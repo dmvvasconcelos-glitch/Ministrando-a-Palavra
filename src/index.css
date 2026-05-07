@@ -1,0 +1,190 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+}
+
+:root {
+  --bg-color: #0d1117;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --nav-bg: rgba(13, 17, 23, 0.8);
+  --mesh-blob-1: rgba(49, 46, 129, 0.3);
+  --mesh-blob-2: rgba(120, 53, 15, 0.2);
+  --mesh-blob-3: rgba(88, 28, 135, 0.2);
+  --accent: #6366f1; /* indigo-500 */
+  --quote-bg: rgba(99, 102, 241, 0.05);
+  --quote-text: #f8fafc;
+}
+
+[data-theme='light'] {
+  --bg-color: #f8fafc; /* Crisp off-white */
+  --text-primary: #0f172a; /* Slate-900 for high contrast */
+  --text-secondary: #64748b; /* Slate-500 */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.04);
+  --nav-bg: rgba(255, 255, 255, 0.8);
+  --mesh-blob-1: rgba(99, 102, 241, 0.12);
+  --mesh-blob-2: rgba(245, 158, 11, 0.1);
+  --mesh-blob-3: rgba(168, 85, 247, 0.1);
+  --accent: #4f46e5; /* indigo-600 */
+  --quote-bg: rgba(79, 70, 229, 0.03);
+  --quote-text: #1e293b;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  --color-app-bg: var(--bg-color);
+  --color-app-text: var(--text-primary);
+  --color-app-secondary: var(--text-secondary);
+  --color-app-accent: var(--accent);
+  --color-app-card: var(--card-bg);
+  --color-app-border: var(--card-border);
+}
+
+@layer base {
+  body {
+    @apply antialiased transition-colors duration-500;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+  }
+}
+
+.frosted-glass {
+  @apply backdrop-blur-2xl transition-all duration-500;
+  background-color: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.15);
+}
+
+[data-theme='light'] .frosted-glass {
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05), 0 0 1px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.card-spirit {
+  @apply transition-all duration-500 rounded-[2.5rem];
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+}
+
+[data-theme='light'] .card-spirit {
+  box-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.03), 0 0 1px 0 rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .card-spirit:hover {
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.06), 0 0 1px 0 rgba(0, 0, 0, 0.08);
+  @apply border-indigo-500/20 translate-y-[-2px];
+}
+
+.mesh-gradient-bg {
+  background-color: var(--bg-color);
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  transition: background-color 500ms;
+}
+
+.mesh-blob-1 {
+  @apply absolute top-[-10%] left-[-10%] w-[800px] h-[800px] rounded-full blur-[140px] transition-colors duration-700 opacity-60;
+  background-color: var(--mesh-blob-1);
+}
+
+.mesh-blob-2 {
+  @apply absolute bottom-[-10%] right-[-10%] w-[900px] h-[900px] rounded-full blur-[160px] transition-colors duration-700 opacity-50;
+  background-color: var(--mesh-blob-2);
+}
+
+.mesh-blob-3 {
+  @apply absolute top-[20%] right-[10%] w-[500px] h-[500px] rounded-full blur-[120px] transition-colors duration-700 opacity-40;
+  background-color: var(--mesh-blob-3);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+[contenteditable]:empty:before {
+  content: attr(placeholder);
+  @apply text-app-secondary opacity-50;
+  font-style: italic;
+  cursor: text;
+}
+
+.personal-note-trigger {
+  @apply bg-indigo-500/10 border-b border-indigo-500/40 cursor-help transition-all px-1 rounded-sm relative inline-flex items-center;
+}
+
+.personal-note-trigger::after {
+  content: "✎";
+  @apply text-[10px] font-bold text-indigo-400 ml-1 opacity-60;
+  cursor: pointer;
+}
+
+.personal-note-trigger:hover::after {
+  @apply opacity-100 scale-110;
+}
+
+.personal-note-added-anim {
+  animation: note-bounce 0.5s ease-out;
+}
+
+@keyframes note-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.selection-highlight {
+  @apply bg-indigo-500/30 transition-all;
+}
+
+.preach-content .personal-note-trigger {
+  @apply bg-indigo-500/10 border-indigo-500/30 cursor-pointer active:scale-95 hover:bg-indigo-500/20 transition-all;
+}
+
+.preach-content .personal-note-trigger::after {
+  content: "✎";
+  @apply text-indigo-400 opacity-60 group-hover:opacity-100;
+}
+
+/* Markdown Biblical Highlights */
+.prose blockquote, blockquote {
+  @apply border-l-4 border-app-accent py-4 px-8 my-8 rounded-r-3xl italic font-serif relative overflow-hidden ring-1 ring-app-accent/10 sm:px-10;
+  background-color: var(--quote-bg);
+  color: var(--quote-text);
+  quotes: none !important;
+}
+
+.prose blockquote::before, blockquote::before {
+  content: '"' !important;
+  @apply absolute top-1 left-2 text-6xl text-app-accent/20 font-serif leading-none;
+}
+
+.prose blockquote strong, blockquote strong {
+  @apply text-app-accent font-bold mr-1;
+}
+
+.prose blockquote p, blockquote p {
+  @apply mb-3 last:mb-0 leading-relaxed;
+}
+
+/* Ensure these work in the contenteditable editor which uses .prose */
+.prose blockquote::after {
+  display: none !important;
+}

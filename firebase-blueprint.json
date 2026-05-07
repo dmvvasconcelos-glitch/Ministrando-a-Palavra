@@ -1,0 +1,241 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User specific information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "fullName": { "type": "string" },
+        "birthDate": { "type": "string" },
+        "newBirthDate": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "denomination": { "type": "string" },
+        "presidentPastor": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid"]
+    },
+    "Sermon": {
+      "title": "Sermon Outline",
+      "description": "A preaching outline or ministered content",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "title": { "type": "string" },
+        "theme": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "event": { "type": "string" },
+        "content": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "preached"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "sharedWith": {
+          "type": "object",
+          "description": "Map of userId to permission level (view/edit)",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["view", "edit"]
+          }
+        }
+      },
+      "required": ["title", "ownerId", "content"]
+    },
+    "BibleHighlight": {
+      "title": "Bible Highlight",
+      "description": "User marked Bible verses",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "verseReference": { "type": "string" },
+        "text": { "type": "string" },
+        "color": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "verseReference"]
+    },
+    "AgendaItem": {
+      "title": "Ministerial Appointment",
+      "description": "Agenda entries",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "location": { "type": "string" },
+        "address": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["culto", "celula", "congresso", "extra"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "notify24h": { "type": "boolean" },
+        "notifyDayOf": { "type": "boolean" },
+        "sermonId": { "type": "string" },
+        "guestId": { "type": "string" },
+        "guestName": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" }
+      },
+      "required": ["userId", "title", "date"]
+    },
+    "DailyInspiration": {
+      "title": "Daily Inspiration",
+      "description": "User specific daily verse and reflection",
+      "type": "object",
+      "properties": {
+        "verseRef": { "type": "string" },
+        "verseText": { "type": "string" },
+        "reflection": { "type": "string" },
+        "date": { "type": "string", "format": "date" }
+      },
+      "required": ["verseRef", "verseText", "reflection", "date"]
+    },
+    "Birthday": {
+      "title": "Birthday",
+      "description": "Registered birthday for a member or friend",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "relationship": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "date", "userId"]
+    },
+    "AIUsage": {
+      "title": "AI Usage Tracking",
+      "description": "Tracks daily requests made by a user",
+      "type": "object",
+      "properties": {
+        "count": { "type": "integer" },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["count", "lastUpdated"]
+    },
+    "UserAIMemory": {
+      "title": "User AI Memory",
+      "description": "Information learned by the AI about the user",
+      "type": "object",
+      "properties": {
+        "traits": { "type": "string", "description": "Personality traits, preferred style, theological background, etc." },
+        "history": { "type": "string", "description": "Brief summary of past interactions" },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["traits", "lastUpdated"]
+    },
+    "AIChat": {
+      "title": "AI Chat History Item",
+      "description": "Stored conversation with the AI",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "messages": { 
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": { "type": "string" },
+              "content": { "type": "string" }
+            }
+          }
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "messages", "updatedAt"]
+    },
+    "AIOutline": {
+      "title": "AI Generated Outline History",
+      "description": "Stored sermon outline generated by AI",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "params": {
+          "type": "object",
+          "properties": {
+            "theme": { "type": "string" },
+            "passage": { "type": "string" },
+            "audience": { "type": "string" },
+            "style": { "type": "string" }
+          }
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "updatedAt"]
+    },
+    "ContactMessage": {
+      "title": "Contact Message",
+      "description": "Messages sent by users to the administrator",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "repliedAt": { "type": "string", "format": "date-time" },
+        "replyMessage": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "replied"] },
+        "archived": { "type": "boolean" },
+        "archivedBy": { "type": "string", "enum": ["user", "admin"] }
+      },
+      "required": ["userId", "userName", "userEmail", "message", "status"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "users/{userId}/ai_profile/memory": {
+      "schema": "UserAIMemory",
+      "description": "Learned information about the user for AI personalization"
+    },
+    "users/{userId}/chats/{chatId}": {
+      "schema": "AIChat",
+      "description": "Stored chat sessions"
+    },
+    "users/{userId}/outlines/{outlineId}": {
+      "schema": "AIOutline",
+      "description": "Stored generated sermon outlines"
+    },
+    "users/{userId}/usage/{date}": {
+      "schema": "AIUsage",
+      "description": "Daily AI usage tracking (date is YYYY-MM-DD)"
+    },
+    "users/{userId}/daily_inspirations/{id}": {
+      "schema": "DailyInspiration",
+      "description": "User specific daily verse and reflection (ID is date_language)"
+    },
+    "users/{userId}/birthdays/{birthdayId}": {
+      "schema": "Birthday",
+      "description": "Church members or friends birthdays"
+    },
+    "sermons/{sermonId}": {
+      "schema": "Sermon",
+      "description": "Preaching outlines"
+    },
+    "highlights/{highlightId}": {
+      "schema": "BibleHighlight",
+      "description": "User marked Bible verses"
+    },
+    "agenda/{appointmentId}": {
+      "schema": "AgendaItem",
+      "description": "Ministerial calendar"
+    },
+    "ministerial_agenda/{id}": {
+      "schema": "AgendaItem",
+      "description": "User's specific preaching commitments and ministerial schedule"
+    },
+    "contactMessages/{messageId}": {
+      "schema": "ContactMessage",
+      "description": "Messages sent to the system administrator"
+    }
+  }
+}

@@ -1,0 +1,301 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definition
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isDocumentOwner(data) {
+      return isSignedIn() && (data.get('ownerId', null) == request.auth.uid || data.get('userId', null) == request.auth.uid);
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'dmv.vasconcelos@gmail.com' && request.auth.token.email_verified == true) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin')
+      );
+    }
+
+    // 2. Validation Blueprints
+    function isValidSermon(data) {
+      return (data.get('title', '') is string && data.get('title', '').size() <= 200)
+          && (data.get('ownerId', '') is string)
+          && (data.get('content', '') is string && data.get('content', '').size() <= 100000)
+          && (data.get('theme', '') is string && data.get('theme', '').size() <= 200)
+          && (data.get('tags', []) is list && data.get('tags', []).size() <= 20)
+          && (data.get('status', 'draft') is string && data.get('status', 'draft').size() <= 50)
+          && (data.get('sharedWith', {}) is map);
+    }
+
+    function isShared(sermonData, userId) {
+      return sermonData.get('sharedWith', {}).get(userId, null) in ['view', 'edit'];
+    }
+    
+    function hasPermission(sermonData, userId, permission) {
+      return sermonData.get('sharedWith', {}).get(userId, null) == permission;
+    }
+
+    function isValidHighlight(data) {
+      return (data.get('userId', '') is string)
+          && (data.get('verseReference', '') is string && data.get('verseReference', '').size() <= 200)
+          && (data.get('text', '') is string && data.get('text', '').size() <= 2000)
+          && (data.get('color', '') is string && data.get('color', '').size() <= 50);
+    }
+
+    function isValidAgenda(data) {
+      return (data.get('userId', '') is string)
+          && (data.get('userName', '') is string && data.get('userName', '').size() <= 500)
+          && (data.get('userEmail', '') is string && data.get('userEmail', '').size() <= 500)
+          && (data.get('title', '') is string && data.get('title', '').size() <= 500)
+          && (data.get('type', 'culto') is string && data.get('type', 'culto').size() <= 100)
+          && (data.get('location', '') is string && data.get('location', '').size() <= 600)
+          && (data.get('address', '') is string && data.get('address', '').size() <= 2000)
+          && (data.get('description', '') is string && data.get('description', '').size() <= 2000)
+          && (data.get('notify24h', true) is bool)
+          && (data.get('notifyDayOf', true) is bool)
+          && (data.get('sermonId', '') is string)
+          && (data.get('guestId', '') is string)
+          && (data.get('guestName', '') is string);
+    }
+
+    function isValidUser(data) {
+      return (data.get('displayName', '') is string && data.get('displayName', '').size() <= 1000)
+          && (data.get('fullName', '') is string && data.get('fullName', '').size() <= 1000)
+          && (data.get('birthDate', '') is string && data.get('birthDate', '').size() <= 100)
+          && (data.get('newBirthDate', '') is string && data.get('newBirthDate', '').size() <= 100)
+          && (data.get('denomination', '') is string && data.get('denomination', '').size() <= 2000)
+          && (data.get('presidentPastor', '') is string && data.get('presidentPastor', '').size() <= 1000)
+          && (data.get('photoURL', '') is string && data.get('photoURL', '').size() <= 1000000)
+          && (data.get('email', '') is string && data.get('email', '').size() <= 800)
+          && (data.get('role', 'user') in ['admin', 'user'])
+          && (data.get('subscriptionStatus', 'trial') in ['trial', 'active', 'expired'])
+          && (data.get('uid', '') is string)
+          && (data.get('deviceInfo', {}) is map)
+          && (data.get('locationInfo', {}) is map)
+          && (data.get('lastLogin', request.time) is timestamp)
+          && (data.get('createdAt', request.time) is timestamp)
+          && (data.get('updatedAt', request.time) is timestamp)
+          && (data.get('geminiApiKey', '') is string)
+          && (data.get('trialExpiresAt', request.time) is timestamp)
+          && (data.get('subscriptionExpiresAt', request.time) is timestamp)
+          && (data.get('paidExpiresAt', request.time) is timestamp)
+          && (data.get('trialDuration', 3) is number)
+          && (data.get('notificationsEnabled', false) is bool)
+          && (data.get('fcmToken', '') is string)
+          && (data.get('defaultNotify24h', true) is bool)
+          && (data.get('defaultNotifyDayOf', true) is bool);
+    }
+
+    function isValidDailyInspiration(data) {
+      return (data.get('verseRef', '') is string && data.get('verseRef', '').size() <= 1000)
+          && (data.get('verseText', '') is string && data.get('verseText', '').size() <= 5000)
+          && (data.get('reflection', '') is string && data.get('reflection', '').size() <= 5000)
+          && (data.get('date', '') is string);
+    }
+
+    function isValidBirthday(data) {
+      return (data.get('name', '') is string && data.get('name', '').size() <= 200)
+          && (data.get('date', '') is string)
+          && (data.get('relationship', '') is string && data.get('relationship', '').size() <= 100)
+          && (data.get('userId', '') is string);
+    }
+
+    function isValidContactMessage(data) {
+      return (data.get('userName', '') is string && data.get('userName', '').size() <= 600)
+          && (data.get('userEmail', '') is string && data.get('userEmail', '').size() <= 600)
+          && (data.get('message', '') is string && data.get('message', '').size() <= 10000)
+          && (data.get('userId', '') is string)
+          && (data.get('status', 'pending') in ['pending', 'replied'])
+          && (!('replyMessage' in data) || data.get('replyMessage', '') is string)
+          && (!('archived' in data) || data.get('archived', false) is bool)
+          && (!('archivedBy' in data) || data.get('archivedBy', null) == null || data.get('archivedBy', '') in ['user', 'admin'])
+          && (!('createdAt' in data) || data.get('createdAt', request.time) is timestamp)
+          && (!('repliedAt' in data) || data.get('repliedAt', request.time) is timestamp);
+    }
+
+    function isValidAIUsage(data) {
+      return (data.get('count', 0) is int)
+          && (data.get('lastUpdated', '') is string);
+    }
+
+    // Rules for Collections
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin() || (isSignedIn() && (
+        resource.data.get('email', null) != null || 
+        resource.data.get('uid', null) != null
+      ));
+      
+      allow create: if isOwner(userId)
+                    && (incoming().get('uid', userId) == userId)
+                    && isValidUser(incoming())
+                    && incoming().get('createdAt', request.time) == request.time
+                    && incoming().get('updatedAt', request.time) == request.time
+                    && (incoming().get('role', 'user') == 'user' || (incoming().get('role', 'user') == 'admin' && request.auth.token.email == 'dmv.vasconcelos@gmail.com'))
+                    && incoming().get('subscriptionStatus', 'trial') == 'trial';
+                    
+      allow update: if (isOwner(userId) || isAdmin())
+                    && isValidUser(incoming())
+                    && (incoming().get('uid', userId) == userId)
+                    && (!('createdAt' in existing()) || incoming().get('createdAt', existing().get('createdAt', request.time)) == existing().get('createdAt', request.time))
+                    && incoming().get('updatedAt', request.time) == request.time
+                    && (isOwner(userId) && !isAdmin() ? (
+                         incoming().get('role', existing().get('role', 'user')) == existing().get('role', 'user') && 
+                         incoming().get('subscriptionStatus', existing().get('subscriptionStatus', 'trial')) == existing().get('subscriptionStatus', 'trial')
+                       ) : true);
+
+      match /usage/{date} {
+        allow get: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidAIUsage(incoming());
+      }
+
+      match /ai_profile/memory {
+        allow get: if isOwner(userId);
+        allow create, update: if isOwner(userId);
+      }
+
+      match /chats/{chatId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+
+      match /outlines/{outlineId} {
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+
+      match /daily_inspirations/{id} {
+        allow get: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidDailyInspiration(incoming());
+      }
+
+      match /birthdays/{birthdayId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidBirthday(incoming());
+        allow update: if isOwner(userId) && isValidBirthday(incoming());
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    match /sermons/{sermonId} {
+      allow get: if isSignedIn() && (
+        existing().ownerId == request.auth.uid || 
+        isShared(existing(), request.auth.uid)
+      );
+      
+      allow list: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid || 
+        isShared(resource.data, request.auth.uid)
+      );
+      
+      allow create: if isSignedIn() && isValidId(sermonId) && isValidSermon(incoming())
+                    && incoming().ownerId == request.auth.uid
+                    && incoming().createdAt == request.time
+                    && incoming().updatedAt == request.time;
+      
+      allow update: if isSignedIn() && isValidId(sermonId) && isValidSermon(incoming())
+                    && incoming().get('ownerId', existing().ownerId) == existing().ownerId
+                    && (
+                      // Action: Owner Complete Edit (Not preached)
+                      (existing().ownerId == request.auth.uid && (!existing().keys().hasAll(['status']) || existing().status != 'preached')) ||
+                      // Action: Owner Share/Meta Update (Allowed even if preached)
+                      (existing().ownerId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['sharedWith', 'updatedAt', 'status', 'lastPreachedAt', 'theme', 'tags', 'title'])) ||
+                      // Action: Shared Content Edit (Editor, not preached)
+                      (hasPermission(existing(), request.auth.uid, 'edit') && 
+                       (!existing().keys().hasAll(['status']) || existing().status != 'preached') &&
+                       incoming().get('sharedWith', existing().get('sharedWith', {})) == existing().get('sharedWith', {}))
+                    )
+                    && incoming().get('createdAt', existing().createdAt) == existing().createdAt
+                    && incoming().updatedAt == request.time;
+      
+      allow delete: if isSignedIn() && isValidId(sermonId) && isDocumentOwner(existing());
+    }
+
+    match /highlights/{highlightId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidHighlight(incoming()) 
+                    && (incoming().userId == request.auth.uid)
+                    && (incoming().createdAt == request.time)
+                    && (incoming().updatedAt == request.time);
+      allow update: if isSignedIn() && isValidHighlight(incoming()) 
+                    && (existing().userId == request.auth.uid) 
+                    && (incoming().get('userId', request.auth.uid) == request.auth.uid)
+                    && (incoming().get('createdAt', existing().createdAt) == existing().createdAt)
+                    && (incoming().updatedAt == request.time);
+      allow delete: if isSignedIn() && isValidId(highlightId) && isDocumentOwner(existing());
+    }
+
+    match /agenda/{agendaId} {
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.get('guestId', null) == request.auth.uid);
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || existing().get('guestId', null) == request.auth.uid);
+      allow create: if isSignedIn() && isValidAgenda(incoming()) 
+                    && (incoming().userId == request.auth.uid)
+                    && (incoming().createdAt == request.time)
+                    && (incoming().updatedAt == request.time);
+      allow update: if isSignedIn() && isValidAgenda(incoming()) 
+                    && (existing().userId == request.auth.uid) 
+                    && (incoming().get('userId', request.auth.uid) == request.auth.uid)
+                    && (incoming().get('createdAt', existing().createdAt) == existing().createdAt)
+                    && (incoming().updatedAt == request.time);
+      allow delete: if isSignedIn() && isValidId(agendaId) && isDocumentOwner(existing());
+    }
+
+    match /ministerial_agenda/{agendaId} {
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.get('guestId', null) == request.auth.uid);
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || existing().get('guestId', null) == request.auth.uid);
+      allow create: if isSignedIn() && isValidAgenda(incoming()) 
+                    && (incoming().userId == request.auth.uid)
+                    && (incoming().createdAt == request.time)
+                    && (incoming().updatedAt == request.time);
+      allow update: if isSignedIn() && isValidAgenda(incoming()) 
+                    && (existing().userId == request.auth.uid) 
+                    && (incoming().get('userId', request.auth.uid) == request.auth.uid)
+                    && (incoming().get('createdAt', existing().createdAt) == existing().createdAt)
+                    && (incoming().updatedAt == request.time);
+      allow delete: if isSignedIn() && isValidId(agendaId) && isDocumentOwner(existing());
+    }
+
+
+    match /contactMessages/{messageId} {
+      allow list: if isSignedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow get: if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
+      allow create: if isSignedIn() && isValidContactMessage(incoming())
+                    && incoming().userId == request.auth.uid
+                    && incoming().status == 'pending'
+                    && incoming().createdAt == request.time;
+      allow update: if (isAdmin() && isValidContactMessage(incoming())) 
+                    || (isSignedIn() && existing().userId == request.auth.uid 
+                        && incoming().diff(existing()).affectedKeys().hasOnly(['archived'])
+                        && isValidContactMessage(incoming()));
+      allow delete: if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
+    }
+  }
+}

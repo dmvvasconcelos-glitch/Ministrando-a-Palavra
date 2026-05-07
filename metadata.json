@@ -1,0 +1,9 @@
+{
+  "name": "Ministrando a Palavra",
+  "description": "Um assistente inteligente e completo para ministros do evangelho, com biblioteca bíblica, criador de ministrações com IA e modo púlpito.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}
