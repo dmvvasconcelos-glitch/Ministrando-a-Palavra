@@ -28,6 +28,8 @@ import {
   signInWithPopup, 
   signInWithRedirect,
   getRedirectResult,
+  setPersistence,
+  browserLocalPersistence,
   GoogleAuthProvider, 
   onAuthStateChanged, 
   signOut,
@@ -138,12 +140,33 @@ export default function App() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
+  // Handle redirect result and set persistence once
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          console.log('Redirect result found user:', result.user.email);
+        }
+      } catch (error: any) {
+        console.error('Error with redirect login:', error);
+      }
+    };
+    initAuth();
+  }, []);
+
   useEffect(() => {
     let unsubscribeProfile: (() => void) | undefined;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (u) => {
+      console.log('Auth state changed:', u ? u.email : 'No user');
       setUser(u);
+      
       if (u) {
+        // Reset logging in state if we found a user
+        setIsLoggingIn(false);
+        
         // Ensure user document exists in 'users' collection for searching/sharing
         const userRef = doc(db, 'users', u.uid);
         
@@ -289,19 +312,13 @@ export default function App() {
         if (unsubscribeProfile) unsubscribeProfile();
       }
       setLoading(false);
+      setIsLoggingIn(false);
     });
 
     return () => {
       unsubscribeAuth();
       if (unsubscribeProfile) unsubscribeProfile();
     };
-  }, []);
-
-  // Handle redirect result
-  useEffect(() => {
-    getRedirectResult(auth).catch((error) => {
-      console.error('Error with redirect login:', error);
-    });
   }, []);
 
   useEffect(() => {
@@ -318,22 +335,40 @@ export default function App() {
     setIsLoggingIn(true);
     try {
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
+      provider.setCustomParameters({ 
+        prompt: 'select_account',
+        display: 'popup'
+      });
+      
+      await setPersistence(auth, browserLocalPersistence);
       
       try {
-        await signInWithPopup(auth, provider);
+        console.log('Attempting popup login...');
+        const result = await signInWithPopup(auth, provider);
+        if (result.user) {
+          console.log('Popup login success:', result.user.email);
+          // onAuthStateChanged will handle the UI update
+        }
       } catch (popupError: any) {
-        console.warn('Popup login failed or blocked, trying redirect...', popupError);
-        // If popup is blocked, common in some mobile browsers/Hostinger environments
-        if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/popup-closed-by-user' || popupError.code === 'auth/cancelled-popup-request') {
+        console.warn('Popup login error:', popupError);
+        
+        const useRedirect = 
+          popupError.code === 'auth/popup-blocked' || 
+          popupError.code === 'auth/popup-closed-by-user' || 
+          popupError.code === 'auth/cancelled-popup-request' ||
+          popupError.code === 'auth/internal-error';
+
+        if (useRedirect) {
+          console.log('Redirecting to Google login...');
           await signInWithRedirect(auth, provider);
+          // Page will redirect, code below won't run or won't matter
+          return;
         } else {
           throw popupError;
         }
       }
-    } catch (error) {
-      console.error('Login failed', error);
-    } finally {
+    } catch (error: any) {
+      console.error('Login failed:', error);
       setIsLoggingIn(false);
     }
   };

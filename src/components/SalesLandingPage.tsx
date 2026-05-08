@@ -147,12 +147,21 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
             >
               Assinar Premium <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </a>
-            <a 
-              href="#offers"
-              className="w-full sm:w-auto bg-white/80 backdrop-blur-sm text-indigo-600 border border-indigo-100 px-10 md:px-14 py-5 md:py-7 rounded-[2.5rem] font-black uppercase text-xs md:text-sm tracking-widest hover:border-indigo-600 transition-all flex items-center justify-center gap-3 hover:shadow-lg active:scale-95"
+            <button 
+              type="button"
+              disabled={isLoading}
+              onClick={(e) => { e.preventDefault(); onLogin(); }}
+              className="w-full sm:w-auto bg-white/80 backdrop-blur-sm text-indigo-600 border border-indigo-100 px-10 md:px-14 py-5 md:py-7 rounded-[2.5rem] font-black uppercase text-xs md:text-sm tracking-widest hover:border-indigo-600 transition-all flex items-center justify-center gap-3 hover:shadow-lg active:scale-95 disabled:opacity-50"
             >
-              Teste Grátis 3 Dias
-            </a>
+              {isLoading ? (
+                <>
+                  <Loader2 className="animate-spin" size={18} />
+                  <span>Autenticando...</span>
+                </>
+              ) : (
+                'Teste Grátis 3 Dias'
+              )}
+            </button>
           </div>
           
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 opacity-50 grayscale group-hover:grayscale-0 transition-all duration-700">
