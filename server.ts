@@ -19,15 +19,33 @@ let messaging: admin.messaging.Messaging | null = null;
 
 try {
   const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+  let firebaseConfig: any = {};
+  
   if (fs.existsSync(configPath)) {
-    const firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    
-    // We only initialize if we have a projectId
-    // In this environment, we might not have a service account key, 
-    // so we rely on default credentials or just projectId for some operations
-    admin.initializeApp({
-      projectId: firebaseConfig.projectId,
-    });
+    firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  }
+
+  // Support environment variables as override (useful for production like Hostinger)
+  const projectId = process.env.FIREBASE_PROJECT_ID || firebaseConfig.projectId;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (projectId) {
+    if (clientEmail && privateKey) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+      });
+      console.log(`Firebase Admin initialized with Service Account (Project: ${projectId})`);
+    } else {
+      admin.initializeApp({
+        projectId: projectId,
+      });
+      console.log(`Firebase Admin initialized with Project ID fallback (Project: ${projectId})`);
+    }
     
     // Use the specific databaseId if provided in config
     if (firebaseConfig.firestoreDatabaseId) {
@@ -37,9 +55,8 @@ try {
     }
     
     messaging = admin.messaging();
-    console.log(`Firebase Admin initialized successfully (Project: ${firebaseConfig.projectId}, Database: ${firebaseConfig.firestoreDatabaseId || '(default)'})`);
   } else {
-    console.warn('Firebase config file not found, background notifications will be disabled');
+    console.warn('No Firebase Project ID found in environment or config file.');
   }
 } catch (err) {
   console.error('Failed to initialize Firebase Admin:', err);

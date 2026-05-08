@@ -3,7 +3,7 @@ import {
   Save, Trash2, ArrowLeft, Eye, Edit3, BookMarked, Tag, Trash, FileText, 
   Highlighter, Palette, Type, CaseSensitive, ChevronDown, Share2, MessageSquare, X,
   Users, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight,
-  Eraser, Info
+  Eraser, Info, Undo2, Redo2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { marked } from 'marked';
@@ -868,6 +868,32 @@ export default function SermonEditor({
             {canEdit && (
               <div className="px-3 py-1.5 border-b border-app-border/40 bg-app-card/30 backdrop-blur-xl sticky top-0 z-50 flex flex-wrap items-center justify-center gap-1.5 overflow-x-auto no-scrollbar shadow-xl">
                 
+                {/* History (Undo/Redo) */}
+                <div className="flex items-center gap-0.5 p-0.5 bg-app-card/40 rounded-lg border border-app-border">
+                  <button
+                    onClick={() => { 
+                      editorRef.current?.focus();
+                      document.execCommand('undo', false); 
+                      handleEditorInput(); 
+                    }}
+                    className="p-1 text-app-secondary hover:bg-app-card/60 hover:text-app-text rounded-md transition-all"
+                    title={t('undo')}
+                  >
+                    <Undo2 size={14} />
+                  </button>
+                  <button
+                    onClick={() => { 
+                      editorRef.current?.focus();
+                      document.execCommand('redo', false); 
+                      handleEditorInput(); 
+                    }}
+                    className="p-1 text-app-secondary hover:bg-app-card/60 hover:text-app-text rounded-md transition-all"
+                    title={t('redo')}
+                  >
+                    <Redo2 size={14} />
+                  </button>
+                </div>
+
                 {/* Basic Text Styles & Alignment combined */}
                 <div className="flex items-center gap-0.5 p-0.5 bg-app-card/40 rounded-lg border border-app-border">
                   <button

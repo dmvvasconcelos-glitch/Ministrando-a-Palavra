@@ -10,7 +10,17 @@ import {
 import { getMessaging } from 'firebase/messaging';
 import firebaseConfig from '../../firebase-applet-config.json';
 
-const app = initializeApp(firebaseConfig);
+const defaultFirebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfig.apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfig.authDomain,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || firebaseConfig.projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfig.storageBucket,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfig.messagingSenderId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || firebaseConfig.appId,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || firebaseConfig.measurementId,
+};
+
+const app = initializeApp(defaultFirebaseConfig);
 
 // Initialize Firestore with persistent cache and force long polling for better connectivity in some environments
 export const db = initializeFirestore(app, {
@@ -18,7 +28,7 @@ export const db = initializeFirestore(app, {
     tabManager: persistentMultipleTabManager()
   }),
   experimentalForceLongPolling: true
-}, firebaseConfig.firestoreDatabaseId);
+}, import.meta.env.VITE_FIREBASE_DATABASE_ID || firebaseConfig.firestoreDatabaseId);
 
 export const auth = getAuth(app);
 

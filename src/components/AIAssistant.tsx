@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Sparkles, Send, RefreshCw, Layers, Users, BookMarked, Wand2, TrendingUp, Calendar, Trash2, ArrowRight, MessageSquare, Bot, ChevronDown, AlertCircle, Info, BrainCircuit, History, Plus } from 'lucide-react';
+import { Sparkles, Send, RefreshCw, Layers, Users, BookMarked, Wand2, TrendingUp, Calendar, Trash2, ArrowRight, MessageSquare, Bot, ChevronDown, AlertCircle, Info, BrainCircuit, History, Plus, Video } from 'lucide-react';
 import { generateSermonOutline, refineSermonOutline, suggestThemes, chatWithAI, getAIUsageCount, MAX_INDIVIDUAL_AI_REQUESTS, MAX_SHARED_AI_REQUESTS, updateUserMemory } from '../services/gemini';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
@@ -41,6 +41,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
   const [usageCount, setUsageCount] = useState(0);
   const [showUsageAlert, setShowUsageAlert] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('ai_theme') || '');
+  const [videoUrl, setVideoUrl] = useState(() => localStorage.getItem('ai_video_url') || '');
   const [passage, setPassage] = useState(() => localStorage.getItem('ai_passage') || '');
   const [audience, setAudience] = useState(() => localStorage.getItem('ai_audience') || '');
   const [style, setStyle] = useState<'expositivo' | 'tematico' | 'narrativo'>(() => (localStorage.getItem('ai_style') as any) || 'expositivo');
@@ -178,6 +179,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
           setPassage(data.params.passage || '');
           setAudience(data.params.audience || '');
           setStyle(data.params.style || 'expositivo');
+          setVideoUrl(data.params.videoUrl || '');
         }
       }
     };
@@ -289,6 +291,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
   useEffect(() => {
     if (!showClearConfirm) {
       if (theme) localStorage.setItem('ai_theme', theme);
+      if (videoUrl) localStorage.setItem('ai_video_url', videoUrl);
       if (passage) localStorage.setItem('ai_passage', passage);
       if (audience) localStorage.setItem('ai_audience', audience);
       if (style) localStorage.setItem('ai_style', style);
@@ -360,11 +363,11 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
     if (!theme && !passage) return;
     setLoading(true);
     try {
-      const result = await generateSermonOutline({ theme, passage, audience, style, language });
+      const result = await generateSermonOutline({ theme, passage, audience, style, language, videoUrl });
       if (!result) throw new Error('Empty response');
       setOutline(result);
       
-      const params = { theme, passage, audience, style };
+      const params = { theme, passage, audience, style, videoUrl };
       await saveOutlineToFirestore(result, params);
 
       // Scroll to result
@@ -439,7 +442,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
       // Refinement
       setRefining(true);
       try {
-        const result = await refineSermonOutline(outline, instruction, language);
+        const result = await refineSermonOutline(outline, instruction, language, videoUrl);
         if (result) {
           setOutline(result);
           const params = { theme, passage, audience, style };
@@ -457,6 +460,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
 
   const handleClear = () => {
     setTheme('');
+    setVideoUrl('');
     setPassage('');
     setAudience('');
     setStyle('expositivo');
@@ -466,6 +470,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
     setActiveChatId(null);
     setActiveOutlineId(null);
     localStorage.removeItem('ai_theme');
+    localStorage.removeItem('ai_video_url');
     localStorage.removeItem('ai_passage');
     localStorage.removeItem('ai_audience');
     localStorage.removeItem('ai_style');
@@ -715,25 +720,45 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
             }}
             className="frosted-glass p-8 rounded-[32px] shadow-2xl space-y-8 border border-white/5"
           >
-            {/* Primary Section: Theme & Topic */}
+            {/* Primary Section: Theme & Topic & Video */}
             <div className="space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2">
-                    <Layers size={14} /> {t('aiThemeLabel')}
-                  </label>
-                  <span className="text-[9px] text-app-secondary/50 font-medium italic">{language === 'pt' ? 'Obrigatório' : 'Required'}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2">
+                      <Layers size={14} /> {t('aiThemeLabel')}
+                    </label>
+                    <span className="text-[9px] text-app-secondary/50 font-medium italic">{language === 'pt' ? 'Obrigatório' : 'Required'}</span>
+                  </div>
+                  <div className="relative group">
+                    <input 
+                      type="text"
+                      placeholder={t('aiThemePlaceholder')}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-app-accent/20 focus:border-app-accent outline-none text-app-text transition-all placeholder:text-app-secondary/30 text-lg font-serif"
+                      value={theme}
+                      onChange={(e) => setTheme(e.target.value)}
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-focus-within:opacity-100 transition-opacity">
+                      <Sparkles size={18} className="text-app-accent/40 animate-pulse" />
+                    </div>
+                  </div>
                 </div>
-                <div className="relative group">
-                  <input 
-                    type="text"
-                    placeholder={t('aiThemePlaceholder')}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-app-accent/20 focus:border-app-accent outline-none text-app-text transition-all placeholder:text-app-secondary/30 text-lg font-serif"
-                    value={theme}
-                    onChange={(e) => setTheme(e.target.value)}
-                  />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-focus-within:opacity-100 transition-opacity">
-                    <Sparkles size={18} className="text-app-accent/40 animate-pulse" />
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2">
+                      <Video size={14} /> {language === 'pt' ? 'Link do Vídeo' : 'Video Link'}
+                    </label>
+                    <span className="text-[9px] text-app-secondary/50 font-medium italic">{language === 'pt' ? 'Opcional' : 'Optional'}</span>
+                  </div>
+                  <div className="relative group">
+                    <input 
+                      type="url"
+                      placeholder={language === 'pt' ? 'Link do YouTube, Vimeo, etc.' : 'YouTube, Vimeo link, etc.'}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-app-accent/20 focus:border-app-accent outline-none text-app-text transition-all placeholder:text-app-secondary/30 text-lg font-serif"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                    />
                   </div>
                 </div>
               </div>

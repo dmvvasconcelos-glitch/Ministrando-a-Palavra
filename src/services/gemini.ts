@@ -170,25 +170,30 @@ export async function generateSermonOutline(params: {
   audience?: string;
   style: 'expositivo' | 'tematico' | 'narrativo';
   language?: string;
+  videoUrl?: string;
 }) {
   const lang = params.language || 'pt';
   const langContext = lang === 'en' ? 'English' : lang === 'es' ? 'Spanish' : 'Portuguese';
   const memoryContext = await getMemoryContext(lang);
 
-  const prompt = `Generate a biblical sermon outline based on the following:
+  const prompt = `You are a high-level homiletical assistant. Generate a biblical sermon outline based on the Following inputs.
+  
+  CRITICAL SOURCE: If a "Related Video Content" URL is provided below, you MUST prioritize its content. Use your specialized tools (Google Search) to identify the core message, main points, and tone of that video if possible, and base this outline on that specific teaching.
+  
   Theme: ${params.theme || 'Not specified'}
   Biblical Text: ${params.passage || 'Not specified'}
   Target Audience: ${params.audience || 'General'}
   Style: ${params.style}
+  Related Video Content (PRIORITY): ${params.videoUrl || 'None provided'}
   ${memoryContext}
   
   LANGUAGE: ${langContext}. You MUST return the entire outline in ${langContext}.
   
-  The outline should be structured in Markdown with the following sections (translated to ${langContext}):
-  - Impactful Title
+  The outline should be structured in Markdown with these sections (translated to ${langContext}):
+  - Impactful Title (Based on the video's theme)
   - Base Text
-  - Introduction
-  - Main Topics (Development)
+  - Introduction (Include a brief mention of the inspiration from the video)
+  - Main Topics (Development - Derived from the video/theme)
   - Suggested Illustrations
   - Practical Application
   - Conclusion
@@ -197,12 +202,18 @@ export async function generateSermonOutline(params: {
   FORMATTING RULES (MANDATORY):
   1. For biblical references and verses, use blockquotes with "> " to highlight the sacred text.
   2. NEVER include references like "(v. 1)" or "(v. 7)" outside the blockquotes.
-  3. ALWAYS provide the COMPLETE biblical reference (Book, Chapter, and Verses) and the version/translation used at the end of the citation (e.g., - John 3:16, NIV).
+  3. ALWAYS provide the COMPLETE biblical reference (Book, Chapter, and Verses) and the version/translation used at the end of the citation (e.g., - John 3:16, NVI).
   4. If there is more than one verse, put the verse number in bold before the text (e.g., **1** Verse text).
   5. Use bold ONLY for verse numbers and extremely important terms. DO NOT use bold for the full biblical text.
   6. Use blockquotes ("> ") for the biblical text.`;
 
-  return await callGeminiDirect('generateContent', { prompt });
+  const config: any = {};
+  if (params.videoUrl) {
+    config.tools = [{ googleSearch: {} }];
+    config.toolConfig = { includeServerSideToolInvocations: true };
+  }
+
+  return await callGeminiDirect('generateContent', { prompt, config });
 }
 
 export async function fetchBiblePassage(reference: string, version: string = 'NVI', language: string = 'pt') {
@@ -250,12 +261,14 @@ export async function suggestThemes(language: string = 'pt') {
   return JSON.parse(jsonStr || result);
 }
 
-export async function refineSermonOutline(currentOutline: string, instruction: string, language: string = 'pt') {
+export async function refineSermonOutline(currentOutline: string, instruction: string, language: string = 'pt', videoUrl?: string) {
   const langContext = language === 'en' ? 'English' : language === 'es' ? 'Spanish' : 'Portuguese';
   const memoryContext = await getMemoryContext(language);
   const prompt = `You are an experienced homiletical assistant. 
   ${memoryContext}
   
+  SOURCE CONTEXT: ${videoUrl ? `This sermon is based on or related to this video: ${videoUrl}. Maintain consistency with its teaching.` : 'No specific video source.'}
+
   CURRENT OUTLINE:
   ${currentOutline}
   
@@ -267,13 +280,19 @@ export async function refineSermonOutline(currentOutline: string, instruction: s
   Rules:
   1. Maintain the Markdown structure.
   2. Adjust the outline according to the request, maintaining biblical coherence.
-  3. Highlight verses with blockquotes ("> ") and ALWAYS provide the COMPLETE biblical reference (Book, Chapter, and Verses) and the version used (e.g., - John 3:16, NIV).
+  3. Highlight verses with blockquotes ("> ") and ALWAYS provide the COMPLETE biblical reference (Book, Chapter, and Verses) and the version used (e.g., - John 3:16, NVI).
   4. NEVER use references like "(v. 7)" outside the blockquotes.
   5. For multiple verses, use bold numbers: **1** Text... **2** Text...
   6. DO NOT use bold for the full biblical text, only for verse numbers.
   7. Return only the new complete outline in Markdown.`;
 
-  return await callGeminiDirect('generateContent', { prompt });
+  const config: any = {};
+  if (videoUrl) {
+    config.tools = [{ googleSearch: {} }];
+    config.toolConfig = { includeServerSideToolInvocations: true };
+  }
+
+  return await callGeminiDirect('generateContent', { prompt, config });
 }
 
 export async function chatWithAI(history: { role: 'user' | 'model', parts: string }[], message: string, language: string = 'pt') {
