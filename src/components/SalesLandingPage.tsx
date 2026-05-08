@@ -5,7 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
   const { t } = useLanguage();
-  const CHECKOUT_URL = 'https://pay.cakto.com.br/neg39tz_876938';
+  const CHECKOUT_URL = 'https://pay.cakto.com.br/38ydnyy_878109';
 
   useEffect(() => {
     document.title = "Ministrando a Palavra | Premium";
@@ -22,7 +22,7 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
     {
       icon: Sparkles,
       title: 'IA Assistente Teológica',
-      description: 'Gere esboços profundos e estruturados em segundos. Sua inspiração auxiliada por tecnologia de ponta.'
+      description: 'IA profunda que aprende com seu estilo e evolui com seu ministério ao longo do tempo.'
     },
     {
       icon: BookOpen,
@@ -102,6 +102,8 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
             </button>
             <a 
               href={CHECKOUT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-2 bg-indigo-900 text-white px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-xs md:text-sm hover:bg-indigo-800 transition-all shadow-xl shadow-indigo-900/10 active:scale-95"
             >
               Assinar Agora
@@ -137,16 +139,18 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6 mb-20 px-4">
             <a 
               href={CHECKOUT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="group w-full sm:w-auto bg-indigo-600 text-white px-10 md:px-14 py-5 md:py-7 rounded-[2.5rem] font-black uppercase text-xs md:text-sm tracking-widest hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-600/30 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95"
             >
               Assinar Premium <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </a>
-            <button 
-              onClick={onLogin}
+            <a 
+              href="#offers"
               className="w-full sm:w-auto bg-white/80 backdrop-blur-sm text-indigo-600 border border-indigo-100 px-10 md:px-14 py-5 md:py-7 rounded-[2.5rem] font-black uppercase text-xs md:text-sm tracking-widest hover:border-indigo-600 transition-all flex items-center justify-center gap-3 hover:shadow-lg active:scale-95"
             >
               Teste Grátis 3 Dias
-            </button>
+            </a>
           </div>
           
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 opacity-50 grayscale group-hover:grayscale-0 transition-all duration-700">
@@ -324,7 +328,7 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
                   Sua ferramenta para a <span className="text-indigo-600 font-sans font-black not-italic block md:inline">Palavra</span>
                 </h2>
                 <p className="text-xl text-slate-500 leading-relaxed max-w-xl">
-                  Não é apenas uma ferramenta, é um parceiro que ajuda você a encontrar as melhores palavras, referências e insights para abençoar a sua igreja.
+                  Não é apenas uma ferramenta, é um parceiro que aprende com o seu estilo ao longo do tempo, ajudando você a encontrar as melhores palavras, referências e insights para abençoar a sua igreja.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
                    <div className="space-y-4">
@@ -474,7 +478,7 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
       </section>
 
       {/* Pricing / Irresistible Offer - Deep and Impactful */}
-      <section className="py-32 md:py-48 px-6 bg-[#0B0D11] text-white overflow-hidden relative">
+      <section id="offers" className="py-32 md:py-48 px-6 bg-[#0B0D11] text-white overflow-hidden relative">
         <div className="absolute top-[10%] right-[-10%] w-[600px] h-[600px] bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute bottom-[10%] left-[-10%] w-[600px] h-[600px] bg-rose-600/10 blur-[120px] rounded-full pointer-events-none" />
 
@@ -516,7 +520,7 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
                     </div>
                     <div className="flex items-baseline gap-3 md:gap-4">
                       <span className="text-slate-400 text-3xl md:text-4xl font-serif italic">por</span>
-                      <span className="text-7xl md:text-[10rem] font-black tracking-tighter text-white leading-none">19,90</span>
+                      <span className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">19,90</span>
                       <div className="flex flex-col items-start leading-[1.1] transform translate-y-[-5px] md:translate-y-[-10px]">
                         <span className="text-indigo-400 font-black text-xl md:text-2xl">R$</span>
                         <span className="text-slate-500 font-bold uppercase text-[10px] md:text-[12px] tracking-widest leading-none mt-1 md:mt-2">/ ano</span>
@@ -531,13 +535,15 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
                   <div className="mt-auto space-y-4 md:space-y-6">
                     <a 
                       href={CHECKOUT_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="w-full bg-indigo-600 text-white py-6 md:py-8 rounded-[2rem] md:rounded-[2.5rem] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-600/40 block text-center text-lg md:text-xl active:scale-[0.98] hover:scale-[1.01]"
                     >
                       Ativar Premium Agora
                     </a>
                     <button 
-                      onClick={onLogin}
-                      className="w-full bg-white/5 hover:bg-white/10 text-white py-5 md:py-6 rounded-[2rem] md:rounded-[2.5rem] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] border border-white/10 transition-all text-xs active:scale-[0.98]"
+                      onClick={(e) => { e.preventDefault(); onLogin(); }}
+                      className="w-full bg-white/5 hover:bg-white/10 text-white py-5 md:py-6 rounded-[2rem] md:rounded-[2.5rem] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] border border-white/10 transition-all text-xs active:scale-[0.98] cursor-pointer"
                     >
                       Começar Teste de 3 Dias
                     </button>
@@ -549,7 +555,7 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
                 <h4 className="text-xl md:text-2xl font-bold mb-10 md:mb-12 text-slate-300">O que você desbloqueia:</h4>
                 <div className="space-y-8 md:space-y-10">
                    {[
-                     'IA Teológica Ilimitada',
+                     'IA Teológica (que aprende com você)',
                      'Bíblia Multiversões Completa',
                      'Organizador de Agenda Ministerial',
                      'Modo Púlpito Personalizado',
