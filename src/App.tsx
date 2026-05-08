@@ -26,6 +26,8 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider, 
   onAuthStateChanged, 
   signOut,
@@ -61,6 +63,7 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const [currentSermonId, setCurrentSermonId] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') as Theme) || 'dark');
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [pendingOutline, setPendingOutline] = useState<string | null>(null);
@@ -294,6 +297,13 @@ export default function App() {
     };
   }, []);
 
+  // Handle redirect result
+  useEffect(() => {
+    getRedirectResult(auth).catch((error) => {
+      console.error('Error with redirect login:', error);
+    });
+  }, []);
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -304,11 +314,27 @@ export default function App() {
   }, [isSidebarCollapsed]);
 
   const handleLogin = async () => {
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      provider.setCustomParameters({ prompt: 'select_account' });
+      
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (popupError: any) {
+        console.warn('Popup login failed or blocked, trying redirect...', popupError);
+        // If popup is blocked, common in some mobile browsers/Hostinger environments
+        if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/popup-closed-by-user' || popupError.code === 'auth/cancelled-popup-request') {
+          await signInWithRedirect(auth, provider);
+        } else {
+          throw popupError;
+        }
+      }
     } catch (error) {
       console.error('Login failed', error);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -467,7 +493,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <SalesLandingPage onLogin={handleLogin} />;
+    return <SalesLandingPage onLogin={handleLogin} isLoading={isLoggingIn} />;
   }
 
   if (isBlocked) {

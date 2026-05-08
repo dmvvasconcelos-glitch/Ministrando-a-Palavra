@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Sparkles, BookOpen, Mic2, Calendar, ShieldCheck, ArrowRight, Star, Quote, Zap, Globe, MessageSquare, TrendingUp, Layers, MousePointer2, Copy, Check } from 'lucide-react';
+import { CheckCircle2, Sparkles, BookOpen, Mic2, Calendar, ShieldCheck, ArrowRight, Star, Quote, Zap, Globe, MessageSquare, TrendingUp, Layers, MousePointer2, Copy, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
+export default function SalesLandingPage({ onLogin, isLoading = false }: { onLogin: () => void, isLoading?: boolean }) {
   const { t } = useLanguage();
   const CHECKOUT_URL = 'https://pay.cakto.com.br/38ydnyy_878109';
 
@@ -95,10 +95,12 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
           </div>
           <div className="flex items-center gap-4 md:gap-6">
             <button 
+              type="button"
+              disabled={isLoading}
               onClick={onLogin}
-              className="text-slate-500 font-bold text-xs md:text-sm hover:text-indigo-600 transition-colors px-2 md:px-4 py-2"
+              className="text-slate-500 font-bold text-xs md:text-sm hover:text-indigo-600 transition-colors px-2 md:px-4 py-2 flex items-center gap-2 disabled:opacity-50"
             >
-              Entrar
+              {isLoading ? <Loader2 className="animate-spin" size={14} /> : 'Entrar'}
             </button>
             <a 
               href={CHECKOUT_URL}
@@ -542,10 +544,19 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
                       Ativar Premium Agora
                     </a>
                     <button 
+                      type="button"
+                      disabled={isLoading}
                       onClick={(e) => { e.preventDefault(); onLogin(); }}
-                      className="w-full bg-white/5 hover:bg-white/10 text-white py-5 md:py-6 rounded-[2rem] md:rounded-[2.5rem] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] border border-white/10 transition-all text-xs active:scale-[0.98] cursor-pointer"
+                      className="w-full bg-white/5 hover:bg-white/10 text-white py-5 md:py-6 rounded-[2rem] md:rounded-[2.5rem] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] border border-white/10 transition-all text-xs active:scale-[0.98] cursor-pointer flex items-center justify-center gap-3 disabled:opacity-50"
                     >
-                      Começar Teste de 3 Dias
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="animate-spin" size={18} />
+                          <span>Autenticando...</span>
+                        </>
+                      ) : (
+                        'Começar Teste de 3 Dias'
+                      )}
                     </button>
                   </div>
                 </div>
