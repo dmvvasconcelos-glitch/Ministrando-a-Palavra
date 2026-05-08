@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Sparkles, Send, RefreshCw, Layers, Users, BookMarked, Wand2, TrendingUp, Calendar, Trash2, ArrowRight, MessageSquare, Bot, ChevronDown, AlertCircle, Info, BrainCircuit, History, Plus, Video } from 'lucide-react';
+import { Sparkles, Send, RefreshCw, Layers, Users, BookMarked, Wand2, TrendingUp, Calendar, Trash2, ArrowRight, MessageSquare, Bot, ChevronDown, AlertCircle, Info, BrainCircuit, History, Plus, Video, TrendingUp as TrendingUpIcon } from 'lucide-react';
 import { generateSermonOutline, refineSermonOutline, suggestThemes, chatWithAI, getAIUsageCount, MAX_INDIVIDUAL_AI_REQUESTS, MAX_SHARED_AI_REQUESTS, updateUserMemory } from '../services/gemini';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
@@ -31,6 +31,8 @@ interface StoredOutline {
     passage: string;
     audience: string;
     style: string;
+    videoUrl?: string;
+    bibleVersion?: string;
   };
   updatedAt: any;
 }
@@ -42,6 +44,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
   const [showUsageAlert, setShowUsageAlert] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('ai_theme') || '');
   const [videoUrl, setVideoUrl] = useState(() => localStorage.getItem('ai_video_url') || '');
+  const [bibleVersion, setBibleVersion] = useState(() => localStorage.getItem('ai_bible_version') || 'NVI');
   const [passage, setPassage] = useState(() => localStorage.getItem('ai_passage') || '');
   const [audience, setAudience] = useState(() => localStorage.getItem('ai_audience') || '');
   const [style, setStyle] = useState<'expositivo' | 'tematico' | 'narrativo'>(() => (localStorage.getItem('ai_style') as any) || 'expositivo');
@@ -180,6 +183,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
           setAudience(data.params.audience || '');
           setStyle(data.params.style || 'expositivo');
           setVideoUrl(data.params.videoUrl || '');
+          setBibleVersion(data.params.bibleVersion || 'NVI');
         }
       }
     };
@@ -292,6 +296,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
     if (!showClearConfirm) {
       if (theme) localStorage.setItem('ai_theme', theme);
       if (videoUrl) localStorage.setItem('ai_video_url', videoUrl);
+      if (bibleVersion) localStorage.setItem('ai_bible_version', bibleVersion);
       if (passage) localStorage.setItem('ai_passage', passage);
       if (audience) localStorage.setItem('ai_audience', audience);
       if (style) localStorage.setItem('ai_style', style);
@@ -363,11 +368,11 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
     if (!theme && !passage) return;
     setLoading(true);
     try {
-      const result = await generateSermonOutline({ theme, passage, audience, style, language, videoUrl });
+      const result = await generateSermonOutline({ theme, passage, audience, style, language, videoUrl, bibleVersion });
       if (!result) throw new Error('Empty response');
       setOutline(result);
       
-      const params = { theme, passage, audience, style, videoUrl };
+      const params = { theme, passage, audience, style, videoUrl, bibleVersion };
       await saveOutlineToFirestore(result, params);
 
       // Scroll to result
@@ -424,11 +429,12 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
           passage, 
           audience, 
           style,
-          language
+          language,
+          bibleVersion
         });
         if (result) {
           setOutline(result);
-          const params = { theme: instruction, passage, audience, style };
+          const params = { theme: instruction, passage, audience, style, bibleVersion };
           await saveOutlineToFirestore(result, params);
         }
         updateUsage();
@@ -442,10 +448,10 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
       // Refinement
       setRefining(true);
       try {
-        const result = await refineSermonOutline(outline, instruction, language, videoUrl);
+        const result = await refineSermonOutline(outline, instruction, language, videoUrl, bibleVersion);
         if (result) {
           setOutline(result);
-          const params = { theme, passage, audience, style };
+          const params = { theme, passage, audience, style, videoUrl, bibleVersion };
           await saveOutlineToFirestore(result, params);
         }
         updateUsage();
@@ -461,6 +467,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
   const handleClear = () => {
     setTheme('');
     setVideoUrl('');
+    setBibleVersion('NVI');
     setPassage('');
     setAudience('');
     setStyle('expositivo');
@@ -471,6 +478,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
     setActiveOutlineId(null);
     localStorage.removeItem('ai_theme');
     localStorage.removeItem('ai_video_url');
+    localStorage.removeItem('ai_bible_version');
     localStorage.removeItem('ai_passage');
     localStorage.removeItem('ai_audience');
     localStorage.removeItem('ai_style');
@@ -637,7 +645,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
             {/* Usage Progress */}
             <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full">
               <div className="flex items-center gap-2">
-                <TrendingUp size={12} className="text-app-accent" />
+                <TrendingUpIcon size={12} className="text-app-accent" />
                 <span className="text-[10px] font-black text-app-secondary uppercase tracking-tighter">
                   {usageCount}/{currentLimit}
                 </span>
@@ -796,7 +804,27 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
             </div>
 
             {/* Secondary Section: Refined Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr_2fr] gap-6 pt-4 border-t border-white/5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4 border-t border-white/5">
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2">
+                  <BookMarked size={14} /> {t('bibleVersionLabel') || (language === 'pt' ? 'Versão da Bíblia' : 'Bible Version')}
+                </label>
+                <div className="relative">
+                  <select
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-app-accent/20 focus:border-app-accent outline-none text-app-text transition-all text-xs font-bold appearance-none cursor-pointer pr-10"
+                    value={bibleVersion}
+                    onChange={(e) => setBibleVersion(e.target.value)}
+                  >
+                    {((t('bibleVersions') as any) || []).map((v: any) => (
+                      <option key={v.id} value={v.id} className="bg-app-bg text-app-text">
+                        {v.name} ({v.id})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-app-secondary pointer-events-none" />
+                </div>
+              </div>
+
               <div className="space-y-3">
                 <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2">
                   <BookMarked size={14} /> {t('bibleTextOptional')}

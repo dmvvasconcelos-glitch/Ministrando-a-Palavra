@@ -524,7 +524,7 @@ export default function App() {
             </div>
 
             <p className="mt-8 text-[9px] text-app-secondary uppercase font-black tracking-widest opacity-40">
-              Suporte: administrador@ministrandoapalavra.com.br
+              Suporte: suporte@ministrandoapalavra.com.br
             </p>
           </motion.div>
         </div>

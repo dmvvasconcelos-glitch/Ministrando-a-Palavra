@@ -2,13 +2,9 @@ import 'dotenv/config';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import * as admin from 'firebase-admin';
 import fs from 'fs';
 import { GoogleGenAI } from '@google/genai';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Gemini Setup
 const aiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });

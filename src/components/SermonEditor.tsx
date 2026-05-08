@@ -3,7 +3,7 @@ import {
   Save, Trash2, ArrowLeft, Eye, Edit3, BookMarked, Tag, Trash, FileText, 
   Highlighter, Palette, Type, CaseSensitive, ChevronDown, Share2, MessageSquare, X,
   Users, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight,
-  Eraser, Info, Undo2, Redo2
+  Eraser, Info, Undo2, Redo2, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { marked } from 'marked';
@@ -51,6 +51,8 @@ export default function SermonEditor({
   
   const isOwner = !activeId || auth.currentUser?.uid === sermon?.ownerId;
   const canEdit = !activeId || isOwner || sermon?.sharedWith?.[auth.currentUser?.uid || ''] === 'edit';
+
+  const currentLimit = profile?.geminiApiKey ? MAX_INDIVIDUAL_AI_REQUESTS : MAX_SHARED_AI_REQUESTS;
 
   // Fetch usage
   useEffect(() => {
@@ -637,17 +639,17 @@ export default function SermonEditor({
             </h2>
             <div className="flex items-center gap-3">
               <p className="text-app-secondary text-[10px] sm:text-xs font-bold tracking-widest uppercase opacity-70 italic">{t('oficinaDaPalavra')}</p>
-              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
-                <Info size={10} className="text-indigo-400" />
-                <span className="text-[9px] font-black uppercase text-indigo-400 tracking-tighter">
-                  IA: {usageCount}/{profile?.geminiApiKey ? MAX_INDIVIDUAL_AI_REQUESTS : MAX_SHARED_AI_REQUESTS}
-                </span>
-              </div>
             </div>
           </div>
         </div>
         
         <div className="flex flex-wrap items-center gap-2">
+          {/* AI Usage Counter */}
+          <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 bg-indigo-500/5 border border-indigo-500/10 rounded-xl mr-2">
+            <Sparkles size={12} className="text-indigo-500" />
+            <span className="text-[10px] font-black text-indigo-500/80 tracking-widest">{usageCount}/{currentLimit}</span>
+          </div>
+
           {/* Audio Tool */}
           {canEdit && (
             <div className="flex-shrink-0 p-1 bg-app-card rounded-2xl border border-app-border shadow-sm hover:border-indigo-500/20 transition-colors">

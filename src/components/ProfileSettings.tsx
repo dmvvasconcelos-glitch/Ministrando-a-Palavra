@@ -680,13 +680,13 @@ export default function ProfileSettings() {
               <div className="flex items-center gap-2">
                 <span className={`
                   px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter
-                  ${profile.subscriptionStatus === 'active' 
+                  ${profile.role === 'admin' || profile.subscriptionStatus === 'active' 
                     ? 'bg-green-500/10 text-green-500' 
                     : profile.subscriptionStatus === 'trial' 
                     ? 'bg-amber-500/10 text-amber-500' 
                     : 'bg-red-500/10 text-red-500'}
                 `}>
-                  {profile.subscriptionStatus === 'active' ? 'Premium (1 Ano)' : profile.subscriptionStatus === 'trial' ? `Acesso Trial (${profile.createdAt && profile.trialExpiresAt ? Math.ceil(((profile.trialExpiresAt.toDate ? profile.trialExpiresAt.toDate() : new Date(profile.trialExpiresAt)).getTime() - (profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt)).getTime()) / (1000 * 60 * 60 * 24)) : 3} dias)` : 'Expirada'}
+                  {profile.role === 'admin' ? 'ADMINISTRADOR' : (profile.subscriptionStatus === 'active' ? 'Premium (1 Ano)' : profile.subscriptionStatus === 'trial' ? `Acesso Trial (${profile.createdAt && profile.trialExpiresAt ? Math.ceil(((profile.trialExpiresAt.toDate ? profile.trialExpiresAt.toDate() : new Date(profile.trialExpiresAt)).getTime() - (profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt)).getTime()) / (1000 * 60 * 60 * 24)) : 3} dias)` : 'Expirada')}
                 </span>
                 {profile.subscriptionStatus === 'active' && <Sparkles size={14} className="text-amber-500" />}
               </div>

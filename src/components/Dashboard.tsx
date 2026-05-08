@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, limit, onSnapshot, getDocs, or, and, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, onSnapshot, getDocs, or, and, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { updateProfile } from 'firebase/auth';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Sermon, AgendaItem, UserProfile, Birthday } from '../types';
 import { Plus, BookOpen, Clock, Calendar as CalIcon, MapPin, ChevronRight, Play, Edit2, Edit3, Heart, FileText, Sparkles, Mic2, Cake, Gift, PartyPopper } from 'lucide-react';
@@ -8,6 +9,7 @@ import { DAILY_VERSES, DAILY_REFLECTIONS } from '../constants/dailyInspirations'
 import { format, formatDistanceToNow, isAfter } from 'date-fns';
 import { ptBR, enUS, es } from 'date-fns/locale';
 import { useLanguage } from '../contexts/LanguageContext';
+import { generateDailyInspiration } from '../services/gemini';
 
 interface DashboardProps {
   profile: UserProfile | null;
@@ -49,7 +51,6 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
         } else {
           // Generate new one
           try {
-            const { generateDailyInspiration } = await import('../services/gemini');
             const newInspiration = await generateDailyInspiration(language);
             
             const saveData = {
@@ -144,9 +145,6 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
     
     setIsSaving(true);
     try {
-      const { updateProfile } = await import('firebase/auth');
-      const { getDoc, doc, setDoc, serverTimestamp } = await import('firebase/firestore');
-
       await updateProfile(auth.currentUser, { displayName: tempName });
       
       const docRef = doc(db, 'users', auth.currentUser.uid);

@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { CheckCircle2, Sparkles, BookOpen, Mic2, Calendar, ShieldCheck, ArrowRight, Star, Quote, Zap, Globe, MessageSquare, TrendingUp, Layers, MousePointer2 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
+import { CheckCircle2, Sparkles, BookOpen, Mic2, Calendar, ShieldCheck, ArrowRight, Star, Quote, Zap, Globe, MessageSquare, TrendingUp, Layers, MousePointer2, Copy, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
@@ -42,7 +42,7 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
     {
       icon: MessageSquare,
       title: 'Suporte Direto com Admin',
-      description: 'Dúvidas ou problemas? Fale diretamente no administrador@ministrandoapalavra.com.br.'
+      description: 'Dúvidas ou problemas? Fale diretamente no suporte@ministrandoapalavra.com.br.'
     },
     {
       icon: ShieldCheck,
@@ -637,7 +637,7 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
              <h3 className="text-4xl md:text-5xl font-serif italic relative z-10">Ainda tem alguma pergunta?</h3>
              <p className="text-xl opacity-80 max-w-xl mx-auto relative z-10">Nossa equipe está pronta para te atender agora mesmo e tirar qualquer dúvida.</p>
              <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
-                <a href="mailto:administrador@ministrandoapalavra.com.br" className="bg-white text-indigo-600 px-12 py-6 rounded-3xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
+                <a href="mailto:suporte@ministrandoapalavra.com.br" className="bg-white text-indigo-600 px-12 py-6 rounded-3xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
                    Enviar E-mail <MessageSquare size={20} />
                 </a>
                 <a href="https://wa.me/5567992790901" target="_blank" rel="noreferrer" className="bg-green-500 text-white px-12 py-6 rounded-3xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
@@ -664,7 +664,7 @@ export default function SalesLandingPage({ onLogin }: { onLogin: () => void }) {
           <div className="flex flex-wrap justify-center gap-12 text-slate-400 text-[10px] font-black uppercase tracking-[0.4em]">
              <a href="#" className="hover:text-indigo-600 transition-colors">Privacidade</a>
              <a href="#" className="hover:text-indigo-600 transition-colors">Termos de Uso</a>
-             <a href="mailto:administrador@ministrandoapalavra.com.br" className="hover:text-indigo-600 transition-colors">Suporte</a>
+             <a href="mailto:suporte@ministrandoapalavra.com.br" className="hover:text-indigo-600 transition-colors">Suporte</a>
           </div>
 
           <div className="text-right space-y-3">

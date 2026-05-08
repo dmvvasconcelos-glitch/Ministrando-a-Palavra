@@ -171,10 +171,12 @@ export async function generateSermonOutline(params: {
   style: 'expositivo' | 'tematico' | 'narrativo';
   language?: string;
   videoUrl?: string;
+  bibleVersion?: string;
 }) {
   const lang = params.language || 'pt';
   const langContext = lang === 'en' ? 'English' : lang === 'es' ? 'Spanish' : 'Portuguese';
   const memoryContext = await getMemoryContext(lang);
+  const version = params.bibleVersion || 'NVI';
 
   const prompt = `You are a high-level homiletical assistant. Generate a biblical sermon outline based on the Following inputs.
   
@@ -182,6 +184,7 @@ export async function generateSermonOutline(params: {
   
   Theme: ${params.theme || 'Not specified'}
   Biblical Text: ${params.passage || 'Not specified'}
+  Bible Version for Citations: ${version}
   Target Audience: ${params.audience || 'General'}
   Style: ${params.style}
   Related Video Content (PRIORITY): ${params.videoUrl || 'None provided'}
@@ -191,18 +194,18 @@ export async function generateSermonOutline(params: {
   
   The outline should be structured in Markdown with these sections (translated to ${langContext}):
   - Impactful Title (Based on the video's theme)
-  - Base Text
+  - Base Text (CITATIONS MUST BE FROM ${version})
   - Introduction (Include a brief mention of the inspiration from the video)
   - Main Topics (Development - Derived from the video/theme)
   - Suggested Illustrations
   - Practical Application
   - Conclusion
-  - Complementary Verses
+  - Complementary Verses (CITATIONS MUST BE FROM ${version})
   
   FORMATTING RULES (MANDATORY):
   1. For biblical references and verses, use blockquotes with "> " to highlight the sacred text.
   2. NEVER include references like "(v. 1)" or "(v. 7)" outside the blockquotes.
-  3. ALWAYS provide the COMPLETE biblical reference (Book, Chapter, and Verses) and the version/translation used at the end of the citation (e.g., - John 3:16, NVI).
+  3. ALWAYS provide the COMPLETE biblical reference (Book, Chapter, and Verses) and the version/translation used at the end of the citation (e.g., - John 3:16, ${version}).
   4. If there is more than one verse, put the verse number in bold before the text (e.g., **1** Verse text).
   5. Use bold ONLY for verse numbers and extremely important terms. DO NOT use bold for the full biblical text.
   6. Use blockquotes ("> ") for the biblical text.`;
@@ -261,13 +264,14 @@ export async function suggestThemes(language: string = 'pt') {
   return JSON.parse(jsonStr || result);
 }
 
-export async function refineSermonOutline(currentOutline: string, instruction: string, language: string = 'pt', videoUrl?: string) {
+export async function refineSermonOutline(currentOutline: string, instruction: string, language: string = 'pt', videoUrl?: string, bibleVersion: string = 'NVI') {
   const langContext = language === 'en' ? 'English' : language === 'es' ? 'Spanish' : 'Portuguese';
   const memoryContext = await getMemoryContext(language);
   const prompt = `You are an experienced homiletical assistant. 
   ${memoryContext}
   
   SOURCE CONTEXT: ${videoUrl ? `This sermon is based on or related to this video: ${videoUrl}. Maintain consistency with its teaching.` : 'No specific video source.'}
+  Bible Version for Citations: ${bibleVersion}
 
   CURRENT OUTLINE:
   ${currentOutline}
@@ -280,7 +284,7 @@ export async function refineSermonOutline(currentOutline: string, instruction: s
   Rules:
   1. Maintain the Markdown structure.
   2. Adjust the outline according to the request, maintaining biblical coherence.
-  3. Highlight verses with blockquotes ("> ") and ALWAYS provide the COMPLETE biblical reference (Book, Chapter, and Verses) and the version used (e.g., - John 3:16, NVI).
+  3. Highlight verses with blockquotes ("> ") and ALWAYS provide the COMPLETE biblical reference (Book, Chapter, and Verses) and the version used (e.g., - John 3:16, ${bibleVersion}).
   4. NEVER use references like "(v. 7)" outside the blockquotes.
   5. For multiple verses, use bold numbers: **1** Text... **2** Text...
   6. DO NOT use bold for the full biblical text, only for verse numbers.
