@@ -329,11 +329,13 @@ export default function AdminDashboard() {
         updates.trialDuration = trialDays;
         updates.role = 'user';
         updates.isPremium = false;
+        updates.subscriptionStatus = 'trial';
       } else {
         updates.paidExpiresAt = expiresAt;
         updates.role = 'premium';
         updates.isPremium = true;
         updates.trialExpiresAt = null;
+        updates.subscriptionStatus = 'active';
       }
 
       await updateDoc(userRef, updates);

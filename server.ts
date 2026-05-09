@@ -226,11 +226,22 @@ async function startServer() {
       const idKeys = ['external_id', 'ext_id', 'customer_id', 'metadata.external_id', 'reference', 'ref', 'custom_id', 'client_id', 'pedido_id', 'transacao_id', 'id_externo'];
 
       const status = findValue(payload, statusKeys);
-      const email = findValue(payload, emailKeys);
+      let email = findValue(payload, emailKeys);
       let externalId = findValue(payload, idKeys);
       
+      // Extraction fallback from checkoutUrl if present in payload
+      if (!externalId && payload.data?.checkoutUrl) {
+        try {
+          const url = new URL(payload.data.checkoutUrl);
+          externalId = url.searchParams.get('external_id') || url.searchParams.get('ext_id');
+          console.log(`Extracted ExtID from checkoutUrl: ${externalId}`);
+        } catch (e) {
+          console.warn('Failed to parse checkoutUrl for externalId');
+        }
+      }
+      
       // Log for debugging
-      console.log(`Extracted: Status=${status}, Email=${email}, ExtID=${externalId}`);
+      console.log(`Extracted: Status=${status}, Event=${payload.event}, Email=${email}, ExtID=${externalId}`);
 
       // Special check for nested metadata or params
       if (!externalId) {
@@ -238,10 +249,8 @@ async function startServer() {
       }
       
       if (!email) {
-        const nestedEmail = payload.venda?.customer?.email || payload.data?.customer?.email;
-        if (nestedEmail) {
-          // already handled by emailKeys searching recursively, but being explicit helps
-        }
+        const nestedEmail = payload.venda?.customer?.email || payload.data?.customer?.email || payload.data?.email;
+        if (nestedEmail) email = nestedEmail;
       }
 
       // Statuses that represent a successful payment
@@ -250,7 +259,9 @@ async function startServer() {
         'pago', 'sucesso', 'aprovado', 'active', 'pago_sucesso', '1',
         'finalized', 'concluded', 'success', 'paga', 'pagamento_confirmado'
       ];
-      const isApproved = successStatuses.includes(String(status).toLowerCase());
+      const isApproved = successStatuses.includes(String(status).toLowerCase()) || 
+                         payload.event === 'purchase_approved' || 
+                         payload.event === 'venda_aprovada';
 
       if (isApproved && (email || externalId) && firestore) {
         console.log(`Processing approved payment for ${email || externalId}`);
