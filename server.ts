@@ -9,50 +9,57 @@ import { GoogleGenAI } from '@google/genai';
 // Firebase Admin Setup
 let firestore: admin.firestore.Firestore | null = null;
 let messaging: admin.messaging.Messaging | null = null;
+let firebaseConfig: any = {};
 
 try {
   const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
-  let firebaseConfig: any = {};
   
   if (fs.existsSync(configPath)) {
     firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
   }
 
-  // Support environment variables as override (useful for production like Hostinger)
   const projectId = process.env.FIREBASE_PROJECT_ID || firebaseConfig.projectId;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
   if (projectId) {
-    if (clientEmail && privateKey) {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId,
-          clientEmail,
-          privateKey,
-        }),
-      });
-      console.log(`Firebase Admin initialized with Service Account (Project: ${projectId})`);
+    if (admin.apps.length === 0) {
+      if (clientEmail && privateKey) {
+        admin.initializeApp({
+          credential: admin.credential.cert({
+            projectId,
+            clientEmail,
+            privateKey,
+          }),
+        });
+        console.log(`[Firebase] Initialized with Service Account (Project: ${projectId})`);
+      } else {
+        admin.initializeApp({
+          projectId: projectId,
+        });
+        console.log(`[Firebase] Initialized with Project ID (Project: ${projectId})`);
+      }
     } else {
-      admin.initializeApp({
-        projectId: projectId,
-      });
-      console.log(`Firebase Admin initialized with Project ID fallback (Project: ${projectId})`);
+      console.log(`[Firebase] Already initialized (Apps: ${admin.apps.length})`);
     }
     
-    // Use the specific databaseId if provided in config
-    if (firebaseConfig.firestoreDatabaseId) {
-      firestore = admin.firestore(firebaseConfig.firestoreDatabaseId);
-    } else {
-      firestore = admin.firestore();
+    try {
+      if (firebaseConfig.firestoreDatabaseId) {
+        firestore = admin.firestore(firebaseConfig.firestoreDatabaseId);
+        console.log(`[Firebase] Firestore set to database: ${firebaseConfig.firestoreDatabaseId}`);
+      } else {
+        firestore = admin.firestore();
+        console.log(`[Firebase] Firestore set to default database`);
+      }
+      messaging = admin.messaging();
+    } catch (fsErr) {
+      console.error('[Firebase] Error obtaining Firestore instance:', fsErr);
     }
-    
-    messaging = admin.messaging();
   } else {
-    console.warn('No Firebase Project ID found in environment or config file.');
+    console.warn('[Firebase] No Project ID found in environment or config file.');
   }
 } catch (err) {
-  console.error('Failed to initialize Firebase Admin:', err);
+  console.error('[Firebase] Failed to initialize Firebase Admin:', err);
 }
 
 // Middleware to verify Firebase Auth Token
@@ -197,22 +204,37 @@ async function startServer() {
       const payload = req.body;
       console.log('[Webhook] Cakto/Payment payload received:', JSON.stringify(payload, null, 2));
 
+      // Lazy check/init for Firestore if it failed at startup
+      if (!firestore && firebaseConfig.projectId) {
+        try {
+          console.log('[Webhook] Attempting late Firestore initialization...');
+          if (admin.apps.length === 0) {
+             admin.initializeApp({ projectId: firebaseConfig.projectId });
+          }
+          if (firebaseConfig.firestoreDatabaseId) {
+            firestore = admin.firestore(firebaseConfig.firestoreDatabaseId);
+          } else {
+            firestore = admin.firestore();
+          }
+          console.log('[Webhook] Late Firestore initialization successful');
+        } catch (initErr) {
+          console.error('[Webhook] Late Firestore initialization failed:', initErr);
+        }
+      }
+
       // ALWAYS store in Firestore for debugging (last 10 webhooks)
       if (firestore) {
         try {
-          // Log even if we can't process it
           await firestore.collection('webhook_logs').add({
             receivedAt: admin.firestore.Timestamp.fromDate(new Date()),
             payload: payload || { empty: true },
             headers: req.headers,
-            source: 'external_gateway'
+            source: 'external_gateway_test'
           });
-          console.log('[Webhook] Log saved to bucket successfully');
+          console.log('[Webhook] Log saved successfully');
         } catch (e) {
-          console.error('[Webhook] CRITICAL Error saving webhook log to Firestore:', e);
+          console.error('[Webhook] Error saving log:', e);
         }
-      } else {
-        console.warn('[Webhook] Firestore not initialized, cannot save logs');
       }
 
       if (!payload || Object.keys(payload).length === 0) {

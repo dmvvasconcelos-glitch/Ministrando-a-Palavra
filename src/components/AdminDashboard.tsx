@@ -128,7 +128,11 @@ export default function AdminDashboard() {
 
   const webhookUrl = `${window.location.origin}/api/webhooks/cakto`;
 
+  const [isTestingWebhook, setIsTestingWebhook] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState(false);
+
   const testWebhookConnectivity = async () => {
+    setIsTestingWebhook(true);
     console.log('AdminDashboard: Testing webhook connectivity...');
     try {
       const res = await fetch('/api/webhooks/cakto');
@@ -141,12 +145,15 @@ export default function AdminDashboard() {
     } catch (e) {
       console.error('AdminDashboard: Webhook test failed:', e);
       alert('Falha ao conectar (GET) com o endpoint do servidor: ' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setIsTestingWebhook(false);
     }
   };
 
   const sendTestWebhook = async () => {
     if (!window.confirm('Isso enviará um payload de teste POST para o servidor. Deseja prosseguir?')) return;
     
+    setIsSendingTest(true);
     console.log('AdminDashboard: Sending test webhook POST...');
     try {
       const res = await fetch('/api/webhooks/cakto', {
@@ -170,10 +177,12 @@ export default function AdminDashboard() {
       const data = await res.json();
       console.log('AdminDashboard: Webhook POST result:', data);
       alert('Resultado (POST): ' + JSON.stringify(data, null, 2));
-      setShowLogs(true); // Open logs to see if it arrived
+      setShowLogs(true);
     } catch (e) {
       console.error('AdminDashboard: Webhook POST failed:', e);
       alert('Falha ao enviar POST para o servidor: ' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setIsSendingTest(false);
     }
   };
 
@@ -779,17 +788,19 @@ export default function AdminDashboard() {
                     <div className="flex gap-2">
                       <button 
                         onClick={testWebhookConnectivity}
-                        className="p-4 bg-amber-500 text-white rounded-2xl hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20 active:scale-95"
+                        disabled={isTestingWebhook}
+                        className="p-4 bg-amber-500 text-white rounded-2xl hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20 active:scale-95 disabled:opacity-50"
                         title="Testar Conectividade (GET)"
                       >
-                        <Activity size={20} />
+                        <Activity size={20} className={isTestingWebhook ? 'animate-spin' : ''} />
                       </button>
                       <button 
                         onClick={sendTestWebhook}
-                        className="p-4 bg-rose-500 text-white rounded-2xl hover:bg-rose-400 transition-all shadow-lg shadow-rose-500/20 active:scale-95"
+                        disabled={isSendingTest}
+                        className="p-4 bg-rose-500 text-white rounded-2xl hover:bg-rose-400 transition-all shadow-lg shadow-rose-500/20 active:scale-95 disabled:opacity-50"
                         title="Enviar Payload Teste (POST)"
                       >
-                        <Send size={20} />
+                        <Send size={20} className={isSendingTest ? 'animate-bounce' : ''} />
                       </button>
                       <button 
                         onClick={() => {
