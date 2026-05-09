@@ -90,7 +90,7 @@ service cloud.firestore {
           && (data.get('presidentPastor', '') is string && data.get('presidentPastor', '').size() <= 1000)
           && (data.get('photoURL', '') is string && data.get('photoURL', '').size() <= 1000000)
           && (data.get('email', '') is string && data.get('email', '').size() <= 800)
-          && (data.get('role', 'user') in ['admin', 'user'])
+          && (data.get('role', 'user') in ['admin', 'user', 'premium'])
           && (data.get('subscriptionStatus', 'trial') in ['trial', 'active', 'expired'])
           && (data.get('uid', '') is string)
           && (data.get('deviceInfo', {}) is map)
@@ -99,15 +99,16 @@ service cloud.firestore {
           && (data.get('createdAt', request.time) is timestamp)
           && (data.get('updatedAt', request.time) is timestamp)
           && (data.get('geminiApiKey', '') is string)
-          && (data.get('trialExpiresAt', request.time) is timestamp)
-          && (data.get('subscriptionExpiresAt', request.time) is timestamp)
-          && (data.get('paidExpiresAt', request.time) is timestamp)
+          && (!('trialExpiresAt' in data) || data.trialExpiresAt == null || data.trialExpiresAt is timestamp)
+          && (!('subscriptionExpiresAt' in data) || data.subscriptionExpiresAt == null || data.subscriptionExpiresAt is timestamp)
+          && (!('paidExpiresAt' in data) || data.paidExpiresAt == null || data.paidExpiresAt is timestamp)
           && (data.get('trialDuration', 3) is number)
           && (data.get('notificationsEnabled', false) is bool)
-          && (data.get('fcmToken', '') is string)
+          && (!('fcmToken' in data) || data.fcmToken is string)
           && (data.get('defaultNotify24h', true) is bool)
           && (data.get('defaultNotifyDayOf', true) is bool)
-          && (data.get('isBlocked', false) is bool);
+          && (data.get('isBlocked', false) is bool)
+          && (data.get('isPremium', false) is bool);
     }
 
     function isValidDailyInspiration(data) {

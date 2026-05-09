@@ -896,7 +896,7 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto w-full relative transition-all duration-500 ease-in-out">
-        {profile?.subscriptionStatus === 'trial' && profile?.role !== 'admin' && (
+        {profile?.subscriptionStatus === 'trial' && !profile?.isPremium && profile?.role !== 'admin' && (
           <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-center gap-2 overflow-hidden shrink-0 animate-in fade-in slide-in-from-top duration-500">
             <Sparkles size={14} className="text-amber-600 animate-pulse" />
             <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-700">

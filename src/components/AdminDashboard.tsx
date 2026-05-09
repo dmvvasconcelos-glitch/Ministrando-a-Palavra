@@ -573,7 +573,7 @@ export default function AdminDashboard() {
   };
 
   const getUserStatus = (user: UserProfile) => {
-    if (user.role === 'admin') return 'active';
+    if (user.role === 'admin' || user.isPremium) return 'active';
     const status = user.subscriptionStatus || 'trial';
     if (status === 'trial') {
       const expiryRef = user.trialExpiresAt;
@@ -1134,7 +1134,7 @@ export default function AdminDashboard() {
                             <span className="text-xs font-bold text-app-text whitespace-nowrap">
                               {user.role === 'admin' ? 'Infinito' : user.subscriptionExpiresAt ? format(user.subscriptionExpiresAt.toDate(), 'dd/MM/yyyy', { locale }) : (user.trialExpiresAt ? format(user.trialExpiresAt.toDate(), 'dd/MM/yyyy', { locale }) : '-')}
                             </span>
-                            {user.role !== 'admin' && (user.subscriptionStatus || 'trial') === 'trial' && (
+                            {user.role !== 'admin' && !user.isPremium && (user.subscriptionStatus || 'trial') === 'trial' && (
                               <span className="text-[9px] font-black uppercase text-amber-600/70">
                                 Restam: {getTimeRemaining(user)}
                               </span>
@@ -1274,7 +1274,7 @@ export default function AdminDashboard() {
                           <p className="font-bold text-app-text truncate">
                             {user.role === 'admin' ? 'Infinito' : user.subscriptionExpiresAt ? format(user.subscriptionExpiresAt.toDate(), 'dd/MM/yyyy') : (user.trialExpiresAt ? format(user.trialExpiresAt.toDate(), 'dd/MM/yyyy') : '-')}
                           </p>
-                          {user.role !== 'admin' && (user.subscriptionStatus || 'trial') === 'trial' && (
+                          {user.role !== 'admin' && !user.isPremium && (user.subscriptionStatus || 'trial') === 'trial' && (
                             <p className="text-[10px] font-black text-amber-600 bg-amber-500/5 px-2 py-0.5 rounded-md w-fit">
                               Restam: {getTimeRemaining(user)}
                             </p>
