@@ -571,6 +571,19 @@ export default function App() {
     return <SalesLandingPage onLogin={handleLogin} isLoading={isLoggingIn} />;
   }
 
+  const getCheckoutUrl = () => {
+    const baseUrl = 'https://pay.cakto.com.br/38ydnyy_878109';
+    if (!user) return baseUrl;
+    const params = new URLSearchParams();
+    if (user.email) params.append('email', user.email);
+    if (user.uid) {
+      params.append('external_id', user.uid);
+      params.append('ext_id', user.uid);
+    }
+    const queryString = params.toString();
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+  };
+
   if (isBlocked) {
     return (
       <div className="min-h-screen bg-app-bg flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300">
@@ -615,7 +628,7 @@ export default function App() {
             <div className="flex flex-col gap-3 w-full">
               {!isManuallyBlocked && (
                 <a
-                  href="https://pay.cakto.com.br/38ydnyy_878109"
+                  href={getCheckoutUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-indigo-600 text-white h-16 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98]"
@@ -887,12 +900,14 @@ export default function App() {
             <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-700">
               Você está na <span className="text-amber-600">versão de teste</span> ({trialDurationDays} dias). 
               <span className="ml-2 text-amber-900/60">Restam:</span> <span className="text-indigo-600">{trialTimeLeft}</span>
-              <button 
-                onClick={() => setActiveTab('profile')}
+              <a 
+                href={getCheckoutUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="ml-4 text-indigo-600 hover:decoration-indigo-400 decoration-2 underline-offset-2 underline font-black bg-indigo-500/10 px-2 py-0.5 rounded-md"
               >
                 Ativar Premium R$ 19,90 (Anual)
-              </button>
+              </a>
             </p>
           </div>
         )}

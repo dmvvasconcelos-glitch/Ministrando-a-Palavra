@@ -386,6 +386,19 @@ export default function ProfileSettings() {
     }
   };
 
+  const getCheckoutUrl = () => {
+    const baseUrl = 'https://pay.cakto.com.br/38ydnyy_878109';
+    if (!auth.currentUser) return baseUrl;
+    const params = new URLSearchParams();
+    if (auth.currentUser.email) params.append('email', auth.currentUser.email);
+    if (auth.currentUser.uid) {
+      params.append('external_id', auth.currentUser.uid);
+      params.append('ext_id', auth.currentUser.uid);
+    }
+    const queryString = params.toString();
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -716,7 +729,7 @@ export default function ProfileSettings() {
               </div>
 
               <a
-                href="https://pay.cakto.com.br/38ydnyy_878109"
+                href={getCheckoutUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full bg-indigo-600 text-white h-16 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20 hover:scale-[1.01] active:scale-[0.99]"

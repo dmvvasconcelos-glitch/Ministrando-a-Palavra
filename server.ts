@@ -185,6 +185,115 @@ async function startServer() {
   const PORT = parseInt(process.env.PORT || '3000', 10);
 
   app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+
+  // Webhook for Cakto Payments
+  app.post('/api/webhooks/cakto', async (req, res) => {
+    try {
+      const payload = req.body;
+      console.log('Cakto Webhook received:', JSON.stringify(payload, null, 2));
+
+      // Helper to find key in nested objects
+      const findValue = (obj: any, keys: string[]): any => {
+        for (const key of keys) {
+          if (obj[key] !== undefined) return obj[key];
+        }
+        for (const k in obj) {
+          if (obj[k] && typeof obj[k] === 'object') {
+            const found = findValue(obj[k], keys);
+            if (found !== undefined) return found;
+          }
+        }
+        return undefined;
+      };
+
+      const statusKeys = ['status', 'transaction_status', 'event', 'venda_status', 'status_venda', 'situacao', 'payment_status', 'state'];
+      const emailKeys = ['customer_email', 'email', 'comprador_email', 'email_comprador', 'cliente_email', 'payer_email', 'user_email'];
+      const idKeys = ['external_id', 'ext_id', 'customer_id', 'metadata.external_id', 'reference', 'ref', 'custom_id', 'client_id'];
+
+      const status = findValue(payload, statusKeys);
+      const email = findValue(payload, emailKeys);
+      let externalId = findValue(payload, idKeys);
+      
+      // Special check for nested metadata or params
+      if (!externalId) {
+        externalId = payload.metadata?.external_id || payload.params?.external_id || payload.data?.external_id;
+      }
+
+      // Statuses that represent a successful payment
+      const successStatuses = ['approved', 'completed', 'paid', 'paid_success', 'venda_aprovada', 'pago', 'sucesso', 'aprovado', 'active'];
+      const isApproved = successStatuses.includes(String(status).toLowerCase());
+
+      if (isApproved && (email || externalId) && firestore) {
+        console.log(`Processing approved payment for ${email || externalId}`);
+        
+        let userDoc: admin.firestore.DocumentReference | null = null;
+        
+        if (externalId && String(externalId).length > 5) { // Ensure it's a real UID
+          userDoc = firestore.collection('users').doc(String(externalId));
+        }
+        
+        if (!userDoc && email) {
+          const usersSnap = await firestore.collection('users')
+            .where('email', '==', String(email).toLowerCase())
+            .limit(1)
+            .get();
+          
+          if (!usersSnap.empty) {
+            userDoc = usersSnap.docs[0].ref;
+          }
+        }
+
+        if (userDoc) {
+          const now = new Date();
+          const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+          
+          await userDoc.update({
+            subscriptionStatus: 'active',
+            subscriptionExpiresAt: admin.firestore.Timestamp.fromDate(oneYearFromNow),
+            paidAt: admin.firestore.Timestamp.fromDate(now),
+            updatedAt: admin.firestore.Timestamp.fromDate(now)
+          });
+          
+          console.log(`User ${email || externalId} upgraded to Premium successfully`);
+          return res.status(200).json({ success: true, message: 'Subscription updated' });
+        } else {
+          console.warn(`User not found for payment: Email=${email}, ExtID=${externalId}`);
+          // Still return 200 to acknowledge receipt to Cakto
+          return res.status(200).json({ success: false, message: 'User not found' });
+        }
+      }
+
+      // If it's a refund or cancellation
+      const cancelStatuses = ['refunded', 'canceled', 'chargeback', 'estornado', 'reembolsado', 'cancelado'];
+      const isCanceled = cancelStatuses.includes(String(status).toLowerCase());
+
+      if (isCanceled && (email || externalId) && firestore) {
+        let userDoc: admin.firestore.DocumentReference | null = null;
+        if (externalId && String(externalId).length > 5) {
+          userDoc = firestore.collection('users').doc(String(externalId));
+        }
+        
+        if (!userDoc && email) {
+          const usersSnap = await firestore.collection('users').where('email', '==', String(email).toLowerCase()).limit(1).get();
+          if (!usersSnap.empty) userDoc = usersSnap.docs[0].ref;
+        }
+
+        if (userDoc) {
+          await userDoc.update({
+            subscriptionStatus: 'expired',
+            updatedAt: admin.firestore.Timestamp.fromDate(new Date())
+          });
+          console.log(`User ${email || externalId} subscription revoked due to ${status}`);
+        }
+      }
+
+      res.status(200).json({ success: true, message: 'Webhook processed' });
+    } catch (error) {
+      console.error('Error in Cakto webhook:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
 
   // Admin User Deletion Endpoint
   app.delete('/api/admin/delete-user/:uid', authenticateAdmin, async (req, res) => {

@@ -1006,7 +1006,7 @@ export default function AdminDashboard() {
                                     }
                                   }}
                                   disabled={isProcessing === user.uid}
-                                  className="w-9 h-9 rounded-xl bg-app-bg hover:bg-amber-500 text-app-secondary hover:text-white flex items-center justify-center transition-all border border-app-border/40 hover:border-transparent disabled:opacity-30 shadow-sm group/btn"
+                                  className="w-9 h-9 rounded-xl bg-amber-500/10 hover:bg-amber-500 text-amber-600 hover:text-white flex items-center justify-center transition-all border border-amber-500/20 hover:border-transparent disabled:opacity-30 shadow-sm group/btn"
                                   title={t('giveTrial')}
                                 >
                                   <Sparkles size={16} />
@@ -1014,32 +1014,39 @@ export default function AdminDashboard() {
 
                                 <button
                                   onClick={() => {
-                                    if (window.confirm(`Ativar plano pago de 1 ano?`)) {
+                                    if (window.confirm(`Ativar plano pago de 1 ano para ${user.email}?`)) {
                                       handleUpdateUserPlan(user.uid, 'active');
                                     }
                                   }}
                                   disabled={isProcessing === user.uid}
-                                  className="w-9 h-9 rounded-xl bg-app-bg hover:bg-emerald-500 text-app-secondary hover:text-white flex items-center justify-center transition-all border border-app-border/40 hover:border-transparent disabled:opacity-30 shadow-sm group/btn"
-                                  title={t('upgradeToPaid')}
+                                  className="h-9 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white flex items-center gap-2 transition-all border border-emerald-500/20 hover:border-transparent disabled:opacity-30 shadow-sm group/btn"
+                                  title="Liberar 1 Ano Premium"
                                 >
-                                  <CreditCard size={16} />
+                                  <CreditCard size={14} />
+                                  <span className="text-[9px] font-black uppercase tracking-widest whitespace-nowrap">Liberar</span>
                                 </button>
 
                                 <button
                                   onClick={() => handleToggleBlock(user.uid, !!user.isBlocked)}
                                   disabled={isProcessing === user.uid || (user.role as string) === 'admin'}
-                                  className={`w-9 h-9 rounded-xl border border-app-border/40 flex items-center justify-center transition-all shadow-sm ${user.isBlocked ? 'bg-red-500 text-white border-transparent' : 'bg-app-bg hover:bg-red-500/10 text-app-secondary hover:text-red-500'}`}
+                                  className={`h-9 px-3 rounded-xl border flex items-center gap-2 transition-all shadow-sm ${user.isBlocked ? 'bg-red-500 text-white border-transparent' : 'bg-app-bg hover:bg-red-500 text-app-secondary hover:text-white border-app-border/40'}`}
                                   title={user.isBlocked ? 'Desbloquear Usuário' : 'Bloquear Usuário'}
                                 >
-                                  <ShieldAlert size={16} />
+                                  <ShieldAlert size={14} />
+                                  <span className="text-[9px] font-black uppercase tracking-widest whitespace-nowrap">
+                                    {user.isBlocked ? 'Desbloquear' : 'Bloquear'}
+                                  </span>
                                 </button>
                               </>
                             )}
 
                             <button
-                              onClick={() => handleDeleteUser(user.uid, user.email)}
+                              onClick={() => {
+                                console.log('Delete button clicked for:', user.uid);
+                                handleDeleteUser(user.uid, user.email);
+                              }}
                               disabled={isProcessing === user.uid || user.role === 'admin' || user.uid === auth.currentUser?.uid}
-                              className="w-9 h-9 rounded-xl bg-app-bg hover:bg-red-500 text-app-secondary hover:text-white flex items-center justify-center transition-all border border-app-border/40 hover:border-transparent disabled:opacity-30 shadow-sm group/btn"
+                              className="w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all border border-red-500/20 hover:border-transparent disabled:opacity-30 shadow-sm group/btn"
                               title={t('deleteUser')}
                             >
                               <Trash2 size={16} />
@@ -1149,43 +1156,50 @@ export default function AdminDashboard() {
                               }
                             }}
                             disabled={isProcessing === user.uid}
-                            className="p-3 rounded-2xl bg-app-card border border-app-border text-amber-500 hover:bg-amber-500 hover:text-white transition-all disabled:opacity-30"
+                            className="p-3 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-500/20 transition-all disabled:opacity-30 flex flex-col items-center gap-1 min-w-[70px]"
                             title={t('giveTrial')}
                           >
                             <Sparkles size={18} />
+                            <span className="text-[8px] font-bold uppercase truncate">Teste</span>
                           </button>
 
                           <button
                             onClick={() => {
-                              if (window.confirm(`Ativar plano pago de 1 ano?`)) {
+                              if (window.confirm(`Ativar plano pago de 1 ano para ${user.email}?`)) {
                                 handleUpdateUserPlan(user.uid, 'active');
                               }
                             }}
                             disabled={isProcessing === user.uid}
-                            className="p-3 rounded-2xl bg-app-card border border-app-border text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all disabled:opacity-30"
-                            title={t('upgradeToPaid')}
+                            className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 transition-all disabled:opacity-30 flex flex-col items-center gap-1 min-w-[70px]"
+                            title="Liberar 1 Ano"
                           >
                             <CreditCard size={18} />
+                            <span className="text-[8px] font-bold uppercase truncate">Liberar</span>
                           </button>
 
                           <button
                             onClick={() => handleToggleBlock(user.uid, !!user.isBlocked)}
                             disabled={isProcessing === user.uid || (user.role as string) === 'admin'}
-                            className={`p-3 rounded-2xl border transition-all ${user.isBlocked ? 'bg-red-500 text-white border-transparent' : 'bg-app-card border-app-border text-red-500 hover:bg-red-500 hover:text-white'}`}
+                            className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1 min-w-[70px] ${user.isBlocked ? 'bg-red-500 text-white border-transparent' : 'bg-app-card border-app-border text-red-500 hover:bg-red-500 hover:text-white'}`}
                             title={user.isBlocked ? 'Desbloquear Usuário' : 'Bloquear Usuário'}
                           >
                             <ShieldAlert size={18} />
+                            <span className="text-[8px] font-bold uppercase truncate">{user.isBlocked ? 'Ativar' : 'Barrar'}</span>
                           </button>
                         </>
                       )}
 
                       <button
-                        onClick={() => handleDeleteUser(user.uid, user.email)}
-                        disabled={isProcessing === user.uid}
-                        className="p-3 rounded-2xl bg-app-card border border-app-border text-red-500 hover:bg-red-500 hover:text-white transition-all disabled:opacity-30"
+                        onClick={() => {
+                          console.log('Mobile Delete clicked for:', user.uid);
+                          handleDeleteUser(user.uid, user.email);
+                        }}
+                        disabled={isProcessing === user.uid || user.role === 'admin' || user.uid === auth.currentUser?.uid}
+                        className="p-3 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 transition-all disabled:opacity-30 flex flex-col items-center gap-1 min-w-[70px]"
                         title={t('deleteUser')}
                       >
                         <Trash2 size={18} />
+                        <span className="text-[8px] font-bold uppercase truncate">Excluir</span>
                       </button>
                     </div>
                   </div>
