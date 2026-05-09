@@ -221,9 +221,9 @@ async function startServer() {
         return undefined;
       };
 
-      const statusKeys = ['status', 'transaction_status', 'event', 'venda_status', 'status_venda', 'situacao', 'payment_status', 'state'];
-      const emailKeys = ['customer_email', 'email', 'comprador_email', 'email_comprador', 'cliente_email', 'payer_email', 'user_email', 'email_contato'];
-      const idKeys = ['external_id', 'ext_id', 'customer_id', 'metadata.external_id', 'reference', 'ref', 'custom_id', 'client_id', 'pedido_id', 'transacao_id'];
+      const statusKeys = ['status', 'transaction_status', 'event', 'venda_status', 'status_venda', 'situacao', 'payment_status', 'state', 'situacao_pagamento'];
+      const emailKeys = ['customer_email', 'email', 'comprador_email', 'email_comprador', 'cliente_email', 'payer_email', 'user_email', 'email_contato', 'contato_email'];
+      const idKeys = ['external_id', 'ext_id', 'customer_id', 'metadata.external_id', 'reference', 'ref', 'custom_id', 'client_id', 'pedido_id', 'transacao_id', 'id_externo'];
 
       const status = findValue(payload, statusKeys);
       const email = findValue(payload, emailKeys);
@@ -234,11 +234,22 @@ async function startServer() {
 
       // Special check for nested metadata or params
       if (!externalId) {
-        externalId = payload.metadata?.external_id || payload.params?.external_id || payload.data?.external_id || payload.external_id;
+        externalId = payload.metadata?.external_id || payload.params?.external_id || payload.data?.external_id || payload.external_id || payload.venda?.customer?.external_id;
+      }
+      
+      if (!email) {
+        const nestedEmail = payload.venda?.customer?.email || payload.data?.customer?.email;
+        if (nestedEmail) {
+          // already handled by emailKeys searching recursively, but being explicit helps
+        }
       }
 
       // Statuses that represent a successful payment
-      const successStatuses = ['approved', 'completed', 'paid', 'paid_success', 'venda_aprovada', 'pago', 'sucesso', 'aprovado', 'active', 'pago_sucesso', '1'];
+      const successStatuses = [
+        'approved', 'completed', 'paid', 'paid_success', 'venda_aprovada', 
+        'pago', 'sucesso', 'aprovado', 'active', 'pago_sucesso', '1',
+        'finalized', 'concluded', 'success', 'paga', 'pagamento_confirmado'
+      ];
       const isApproved = successStatuses.includes(String(status).toLowerCase());
 
       if (isApproved && (email || externalId) && firestore) {
@@ -246,13 +257,19 @@ async function startServer() {
         
         let userDoc: admin.firestore.DocumentReference | null = null;
         
-        if (externalId && String(externalId).length > 5) { // Ensure it's a real UID
+        // Try finding by exactly matching externalId
+        if (externalId && String(externalId).length > 5) {
           userDoc = firestore.collection('users').doc(String(externalId));
+          // Verify it exists, if not clear it to try email
+          const docSnap = await userDoc.get();
+          if (!docSnap.exists) {
+            userDoc = null;
+          }
         }
         
         if (!userDoc && email) {
           const usersSnap = await firestore.collection('users')
-            .where('email', '==', String(email).toLowerCase())
+            .where('email', '==', String(email).trim().toLowerCase())
             .limit(1)
             .get();
           
@@ -261,13 +278,24 @@ async function startServer() {
           }
         }
 
+        // Last ditch fallback for identification
+        if (!userDoc && !email && !externalId) {
+           const allPayload = JSON.stringify(payload).toLowerCase();
+           // Very loose check just to see if we can rescue this transaction
+           // But we need a target user, so we skip if no clear ID/Email
+        }
+
         if (userDoc) {
           const now = new Date();
           const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
           
           await userDoc.update({
+            role: 'premium',
             subscriptionStatus: 'active',
+            isPremium: true,
             subscriptionExpiresAt: admin.firestore.Timestamp.fromDate(oneYearFromNow),
+            trialExpiresAt: null,
+            trialStartedAt: null,
             paidAt: admin.firestore.Timestamp.fromDate(now),
             updatedAt: admin.firestore.Timestamp.fromDate(now)
           });

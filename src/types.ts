@@ -28,6 +28,8 @@ export interface UserProfile {
   geminiApiKey?: string;
   role?: 'admin' | 'user';
   subscriptionStatus?: 'trial' | 'active' | 'expired';
+  isPremium?: boolean;
+  premiumSince?: any;
   trialExpiresAt?: any;
   trialDuration?: number;
   paidExpiresAt?: any;

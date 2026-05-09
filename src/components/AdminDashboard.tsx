@@ -327,8 +327,13 @@ export default function AdminDashboard() {
       if (plan === 'trial') {
         updates.trialExpiresAt = expiresAt;
         updates.trialDuration = trialDays;
+        updates.role = 'user';
+        updates.isPremium = false;
       } else {
         updates.paidExpiresAt = expiresAt;
+        updates.role = 'premium';
+        updates.isPremium = true;
+        updates.trialExpiresAt = null;
       }
 
       await updateDoc(userRef, updates);
@@ -360,7 +365,8 @@ export default function AdminDashboard() {
         displayName: newUserEmail.split('@')[0],
         subscriptionStatus: newUserPlan,
         subscriptionExpiresAt: expiresAt,
-        role: 'user',
+        role: newUserPlan === 'active' ? 'premium' : 'user',
+        isPremium: newUserPlan === 'active',
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp()
       };

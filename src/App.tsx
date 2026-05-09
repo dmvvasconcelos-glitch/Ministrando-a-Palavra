@@ -96,11 +96,13 @@ export default function App() {
 
   // Auto-expire trials locally only.
   const isTrialExpired = !isUserAdmin && 
+    !profile?.isPremium &&
     profile?.subscriptionStatus === 'trial' && 
     profile?.trialExpiresAt && 
     (profile.trialExpiresAt.toDate ? profile.trialExpiresAt.toDate() : new Date(profile.trialExpiresAt)) < new Date();
   
   const isActualExpired = !isUserAdmin && 
+    !profile?.isPremium &&
     profile?.subscriptionStatus === 'expired';
     
   const isSubscriptionBlocked = isTrialExpired || isActualExpired;
