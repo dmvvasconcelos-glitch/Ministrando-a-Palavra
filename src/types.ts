@@ -48,6 +48,7 @@ export interface UserProfile {
     longitude?: number;
   };
   lastLogin?: any;
+  isBlocked?: boolean;
   createdAt?: any;
   updatedAt: any;
   fcmToken?: string;

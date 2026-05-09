@@ -106,7 +106,8 @@ service cloud.firestore {
           && (data.get('notificationsEnabled', false) is bool)
           && (data.get('fcmToken', '') is string)
           && (data.get('defaultNotify24h', true) is bool)
-          && (data.get('defaultNotifyDayOf', true) is bool);
+          && (data.get('defaultNotifyDayOf', true) is bool)
+          && (data.get('isBlocked', false) is bool);
     }
 
     function isValidDailyInspiration(data) {
@@ -166,6 +167,8 @@ service cloud.firestore {
                          incoming().get('role', existing().get('role', 'user')) == existing().get('role', 'user') && 
                          incoming().get('subscriptionStatus', existing().get('subscriptionStatus', 'trial')) == existing().get('subscriptionStatus', 'trial')
                        ) : true);
+
+      allow delete: if isAdmin() || isOwner(userId);
 
       match /usage/{date} {
         allow get: if isOwner(userId);

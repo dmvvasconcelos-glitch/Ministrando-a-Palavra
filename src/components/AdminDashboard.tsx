@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, deleteDoc, setDoc, deleteField } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { UserProfile, ContactMessage } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -40,6 +40,7 @@ import { ptBR, enUS, es } from 'date-fns/locale';
 type AdminTab = 'users' | 'messages';
 
 export default function AdminDashboard() {
+  console.log('AdminDashboard: Mounting...');
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<AdminTab>('users');
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -143,9 +144,12 @@ export default function AdminDashboard() {
     );
 
     const unsubUsers = onSnapshot(qUsers, (snapshot) => {
+      console.log('AdminDashboard: Users snapshot received, size:', snapshot.size);
       const uList = snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as UserProfile));
       setUsers(uList);
     }, (error) => {
+      console.error('AdminDashboard: Users snapshot error:', error);
+      setLoading(false);
       handleFirestoreError(error, OperationType.LIST, 'users');
     });
 
@@ -156,6 +160,7 @@ export default function AdminDashboard() {
     );
 
     const unsubMessages = onSnapshot(qMessages, (snapshot) => {
+      console.log('AdminDashboard: Messages snapshot received, size:', snapshot.size);
       const mList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ContactMessage));
       
       // Check for new pending messages to notify
@@ -182,7 +187,7 @@ export default function AdminDashboard() {
             const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
             audio.play().catch(() => {});
           } catch (e) {}
-
+ 
           setTimeout(() => setNewMsgToast(null), 5000);
         }
       }
@@ -191,8 +196,9 @@ export default function AdminDashboard() {
       setLoading(false);
       isFirstLoad.current = false;
     }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'contactMessages');
+      console.error('AdminDashboard: Messages snapshot error:', error);
       setLoading(false);
+      handleFirestoreError(error, OperationType.LIST, 'contactMessages');
     });
 
     return () => {
@@ -221,6 +227,9 @@ export default function AdminDashboard() {
 
   const getTimeRemaining = (user: UserProfile) => {
     if (user.role === 'admin') return '∞';
+    // If it's a fixed admin by email like dmv.vasconcelos@gmail.com, show 'Infinito'
+    if (user.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com') return '∞';
+    
     const expiryRef = user.subscriptionExpiresAt || user.trialExpiresAt;
     if (!expiryRef) return '-';
     try {
@@ -416,12 +425,59 @@ export default function AdminDashboard() {
     setIsProcessing(uid);
     try {
       console.log(`Deleting user: ${uid} (${email})`);
-      await deleteDoc(doc(db, 'users', uid));
-      alert('Usuário excluído com sucesso.');
-    } catch (err) {
+      
+      // Get the ID token for authentication
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        throw new Error('Not authenticated properly');
+      }
+
+      const response = await fetch(`/api/admin/delete-user/${uid}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${idToken}`
+        }
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Server deletion failed');
+      }
+
+      alert('Usuário excluído com sucesso do sistema e da autenticação.');
+    } catch (err: any) {
       console.error('Error deleting user:', err);
-      handleFirestoreError(err, OperationType.DELETE, `users/${uid}`);
-      alert('Erro ao excluir usuário.');
+      // Fallback: if server deletion failed but document still exists, try client-side doc deletion
+      try {
+        await deleteDoc(doc(db, 'users', uid));
+        alert('Documento do usuário removido, mas a exclusão da autenticação na Firebase Auth falhou. O usuário ainda pode conseguir logar se não for bloqueado.');
+      } catch (clientErr) {
+        handleFirestoreError(clientErr, OperationType.DELETE, `users/${uid}`);
+        alert('Erro ao excluir usuário: ' + err.message);
+      }
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  const handleToggleBlock = async (uid: string, currentStatus: boolean) => {
+    if (!uid) {
+      alert('ID do usuário não encontrado.');
+      return;
+    }
+    
+    setIsProcessing(uid);
+    try {
+      console.log(`Toggling block: user=${uid}, current=${currentStatus}`);
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, {
+        isBlocked: !currentStatus,
+        updatedAt: serverTimestamp()
+      });
+      alert(`Usuário ${!currentStatus ? 'BLOQUEADO' : 'DESBLOQUEADO'} com sucesso!`);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, `users/${uid}`);
+      alert('Erro ao alterar status de bloqueio. Verifique suas permissões.');
     } finally {
       setIsProcessing(null);
     }
@@ -511,12 +567,13 @@ export default function AdminDashboard() {
   };
 
   const filteredUsers = users.filter(user => {
+    const search = searchQuery.toLowerCase();
     const matchesSearch = 
-      (user.displayName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (user.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (user.fullName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (user.denomination?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (user.locationInfo?.city?.toLowerCase().includes(searchQuery.toLowerCase()));
+      (user.displayName?.toLowerCase() || '').includes(search) ||
+      (user.email?.toLowerCase() || '').includes(search) ||
+      (user.fullName?.toLowerCase() || '').includes(search) ||
+      (user.denomination?.toLowerCase() || '').includes(search) ||
+      (user.locationInfo?.city?.toLowerCase() || '').includes(search);
     
     const status = getUserStatus(user);
     const matchesStatus = statusFilter === 'all' || status === statusFilter;
@@ -967,12 +1024,21 @@ export default function AdminDashboard() {
                                 >
                                   <CreditCard size={16} />
                                 </button>
+
+                                <button
+                                  onClick={() => handleToggleBlock(user.uid, !!user.isBlocked)}
+                                  disabled={isProcessing === user.uid || (user.role as string) === 'admin'}
+                                  className={`w-9 h-9 rounded-xl border border-app-border/40 flex items-center justify-center transition-all shadow-sm ${user.isBlocked ? 'bg-red-500 text-white border-transparent' : 'bg-app-bg hover:bg-red-500/10 text-app-secondary hover:text-red-500'}`}
+                                  title={user.isBlocked ? 'Desbloquear Usuário' : 'Bloquear Usuário'}
+                                >
+                                  <ShieldAlert size={16} />
+                                </button>
                               </>
                             )}
 
                             <button
                               onClick={() => handleDeleteUser(user.uid, user.email)}
-                              disabled={isProcessing === user.uid}
+                              disabled={isProcessing === user.uid || user.role === 'admin' || user.uid === auth.currentUser?.uid}
                               className="w-9 h-9 rounded-xl bg-app-bg hover:bg-red-500 text-app-secondary hover:text-white flex items-center justify-center transition-all border border-app-border/40 hover:border-transparent disabled:opacity-30 shadow-sm group/btn"
                               title={t('deleteUser')}
                             >
@@ -1100,6 +1166,15 @@ export default function AdminDashboard() {
                             title={t('upgradeToPaid')}
                           >
                             <CreditCard size={18} />
+                          </button>
+
+                          <button
+                            onClick={() => handleToggleBlock(user.uid, !!user.isBlocked)}
+                            disabled={isProcessing === user.uid || (user.role as string) === 'admin'}
+                            className={`p-3 rounded-2xl border transition-all ${user.isBlocked ? 'bg-red-500 text-white border-transparent' : 'bg-app-card border-app-border text-red-500 hover:bg-red-500 hover:text-white'}`}
+                            title={user.isBlocked ? 'Desbloquear Usuário' : 'Bloquear Usuário'}
+                          >
+                            <ShieldAlert size={18} />
                           </button>
                         </>
                       )}
@@ -1728,6 +1803,13 @@ export default function AdminDashboard() {
                   className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all active:scale-95 flex items-center justify-center gap-2 ${selectedUser.role === 'admin' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-app-card border-app-border text-app-secondary hover:text-indigo-500'}`}
                 >
                   <Shield size={14} /> {selectedUser.role === 'admin' ? 'Remover Admin' : 'Tornar Admin'}
+                </button>
+
+                <button
+                  onClick={() => handleToggleBlock(selectedUser.uid, !!selectedUser.isBlocked)}
+                  className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all active:scale-95 flex items-center justify-center gap-2 ${selectedUser.isBlocked ? 'bg-red-500 text-white border-transparent shadow-lg shadow-red-500/20' : 'bg-app-card border-app-border text-app-secondary hover:text-red-500 hover:border-red-500/20'}`}
+                >
+                  <ShieldAlert size={14} /> {selectedUser.isBlocked ? 'Desbloquear Usuário' : 'Bloquear Usuário'}
                 </button>
                  <button
                   onClick={() => handleDeleteUser(selectedUser.uid, selectedUser.email || 'usuário')}

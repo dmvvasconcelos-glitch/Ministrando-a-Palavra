@@ -103,6 +103,64 @@ async function getMemoryContext(language: string = 'pt') {
     : `\n\nPERSONALIZED USER CONTEXT (WHAT YOU HAVE LEARNED ABOUT THEM):\n${memory.traits}\nUse this context to make your responses more relevant to this specific user's style and needs.`;
 }
 
+// Cache for clients to avoid re-initialization
+let systemAiClient: any = null;
+let lastUserKey: string | null = null;
+let userAiClient: any = null;
+
+function getAiClient(userApiKey?: string) {
+  if (userApiKey) {
+    if (userApiKey !== lastUserKey || !userAiClient) {
+      userAiClient = new GoogleGenAI({ apiKey: userApiKey });
+      lastUserKey = userApiKey;
+    }
+    return { client: userAiClient, isUserKey: true };
+  }
+  
+  if (!systemAiClient) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY environment variable is required.');
+    }
+    systemAiClient = new GoogleGenAI({ apiKey });
+  }
+  return { client: systemAiClient, isUserKey: false };
+}
+
+// Retry Utility for AI Calls on Client
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 2000): Promise<T> {
+  let lastError: any;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      const status = error.status || error.code;
+      const message = error.message || "";
+      
+      const isRetryable = 
+        status === 503 || 
+        status === 429 || 
+        message.includes('503') || 
+        message.includes('quota') || 
+        message.includes('quota_exceeded') || 
+        message.includes('high demand') || 
+        message.includes('UNAVAILABLE') ||
+        message.includes('DEADLINE_EXCEEDED') ||
+        message.toLowerCase().includes('rate limit');
+
+      if (isRetryable && i < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, i);
+        console.warn(`AI temporary error: ${message}. Retrying in ${delay}ms... (Attempt ${i + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
+}
+
 async function callGeminiDirect(method: 'generateContent' | 'chat', args: any, skipUsage: boolean = false) {
   const user = auth.currentUser;
   if (!user) throw new Error('Not authenticated');
@@ -122,26 +180,51 @@ async function callGeminiDirect(method: 'generateContent' | 'chat', args: any, s
     console.error('Error fetching user api key:', err);
   }
 
-  try {
-    const response = await fetch('/api/ai', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        method,
-        args,
-        userApiKey
-      })
-    });
+  const { client, isUserKey } = getAiClient(userApiKey);
+  const DEFAULT_MODEL = 'gemini-3-flash-preview';
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+  try {
+    let resultText = '';
+
+    if (method === 'generateContent') {
+      const { prompt, config, audioData } = args;
+      let contents;
+      
+      if (audioData) {
+        contents = [
+          { text: prompt },
+          { inlineData: { mimeType: audioData.mimeType, data: audioData.data } }
+        ];
+      } else {
+        contents = prompt;
+      }
+
+      const response = await withRetry(() => client.models.generateContent({
+        model: DEFAULT_MODEL,
+        contents: contents,
+        config: config
+      }));
+      
+      resultText = (response as any).text || '';
+    } else if (method === 'chat') {
+      const { history, message } = args;
+      
+      const chat = client.chats.create({
+        model: DEFAULT_MODEL,
+        history: (history || []).map((h: any) => ({
+          role: h.role,
+          parts: h.parts?.[0]?.text ? h.parts : [{ text: h.parts }]
+        }))
+      });
+      
+      const response = await withRetry(() => (chat.sendMessage({
+        message: message
+      })));
+      
+      resultText = (response as any).text || '';
     }
 
-    const data = await response.json();
-    if (!data.text) {
+    if (!resultText) {
       throw new Error('Resposta vazia da IA.');
     }
 
@@ -150,16 +233,32 @@ async function callGeminiDirect(method: 'generateContent' | 'chat', args: any, s
       await incrementAIUsage();
     }
 
-    return data.text;
+    return resultText;
   } catch (err: any) {
-    console.error('Gemini Proxy Error:', err);
-    const msg = err.message || String(err);
-    if (msg.includes('429') || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('resource_exhausted')) {
+    console.error('Gemini Error:', err);
+    const msg = (err.message || String(err)).toLowerCase();
+    
+    const isInvalidKey = 
+      msg.includes('api key not valid') || 
+      msg.includes('api_key_invalid') ||
+      msg.includes('invalid api key') ||
+      msg.includes('invalid_argument') && msg.includes('key');
+
+    if (isInvalidKey) {
+      if (isUserKey) {
+        throw new Error('CHAVE_API_USER_INVALIDA');
+      } else {
+        throw new Error('CHAVE_API_SISTEMA_INVALIDA');
+      }
+    }
+
+    if (msg.includes('429') || msg.includes('quota') || msg.includes('resource_exhausted')) {
       throw new Error('LIMITE_COTA_API');
     }
-    if (msg.includes('503') || msg.toLowerCase().includes('high demand') || msg.toLowerCase().includes('unavailable')) {
+    if (msg.includes('503') || msg.includes('high demand') || msg.includes('unavailable')) {
       throw new Error('IA_SOBRECARREGADA');
     }
+    
     throw err;
   }
 }

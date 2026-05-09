@@ -177,6 +177,10 @@ export default function BibleReader({ profile }: BibleReaderProps) {
         alert(t('sharedQuotaInfo'));
       } else if (errorMsg === 'IA_SOBRECARREGADA') {
         alert(t('aiOverloaded'));
+      } else if (errorMsg === 'CHAVE_API_INVALIDA') {
+        alert(language === 'pt' 
+          ? 'Sua Chave de API parece ser inválida. Verifique em seu Perfil.' 
+          : 'Your API Key seems to be invalid. Check your Profile.');
       } else {
         alert(`${t('bibleErrorTip')}: ${errorMsg}`);
       }

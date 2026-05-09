@@ -72,11 +72,21 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
             throw genErr; // Rethrow to trigger fallback in catch block
           }
         }
-      } catch (err) {
-        // If it's a Firestore error we already handled inside the 'else' block, don't handle again
-        if (!(err instanceof Error && err.message.startsWith('{'))) {
+      } catch (err: any) {
+        // Ignore AI specific errors to avoid showing the JSON error overlay to the user
+        const isAiError = err.message === 'CHAVE_API_USER_INVALIDA' || 
+                          err.message === 'CHAVE_API_SISTEMA_INVALIDA' ||
+                          err.message === 'CHAVE_API_INVALIDA' ||
+                          err.message === 'LIMITE_EXCEDIDO' ||
+                          err.message === 'LIMITE_COTA_API' ||
+                          err.message === 'IA_SOBRECARREGADA' ||
+                          err.message === 'LIMITE_EXCEDIDO';
+
+        // If it's not an AI error and not already a handled Firestore error, report it
+        if (!isAiError && !(err instanceof Error && err.message.startsWith('{'))) {
           handleFirestoreError(err, OperationType.GET, docPath);
         }
+        
         // Fallback to static if everything fails
         const verses = DAILY_VERSES[language] || DAILY_VERSES.pt;
         const reflections = DAILY_REFLECTIONS[language] || DAILY_REFLECTIONS.pt;

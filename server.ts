@@ -6,9 +6,6 @@ import * as admin from 'firebase-admin';
 import fs from 'fs';
 import { GoogleGenAI } from '@google/genai';
 
-// Gemini Setup
-const aiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-
 // Firebase Admin Setup
 let firestore: admin.firestore.Firestore | null = null;
 let messaging: admin.messaging.Messaging | null = null;
@@ -57,6 +54,38 @@ try {
 } catch (err) {
   console.error('Failed to initialize Firebase Admin:', err);
 }
+
+// Middleware to verify Firebase Auth Token
+const authenticateAdmin = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const idToken = authHeader.split('Bearer ')[1];
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    
+    // Check if the user is an admin
+    const isAdminEmail = decodedToken.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com';
+    let isFirestoreAdmin = false;
+
+    if (!isAdminEmail && firestore) {
+      const userDoc = await firestore.collection('users').doc(decodedToken.uid).get();
+      isFirestoreAdmin = userDoc.data()?.role === 'admin';
+    }
+
+    if (isAdminEmail || isFirestoreAdmin) {
+      (req as any).user = decodedToken;
+      next();
+    } else {
+      res.status(403).json({ error: 'Forbidden: Admin access required' });
+    }
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    res.status(401).json({ error: 'Invalid token' });
+  }
+};
 
 // Background check for notifications
 async function checkNotifications() {
@@ -151,98 +180,33 @@ if (process.env.NODE_ENV === 'production') {
   setInterval(checkNotifications, 5 * 60 * 1000);
 }
 
-// Retry Utility for AI Calls
-async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 2000): Promise<T> {
-  let lastError: any;
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (error: any) {
-      lastError = error;
-      // Handle both numeric status codes and string codes from Gemini SDK
-      const status = error.status || error.code;
-      const message = error.message || "";
-      
-      const isRetryable = 
-        status === 503 || 
-        status === 429 || 
-        message.includes('503') || 
-        message.includes('high demand') || 
-        message.includes('UNAVAILABLE') ||
-        message.includes('DEADLINE_EXCEEDED');
-
-      if (isRetryable && i < maxRetries - 1) {
-        const delay = initialDelay * Math.pow(2, i);
-        console.warn(`AI temporary error: ${message}. Retrying in ${delay}ms... (Attempt ${i + 1}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
-      }
-      throw error;
-    }
-  }
-  throw lastError;
-}
-
 async function startServer() {
   const app = express();
   const PORT = parseInt(process.env.PORT || '3000', 10);
 
   app.use(express.json());
 
-  // AI Proxy Endpoint
-  app.post('/api/ai', async (req, res) => {
+  // Admin User Deletion Endpoint
+  app.delete('/api/admin/delete-user/:uid', authenticateAdmin, async (req, res) => {
     try {
-      const { method, args, userApiKey } = req.body;
+      const { uid } = req.params;
+      console.log(`Admin ${((req as any).user as any).email} requested deletion of user ${uid}`);
       
-      // Use user-provided API key if available, otherwise fallback to server key
-      const client = userApiKey 
-        ? new GoogleGenAI({ apiKey: userApiKey }) 
-        : aiClient;
+      // Delete from Firebase Auth
+      await admin.auth().deleteUser(uid);
       
-      const DEFAULT_MODEL = 'gemini-3-flash-preview';
-
-      if (method === 'generateContent') {
-        const { prompt, config, audioData } = args;
-        let contents;
+      // Delete from Firestore (though rules should also allow client-side, we do it here for completeness)
+      if (firestore) {
+        await firestore.collection('users').doc(uid).delete();
         
-        if (audioData) {
-          contents = [
-            { text: prompt },
-            { inlineData: { mimeType: audioData.mimeType, data: audioData.data } }
-          ];
-        } else {
-          contents = prompt;
-        }
-
-        const response = await withRetry(() => client.models.generateContent({
-          model: DEFAULT_MODEL,
-          contents: contents,
-          config: config
-        }));
-        
-        res.json({ text: response.text });
-      } else if (method === 'chat') {
-        const { history, message } = args;
-        
-        const chat = client.chats.create({
-          model: DEFAULT_MODEL,
-          history: (history || []).map((h: any) => ({
-            role: h.role,
-            parts: h.parts?.[0]?.text ? h.parts : [{ text: h.parts }]
-          }))
-        });
-        
-        const response = await withRetry(() => chat.sendMessage({
-          message: message
-        }));
-        
-        res.json({ text: response.text });
-      } else {
-        res.status(400).json({ error: 'Invalid method' });
+        // Optionally delete other collection data
+        // For now, deleting the profile is the most important part
       }
+      
+      res.json({ success: true, message: 'User deleted successfully' });
     } catch (error: any) {
-      console.error('Server AI Error:', error);
-      res.status(500).json({ error: error.message || 'Internal AI Error' });
+      console.error('Error deleting user:', error);
+      res.status(500).json({ error: error.message || 'Failed to delete user' });
     }
   });
 

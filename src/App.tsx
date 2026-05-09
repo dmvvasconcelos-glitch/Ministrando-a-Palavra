@@ -62,6 +62,8 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthInitialized, setIsAuthInitialized] = useState(false);
+  const [isRedirectProcessed, setIsRedirectProcessed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const [currentSermonId, setCurrentSermonId] = useState<string | null>(null);
@@ -75,15 +77,35 @@ export default function App() {
 
   const trialDurationDays = 3;
 
-  // Auto-expire trials locally only. We don't sync back 'expired' to Firestore 
-  // automatically from client to avoid clock-sync loops between admin/user.
-  // The UI blocking already relies on isTrialExpired which checks the expiration date.
-  const isTrialExpired = profile?.role !== 'admin' && profile?.subscriptionStatus === 'trial' && 
-    profile.trialExpiresAt && 
+  // Final loading state: wait for both redirect processing AND auth state observation
+  const isAppLoading = loading || !isAuthInitialized || !isRedirectProcessed;
+
+  // Final check for admin status - hardcoded or via profile role
+  const isUserAdmin = profile?.role === 'admin' || user?.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com';
+
+  useEffect(() => {
+    if (user) {
+      console.log('App: User Status Check:', {
+        email: user.email,
+        profileRole: profile?.role,
+        isUserAdmin: isUserAdmin,
+        activeTab: activeTab
+      });
+    }
+  }, [user, profile, activeTab, isUserAdmin]);
+
+  // Auto-expire trials locally only.
+  const isTrialExpired = !isUserAdmin && 
+    profile?.subscriptionStatus === 'trial' && 
+    profile?.trialExpiresAt && 
     (profile.trialExpiresAt.toDate ? profile.trialExpiresAt.toDate() : new Date(profile.trialExpiresAt)) < new Date();
   
-  const isActualExpired = profile?.role !== 'admin' && profile?.subscriptionStatus === 'expired';
-  const isBlocked = isTrialExpired || isActualExpired;
+  const isActualExpired = !isUserAdmin && 
+    profile?.subscriptionStatus === 'expired';
+    
+  const isSubscriptionBlocked = isTrialExpired || isActualExpired;
+  const isManuallyBlocked = profile?.isBlocked === true;
+  const isBlocked = isSubscriptionBlocked || isManuallyBlocked;
 
   useEffect(() => {
     if (profile?.subscriptionStatus !== 'trial') return;
@@ -144,13 +166,25 @@ export default function App() {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        console.log('Initializing auth persistence...');
         await setPersistence(auth, browserLocalPersistence);
+        
+        console.log('Checking for redirect results...');
         const result = await getRedirectResult(auth);
+        
         if (result?.user) {
-          console.log('Redirect result found user:', result.user.email);
+          console.log('Redirect login success:', result.user.email);
+          setUser(result.user);
+          // Flag that we just logged in via redirect to trigger dashboard transition
+          sessionStorage.setItem('just_logged_in', 'true');
         }
       } catch (error: any) {
-        console.error('Error with redirect login:', error);
+        console.error('Auth initialization / Redirect error:', error);
+      } finally {
+        setIsRedirectProcessed(true);
+        // Clean up any pending login flags
+        localStorage.removeItem('auth_pending');
+        setLoading(false);
       }
     };
     initAuth();
@@ -160,7 +194,7 @@ export default function App() {
     let unsubscribeProfile: (() => void) | undefined;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (u) => {
-      console.log('Auth state changed:', u ? u.email : 'No user');
+      console.log('Auth observer triggered:', u ? `User: ${u.email}` : 'No active session');
       setUser(u);
       
       if (u) {
@@ -169,6 +203,12 @@ export default function App() {
         
         // Ensure user document exists in 'users' collection for searching/sharing
         const userRef = doc(db, 'users', u.uid);
+
+        // If we just logged in, force navigation out of landing
+        if (sessionStorage.getItem('just_logged_in') === 'true') {
+          setActiveTab('dashboard');
+          sessionStorage.removeItem('just_logged_in');
+        }
         
         try {
           const userSnap = await getDoc(userRef);
@@ -311,6 +351,7 @@ export default function App() {
         setProfile(null);
         if (unsubscribeProfile) unsubscribeProfile();
       }
+      setIsAuthInitialized(true);
       setLoading(false);
       setIsLoggingIn(false);
     });
@@ -333,43 +374,42 @@ export default function App() {
   const handleLogin = async () => {
     if (isLoggingIn) return;
     setIsLoggingIn(true);
+    
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ 
-        prompt: 'select_account',
-        display: 'popup'
+        prompt: 'select_account'
       });
       
       await setPersistence(auth, browserLocalPersistence);
       
+      const isLocalhost = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1' || 
+                         window.location.hostname.includes('webcontainer.io');
+      
+      // On non-localhost, try popup first but be ready for redirect
+      // If Hostinger blocks popups aggressively, this tried-and-true chain works best
       try {
         console.log('Attempting popup login...');
         const result = await signInWithPopup(auth, provider);
         if (result.user) {
-          console.log('Popup login success:', result.user.email);
-          // onAuthStateChanged will handle the UI update
+          setIsLoggingIn(false);
+          setActiveTab('dashboard');
+          return;
         }
       } catch (popupError: any) {
-        console.warn('Popup login error:', popupError);
-        
-        const useRedirect = 
-          popupError.code === 'auth/popup-blocked' || 
-          popupError.code === 'auth/popup-closed-by-user' || 
-          popupError.code === 'auth/cancelled-popup-request' ||
-          popupError.code === 'auth/internal-error';
-
-        if (useRedirect) {
-          console.log('Redirecting to Google login...');
+        console.warn('Popup interrupted or failed:', popupError.code);
+        if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/popup-closed-by-user' || !isLocalhost) {
+          console.log('Proceeding with redirect flow...');
+          localStorage.setItem('auth_pending', 'true');
           await signInWithRedirect(auth, provider);
-          // Page will redirect, code below won't run or won't matter
           return;
-        } else {
-          throw popupError;
         }
       }
     } catch (error: any) {
-      console.error('Login failed:', error);
+      console.error('Login process failed:', error);
       setIsLoggingIn(false);
+      localStorage.removeItem('auth_pending');
     }
   };
 
@@ -512,7 +552,7 @@ export default function App() {
     setActiveTab('preach');
   };
 
-  if (loading) {
+  if (isAppLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-[var(--bg-color)]">
         <motion.div 
@@ -549,34 +589,41 @@ export default function App() {
             </div>
             
             <h1 className="text-3xl font-black text-app-text mb-4 tracking-tighter uppercase leading-tight">
-              Acesso <span className="text-red-500">Expirado</span>
+              Acesso <span className="text-red-500">{isManuallyBlocked ? 'Suspenso' : 'Expirado'}</span>
             </h1>
             
             <div className="space-y-4 mb-10">
               <p className="text-app-secondary font-medium tracking-wide">
-                Seu período de teste de 3 dias terminou. Para continuar desfrutando de todas as ferramentas de IA e gestão ministerial, adquira o plano anual.
+                {isManuallyBlocked 
+                  ? 'Sua conta foi suspensa por um administrador. Por favor, entre em contato com o suporte para mais informações.'
+                  : 'Seu período de teste de 3 dias terminou. Para continuar desfrutando de todas as ferramentas de IA e gestão ministerial, adquira o plano anual.'
+                }
               </p>
               
-              <div className="bg-indigo-500/5 rounded-3xl p-6 border border-indigo-500/10 shadow-inner">
-                <p className="text-indigo-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Promoção de Lançamento</p>
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-app-text text-xl font-bold italic">R$</span>
-                  <span className="text-5xl font-black text-app-text tracking-tighter">19,90</span>
+              {!isManuallyBlocked && (
+                <div className="bg-indigo-500/5 rounded-3xl p-6 border border-indigo-500/10 shadow-inner">
+                  <p className="text-indigo-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Promoção de Lançamento</p>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-app-text text-xl font-bold italic">R$</span>
+                    <span className="text-5xl font-black text-app-text tracking-tighter">19,90</span>
+                  </div>
+                  <p className="text-app-secondary text-[11px] font-bold uppercase tracking-widest mt-1 opacity-60">Licença Premium • 1 Ano</p>
                 </div>
-                <p className="text-app-secondary text-[11px] font-bold uppercase tracking-widest mt-1 opacity-60">Licença Premium • 1 Ano</p>
-              </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-3 w-full">
-              <a
-                href="https://pay.cakto.com.br/38ydnyy_878109"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full bg-indigo-600 text-white h-16 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Sparkles size={18} />
-                Fazer Aquisição Premium (Anual)
-              </a>
+              {!isManuallyBlocked && (
+                <a
+                  href="https://pay.cakto.com.br/38ydnyy_878109"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-indigo-600 text-white h-16 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Sparkles size={18} />
+                  Fazer Aquisição Premium (Anual)
+                </a>
+              )}
               
               <button
                 onClick={() => signOut(auth)}
@@ -607,7 +654,7 @@ export default function App() {
     { id: 'help', label: t('help'), icon: HelpCircle, badge: profile?.role === 'admin' ? adminNewMsgCount : userNewMsgCount },
   ];
 
-  if (profile?.role === 'admin') {
+  if (isUserAdmin) {
     // We already have a dedicated button at the bottom for admin
   }
 
@@ -752,23 +799,24 @@ export default function App() {
             ))}
           </div>
 
-          {profile?.role === 'admin' && (
+          {(profile?.role === 'admin' || isUserAdmin) && (
             <div className="pt-4 mt-auto border-t border-app-border/20 pb-2">
               <button
                 id="nav-admin"
                 onClick={() => {
+                  console.log('Switching to Admin tab');
                   setActiveTab('admin');
                   setIsMenuOpen(false);
                 }}
                 className={`
-                  w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative group
+                  w-full flex items-center gap-3 px-4 py-4 rounded-xl transition-all relative group
                   ${activeTab === 'admin' ? 'bg-indigo-600 text-white shadow-lg' : 'text-indigo-500/60 hover:bg-indigo-500/10 hover:text-indigo-500'}
                 `}
               >
-                <ShieldCheck size={18} />
-                <span className="font-bold text-[10px] uppercase tracking-[0.2em]">{t('admin') || 'Admin'}</span>
+                <ShieldCheck size={20} />
+                <span className="font-bold text-xs uppercase tracking-[0.2em]">{t('admin') || 'Admin'}</span>
                 {adminNewMsgCount > 0 && (
-                  <span className="absolute right-4 w-4 h-4 bg-red-500 text-white text-[8px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-app-card transition-all">
+                  <span className="absolute right-4 w-5 h-5 bg-red-500 text-white text-[10px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-app-card transition-all">
                     {adminNewMsgCount}
                   </span>
                 )}
@@ -882,7 +930,7 @@ export default function App() {
             {activeTab === 'agenda' && <MinisterialAgenda onPreach={handlePreach} />}
             {activeTab === 'profile' && <ProfileSettings />}
             {activeTab === 'help' && <HelpCenter />}
-            {activeTab === 'admin' && profile?.role === 'admin' && <AdminDashboard />}
+            {activeTab === 'admin' && isUserAdmin && <AdminDashboard />}
             {activeTab === 'preach' && currentSermonId && <PreachingMode sermonId={currentSermonId} onClose={() => setActiveTab('dashboard')} />}
             {activeTab === 'history' && <div>{t('historyOfMessages')}</div>}
           </motion.div>

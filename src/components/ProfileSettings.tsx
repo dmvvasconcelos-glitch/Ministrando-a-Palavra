@@ -715,13 +715,15 @@ export default function ProfileSettings() {
                 </p>
               </div>
 
-              <button
-                onClick={() => window.open('https://wa.me/5567992790901?text=Olá, desejo adquirir a licença premium do Ministrando a Palavra.', '_blank')}
+              <a
+                href="https://pay.cakto.com.br/38ydnyy_878109"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full bg-indigo-600 text-white h-16 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20 hover:scale-[1.01] active:scale-[0.99]"
               >
                 <CreditCard size={18} />
                 Fazer Aquisição Premium (Anual)
-              </button>
+              </a>
             </div>
           )}
         </div>

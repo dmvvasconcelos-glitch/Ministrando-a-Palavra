@@ -263,10 +263,27 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
     const rawMsg = error?.message || String(error);
     const msg = rawMsg.includes('LIMITE_EXCEDIDO') ? 'LIMITE_EXCEDIDO' : 
                 rawMsg.includes('LIMITE_COTA_API') ? 'LIMITE_COTA_API' : 
-                rawMsg.includes('IA_SOBRECARREGADA') ? 'IA_SOBRECARREGADA' : rawMsg;
+                rawMsg.includes('IA_SOBRECARREGADA') ? 'IA_SOBRECARREGADA' : 
+                rawMsg.includes('CHAVE_API_USER_INVALIDA') ? 'CHAVE_API_USER_INVALIDA' :
+                rawMsg.includes('CHAVE_API_SISTEMA_INVALIDA') ? 'CHAVE_API_SISTEMA_INVALIDA' :
+                rawMsg.includes('CHAVE_API_INVALIDA') ? 'CHAVE_API_INVALIDA' : rawMsg;
 
     if (msg === 'LIMITE_EXCEDIDO') {
       setShowUsageAlert(true);
+      return;
+    }
+
+    if (msg === 'CHAVE_API_USER_INVALIDA' || msg === 'CHAVE_API_INVALIDA') {
+      alert(language === 'pt' 
+        ? 'Sua Chave de API Gemini parece ser inválida ou expirou. Por favor, remova ou atualize a chave nas Configurações de Perfil.' 
+        : 'Your Gemini API Key seems to be invalid or expired. Please remove or update it in Profile Settings.');
+      return;
+    }
+
+    if (msg === 'CHAVE_API_SISTEMA_INVALIDA') {
+      alert(language === 'pt'
+        ? 'Ocorreu um problema com o serviço de IA do sistema. Por favor, tente novamente mais tarde ou use sua própria chave de API.'
+        : 'There was a problem with the system AI service. Please try again later or use your own API key.');
       return;
     }
 
