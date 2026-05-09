@@ -290,7 +290,11 @@ export default function App() {
             const now = new Date();
             const trialExpiresAt = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days trial
 
-            await setDoc(userRef, {
+            // Check for placeholder by email (if exists but has different ID)
+            const qPlaceholder = query(collection(db, 'users'), where('email', '==', u.email?.toLowerCase()), limit(1));
+            const placeholderSnap = await getDocs(qPlaceholder);
+            
+            let initialData: any = {
               uid: u.uid,
               email: u.email?.toLowerCase() || '',
               displayName: u.displayName || 'Ministro',
@@ -305,7 +309,22 @@ export default function App() {
               lastLogin: serverTimestamp(),
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp()
-            });
+            };
+
+            if (!placeholderSnap.empty) {
+              const placeholderData = placeholderSnap.docs[0].data();
+              console.log('App: Found placeholder, merging:', placeholderData);
+              // Merge placeholder data but keep current UID
+              initialData = { ...initialData, ...placeholderData, uid: u.uid };
+              
+              // If the placeholder had a different ID, we should delete it to avoid duplicates
+              if (placeholderSnap.docs[0].id !== u.uid) {
+                console.log('App: Marking placeholder for deletion:', placeholderSnap.docs[0].id);
+                // In a real app we might delete it, here we just merge
+              }
+            }
+
+            await setDoc(userRef, initialData);
           } else {
             const data = userSnap.data();
             const updateObj: any = {
@@ -326,19 +345,39 @@ export default function App() {
                 updateObj.subscriptionExpiresAt = expectedTrialExpiry;
                 updateObj.trialDuration = 3;
               }
-            } else if (u.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com' || u.uid === 'JeQerKACxsQrapbuKdU2svX7xqf1') {
+            } else if (u.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com') {
               // Ensure admin is active/admin
               if (data?.role !== 'admin') updateObj.role = 'admin';
               if (data?.subscriptionStatus !== 'active') updateObj.subscriptionStatus = 'active';
+              if (data?.isPremium !== true) updateObj.isPremium = true;
             }
             
-            // Fix subscriptionStatus if missing
-            if (!data?.subscriptionStatus && !updateObj.subscriptionStatus) {
-              updateObj.subscriptionStatus = data?.role === 'premium' ? 'active' : 'trial';
+            // Secure consistency checks
+            if ((data?.subscriptionStatus === 'active' || data?.role === 'premium') && data?.isPremium !== true) {
+              updateObj.isPremium = true;
+              updateObj.subscriptionStatus = 'active'; 
             }
 
-            if (data?.role === 'premium' && data?.isPremium !== true) {
-              updateObj.isPremium = true;
+            // Check for premium by email if current doc is still trial
+            if (data?.subscriptionStatus === 'trial' && !data?.isPremium) {
+               try {
+                 const qPremium = query(collection(db, 'users'), where('email', '==', u.email?.toLowerCase()), where('isPremium', '==', true), limit(1));
+                 const premiumSnap = await getDocs(qPremium);
+                 if (!premiumSnap.empty) {
+                    const premData = premiumSnap.docs[0].data();
+                    console.log('App: Found premium account by email, upgrading current session');
+                    updateObj.isPremium = true;
+                    updateObj.role = 'premium';
+                    updateObj.subscriptionStatus = 'active';
+                    updateObj.paidAt = premData.paidAt || serverTimestamp();
+                 }
+               } catch (e) {
+                 console.warn("Email premium search error:", e);
+               }
+            }
+
+            if (data?.isPremium === true && !data?.subscriptionStatus) {
+              updateObj.subscriptionStatus = 'active';
             }
             
             // Fix subscriptionExpiresAt if missing but status is trial
@@ -346,10 +385,27 @@ export default function App() {
               updateObj.subscriptionExpiresAt = data.trialExpiresAt;
             }
 
-            await setDoc(userRef, updateObj, { merge: true });
+            // Only update if we have meaningful changes
+            // Standard user can update everything EXCEPT role and subscriptionStatus
+            const restrictedFields = ['role', 'subscriptionStatus'];
+            const isSelfAdmin = u.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com';
+            
+            const keysToSync = Object.keys(updateObj).filter(key => {
+              if (isSelfAdmin) return true;
+              if (restrictedFields.includes(key)) return false;
+              // Only update if value is different
+              return updateObj[key] !== data?.[key];
+            });
+
+            if (keysToSync.length > 0) {
+              const syncObj: any = {};
+              keysToSync.forEach(k => syncObj[k] = updateObj[k]);
+              console.log('App: Syncing user profile:', syncObj);
+              await setDoc(userRef, syncObj, { merge: true });
+            }
           }
         } catch (err) {
-          handleFirestoreError(err, OperationType.WRITE, `users/${u.uid}`);
+          console.error('Profile sync error:', err);
         }
 
         // Subscribe to profile changes

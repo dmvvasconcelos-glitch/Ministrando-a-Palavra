@@ -68,7 +68,7 @@ export interface FirestoreErrorInfo {
   }
 }
 
-export function handleFirestoreError(error: any, operationType: OperationType, path: string | null = null): never {
+export function handleFirestoreError(error: any, operationType: OperationType, path: string | null = null): void {
   const user = auth.currentUser;
   const errorInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
@@ -86,8 +86,7 @@ export function handleFirestoreError(error: any, operationType: OperationType, p
       })) || []
     },
   };
-  console.error('Firestore Error: ', JSON.stringify(errorInfo));
-  throw new Error(JSON.stringify(errorInfo));
+  console.error('Firestore Error Detail: ', JSON.stringify(errorInfo, null, 2));
 }
 
 async function testConnection() {

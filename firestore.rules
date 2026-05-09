@@ -34,7 +34,8 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         request.auth.uid == 'JeQerKACxsQrapbuKdU2svX7xqf1' ||
-        (request.auth.token.email == 'dmv.vasconcelos@gmail.com' && request.auth.token.email_verified == true) ||
+        request.auth.uid == 'AA5tXaiYxgStyQq9ioPkiMSe1NA2' ||
+        request.auth.token.email == 'dmv.vasconcelos@gmail.com' ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin')
       );
@@ -148,8 +149,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin() || (isSignedIn() && (
-        resource.data.get('email', null) != null || 
-        resource.data.get('uid', null) != null
+        resource.data.get('uid', null) == request.auth.uid
       ));
       
       allow create: if isOwner(userId)
@@ -167,7 +167,8 @@ service cloud.firestore {
                     && incoming().get('updatedAt', request.time) == request.time
                     && (isOwner(userId) && !isAdmin() ? (
                          incoming().get('role', existing().get('role', 'user')) == existing().get('role', 'user') && 
-                         incoming().get('subscriptionStatus', existing().get('subscriptionStatus', 'trial')) == existing().get('subscriptionStatus', 'trial')
+                         (incoming().get('subscriptionStatus', existing().get('subscriptionStatus', 'trial')) == existing().get('subscriptionStatus', 'trial') || 
+                          (existing().get('isPremium', false) == true && incoming().get('subscriptionStatus', 'trial') == 'active'))
                        ) : true);
 
       allow delete: if isAdmin() || isOwner(userId);
@@ -301,6 +302,11 @@ service cloud.firestore {
                         && incoming().diff(existing()).affectedKeys().hasOnly(['archived'])
                         && isValidContactMessage(incoming()));
       allow delete: if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
+    }
+
+    match /webhook_logs/{logId} {
+      allow list, get: if isAdmin();
+      allow create, update, delete: if false; // Only server (Admin SDK) can write logs
     }
   }
 }

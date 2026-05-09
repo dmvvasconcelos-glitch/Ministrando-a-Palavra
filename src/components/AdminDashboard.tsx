@@ -31,7 +31,10 @@ import {
   X,
   Copy,
   Terminal,
-  Settings
+  Settings,
+  Activity,
+  Unlock,
+  Database
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, deleteDoc, setDoc, deleteField, limit } from 'firebase/firestore';
@@ -70,8 +73,56 @@ export default function AdminDashboard() {
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [showIntegrationInfo, setShowIntegrationInfo] = useState(false);
-  const [webhookLogs, setWebhookLogs] = useState<any[]>([]);
   const [showLogs, setShowLogs] = useState(false);
+  const [webhookLogs, setWebhookLogs] = useState<any[]>([]);
+  const [manualUpgradeEmail, setManualUpgradeEmail] = useState('');
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const handleManualUpgrade = async () => {
+    if (!manualUpgradeEmail || !manualUpgradeEmail.includes('@')) {
+      alert('Por favor, insira um e-mail válido.');
+      return;
+    }
+
+    if (!window.confirm(`Tem certeza que deseja promover o e-mail ${manualUpgradeEmail} para PREMIUM manualmente?`)) return;
+
+    setIsUpgrading(true);
+    try {
+      const emailLower = manualUpgradeEmail.trim().toLowerCase();
+      // Search for user
+      const q = query(collection(db, 'users'), where('email', '==', emailLower), limit(1));
+      const snap = await getDocs(q);
+      
+      const now = serverTimestamp();
+      const updates = {
+        role: 'premium' as const,
+        isPremium: true,
+        subscriptionStatus: 'active' as const,
+        paidAt: now,
+        updatedAt: now
+      };
+
+      if (!snap.empty) {
+        await updateDoc(doc(db, 'users', snap.docs[0].id), updates);
+        alert(`Usuário ${emailLower} atualizado com sucesso!`);
+      } else {
+        // Create placeholder
+        const placeholderId = emailLower.replace(/[^a-z0-9]/g, '_') + '_manual';
+        await setDoc(doc(db, 'users', placeholderId), {
+          email: emailLower,
+          ...updates,
+          createdAt: now
+        });
+        alert(`Nenhum usuário logado encontrado com esse e-mail. Criamos um registro Premium preventivo para ${emailLower}.`);
+      }
+      setManualUpgradeEmail('');
+    } catch (err) {
+      console.error('Manual upgrade error:', err);
+      alert('Erro ao atualizar usuário. Verifique os logs do console.');
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
 
   const webhookUrl = `${window.location.origin}/api/webhooks/cakto`;
 
@@ -221,6 +272,9 @@ export default function AdminDashboard() {
       const q = query(collection(db, 'webhook_logs'), orderBy('receivedAt', 'desc'), limit(10));
       return onSnapshot(q, (snapshot) => {
         setWebhookLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }, (err) => {
+        console.error('AdminDashboard: Webhook logs error:', err);
+        handleFirestoreError(err, OperationType.LIST, 'webhook_logs');
       });
     }
   }, [showLogs]);
@@ -1985,6 +2039,89 @@ export default function AdminDashboard() {
                 >
                   Excluir Usuário permanentemente
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Admin Quick Actions Footer */}
+      <div className="fixed bottom-0 left-0 right-0 z-[50] p-4 bg-app-bg/80 backdrop-blur-xl border-t border-app-border">
+        <div className="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="relative group">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-app-secondary group-focus-within:text-indigo-500 transition-colors" />
+              <input
+                type="email"
+                placeholder="Liberar Premium por E-mail"
+                className="pl-10 pr-4 py-2 bg-app-card border border-app-border rounded-xl text-sm text-app-text focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64 transition-all"
+                value={manualUpgradeEmail}
+                onChange={(e) => setManualUpgradeEmail(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={handleManualUpgrade}
+              disabled={isUpgrading}
+              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/20"
+            >
+              <Unlock className="w-4 h-4" />
+              {isUpgrading ? 'Liberando...' : 'Liberar Premium'}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+             <button
+                onClick={() => setShowLogs(!showLogs)}
+                className={`flex items-center gap-2 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all
+                  ${showLogs ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-app-card border border-app-border text-app-secondary hover:text-app-text'}
+                `}
+              >
+                <Activity className="w-4 h-4" />
+                {showLogs ? 'Ocultar Logs' : 'Logs de Vendas'}
+              </button>
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {showLogs && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+             <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLogs(false)}
+              className="absolute inset-0 bg-app-bg/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-4xl max-h-[80vh] bg-app-card border border-app-border rounded-[40px] shadow-2xl overflow-hidden flex flex-col"
+            >
+              <div className="p-8 border-b border-app-border flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-app-text">Logs de Webhooks Recentes</h3>
+                  <p className="text-xs text-app-secondary">Últimos 10 eventos recebidos do Cakto (Ou outros gateways)</p>
+                </div>
+                <button onClick={() => setShowLogs(false)} className="p-2 hover:bg-app-bg rounded-xl text-app-secondary"><X size={24}/></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-8 space-y-4 font-mono text-[10px]">
+                {webhookLogs.length === 0 ? (
+                  <div className="py-20 text-center opacity-30 italic">Nenhum log disponível</div>
+                ) : (
+                  webhookLogs.map((log) => (
+                    <div key={log.id} className="p-4 bg-app-bg/50 border border-app-border rounded-2xl space-y-2">
+                       <div className="flex justify-between items-center text-indigo-500 font-bold border-b border-app-border/20 pb-2">
+                          <span>Event: {log.payload?.event || 'N/A'} - Status: {log.payload?.status || log.payload?.venda_status || 'N/A'}</span>
+                          <span>{log.receivedAt ? format(log.receivedAt.toDate(), 'PPP HH:mm:ss', { locale: language === 'pt-BR' ? ptBR : enUS }) : '...'}</span>
+                       </div>
+                       <pre className="overflow-x-auto whitespace-pre-wrap text-app-secondary">
+                          {JSON.stringify(log.payload, null, 2)}
+                       </pre>
+                    </div>
+                  ))
+                )}
               </div>
             </motion.div>
           </div>

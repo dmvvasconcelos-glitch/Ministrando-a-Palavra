@@ -26,7 +26,7 @@ export interface UserProfile {
   presidentPastor?: string;
   photoURL?: string;
   geminiApiKey?: string;
-  role?: 'admin' | 'user';
+  role?: 'admin' | 'user' | 'premium';
   subscriptionStatus?: 'trial' | 'active' | 'expired';
   isPremium?: boolean;
   premiumSince?: any;

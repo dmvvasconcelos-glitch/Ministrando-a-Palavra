@@ -191,7 +191,7 @@ async function startServer() {
   app.post('/api/webhooks/cakto', async (req, res) => {
     try {
       const payload = req.body;
-      console.log('Cakto Webhook received:', JSON.stringify(payload, null, 2));
+      console.log('[Webhook] Cakto payload received:', JSON.stringify(payload, null, 2));
 
       // Optional: Store in Firestore for debugging (last 10 webhooks)
       if (firestore) {
@@ -203,27 +203,51 @@ async function startServer() {
             source: 'cakto'
           });
         } catch (e) {
-          console.error('Error saving webhook log:', e);
+          console.error('[Webhook] Error saving webhook log:', e);
         }
       }
 
-      // Helper to find key in nested objects
+      // Helper to find key in nested objects (supports dot notation like 'data.customer.email')
       const findValue = (obj: any, keys: string[]): any => {
         for (const key of keys) {
-          if (obj[key] !== undefined) return obj[key];
+          if (key.includes('.')) {
+            const parts = key.split('.');
+            let current = obj;
+            for (const part of parts) {
+              current = current ? current[part] : undefined;
+            }
+            if (current !== undefined) return current;
+          } else if (obj[key] !== undefined) {
+            return obj[key];
+          }
         }
+        
+        // Recursive fallback for simple keys (non-dotted)
         for (const k in obj) {
           if (obj[k] && typeof obj[k] === 'object') {
-            const found = findValue(obj[k], keys);
+            const found = findValue(obj[k], keys.filter(k => !k.includes('.')));
             if (found !== undefined) return found;
           }
         }
         return undefined;
       };
 
-      const statusKeys = ['status', 'transaction_status', 'event', 'venda_status', 'status_venda', 'situacao', 'payment_status', 'state', 'situacao_pagamento'];
-      const emailKeys = ['customer_email', 'email', 'comprador_email', 'email_comprador', 'cliente_email', 'payer_email', 'user_email', 'email_contato', 'contato_email'];
-      const idKeys = ['external_id', 'ext_id', 'customer_id', 'metadata.external_id', 'reference', 'ref', 'custom_id', 'client_id', 'pedido_id', 'transacao_id', 'id_externo'];
+      const statusKeys = [
+        'status', 'transaction_status', 'event', 'venda_status', 'status_venda', 'situacao', 
+        'payment_status', 'state', 'situacao_pagamento', 'venda.status', 'data.status',
+        'venda.situacao', 'data.situacao', 'venda.workflow_status', 'data.workflow_status'
+      ];
+      const emailKeys = [
+        'customer_email', 'email', 'comprador_email', 'email_comprador', 'cliente_email', 
+        'payer_email', 'user_email', 'email_contato', 'contato_email', 
+        'venda.cliente.email', 'data.customer.email', 'venda.customer.email', 'data.email',
+        'customer.email', 'cliente.email', 'metadata.email'
+      ];
+      const idKeys = [
+        'external_id', 'ext_id', 'customer_id', 'metadata.external_id', 'reference', 'ref', 
+        'custom_id', 'client_id', 'pedido_id', 'transacao_id', 'id_externo', 'venda.external_id', 
+        'data.external_id', 'venda_id', 'data.id'
+      ];
 
       const status = findValue(payload, statusKeys);
       let email = findValue(payload, emailKeys);
@@ -234,14 +258,14 @@ async function startServer() {
         try {
           const url = new URL(payload.data.checkoutUrl);
           externalId = url.searchParams.get('external_id') || url.searchParams.get('ext_id');
-          console.log(`Extracted ExtID from checkoutUrl: ${externalId}`);
+          console.log(`[Webhook] Extracted ExtID from checkoutUrl: ${externalId}`);
         } catch (e) {
-          console.warn('Failed to parse checkoutUrl for externalId');
+          console.warn('[Webhook] Failed to parse checkoutUrl for externalId');
         }
       }
       
       // Log for debugging
-      console.log(`Extracted: Status=${status}, Event=${payload.event}, Email=${email}, ExtID=${externalId}`);
+      console.log(`[Webhook] Extraction: Status=${status}, Event=${payload.event}, Email=${email}, ExtID=${externalId}`);
 
       // Special check for nested metadata or params
       if (!externalId) {
@@ -265,23 +289,34 @@ async function startServer() {
       const eventStr = String(payload.event || '').toLowerCase();
       const isApproved = successStatuses.includes(statusStr) || successStatuses.includes(eventStr);
 
+      console.log(`[Webhook] Verdict: isApproved=${isApproved} (Status: ${statusStr}, Event: ${eventStr})`);
+
       if (isApproved && (email || externalId) && firestore) {
-        console.log(`Processing approved payment for Email: ${email}, ExtID: ${externalId}`);
+        console.log(`[Webhook] Processing approved payment for Email: ${email}, ExtID: ${externalId}`);
         try {
           let userDoc: admin.firestore.DocumentReference | null = null;
           
           if (externalId && String(externalId).length > 5) {
             const ref = firestore.collection('users').doc(String(externalId));
             const snap = await ref.get();
-            if (snap.exists) userDoc = ref;
+            if (snap.exists) {
+              console.log(`[Webhook] Found user by ExtID: ${externalId}`);
+              userDoc = ref;
+            } else {
+              console.log(`[Webhook] No user found with ID ${externalId}, will create/search by email`);
+            }
           }
           
           if (!userDoc && email) {
+            console.log(`[Webhook] Searching user by email: ${email}`);
             const snap = await firestore.collection('users')
               .where('email', '==', String(email).trim().toLowerCase())
               .limit(1)
               .get();
-            if (!snap.empty) userDoc = snap.docs[0].ref;
+            if (!snap.empty) {
+              console.log(`[Webhook] Found user by email: ${email}`);
+              userDoc = snap.docs[0].ref;
+            }
           }
           
           const now = new Date();
@@ -300,11 +335,11 @@ async function startServer() {
               paidAt: admin.firestore.Timestamp.fromDate(now),
               updatedAt: admin.firestore.Timestamp.fromDate(now)
             });
-            console.log(`Successfully upgraded user ${email || externalId} to Premium`);
+            console.log(`[Webhook] Successfully upgraded user ${email || externalId} to Premium`);
             return res.status(200).json({ success: true, message: 'User upgraded' });
           } else {
-            console.log(`User ${email || externalId} not found, creating placeholder...`);
-            const placeholderId = externalId ? String(externalId) : String(email).toLowerCase().replace(/[^a-z0-9]/g, '_');
+            console.log(`[Webhook] User ${email || externalId} not found, creating placeholder...`);
+            const placeholderId = externalId ? String(externalId) : (String(email).toLowerCase().replace(/[^a-z0-9]/g, '_') + '_p');
             await firestore.collection('users').doc(placeholderId).set({
               email: String(email || '').toLowerCase(),
               role: 'premium',
@@ -316,18 +351,19 @@ async function startServer() {
               updatedAt: admin.firestore.Timestamp.fromDate(now),
               createdAt: admin.firestore.Timestamp.fromDate(now)
             }, { merge: true });
+            console.log(`[Webhook] Created placeholder with ID: ${placeholderId}`);
             return res.status(200).json({ success: true, message: 'Placeholder created' });
           }
         } catch (error) {
-          console.error('Webhook error:', error);
+          console.error('[Webhook] Internal processing error:', error);
           return res.status(500).json({ error: 'Processing error' });
         }
       } else {
-        console.warn(`Payment not approved or data missing: Status=${status}, Email=${email}`);
+        console.warn(`[Webhook] Payment not approved or data missing: Status=${status}, Event=${payload.event}, Email=${email}, ExtID=${externalId}`);
         return res.status(200).json({ success: false, message: 'Not approved or missing info' });
       }
     } catch (error) {
-      console.error('Webhook endpoint error:', error);
+      console.error('[Webhook] Endpoint error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
