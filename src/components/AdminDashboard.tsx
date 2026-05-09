@@ -169,7 +169,7 @@ export default function AdminDashboard() {
       
       const data = await res.json();
       console.log('AdminDashboard: Webhook POST result:', data);
-      alert('Resultado (POST): ' + JSON.stringify(data));
+      alert('Resultado (POST): ' + JSON.stringify(data, null, 2));
       setShowLogs(true); // Open logs to see if it arrived
     } catch (e) {
       console.error('AdminDashboard: Webhook POST failed:', e);

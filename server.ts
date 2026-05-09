@@ -369,11 +369,24 @@ async function startServer() {
           }
         } catch (error) {
           console.error('[Webhook] Internal processing error:', error);
-          return res.status(500).json({ error: 'Processing error' });
+          return res.status(500).json({ error: 'Processing error', details: error instanceof Error ? error.message : String(error) });
         }
       } else {
         console.warn(`[Webhook] Payment not approved or data missing: Status=${status}, Event=${payload.event}, Email=${email}, ExtID=${externalId}`);
-        return res.status(200).json({ success: false, message: 'Not approved or missing info' });
+        return res.status(200).json({ 
+          success: false, 
+          message: 'Not approved or missing info',
+          debug: {
+            isApproved,
+            hasEmail: !!email,
+            hasExtId: !!externalId,
+            hasFirestore: !!firestore,
+            extractedStatus: status,
+            extractedEmail: email,
+            extractedExtId: externalId,
+            event: payload.event
+          }
+        });
       }
     } catch (error) {
       console.error('[Webhook] Endpoint error:', error);
