@@ -255,99 +255,80 @@ async function startServer() {
 
       // Statuses that represent a successful payment
       const successStatuses = [
-        'approved', 'completed', 'paid', 'paid_success', 'venda_aprovada', 
+        'paid', 'approved', 'completed', 'verified', 'confirmed',
         'pago', 'sucesso', 'aprovado', 'active', 'pago_sucesso', '1',
-        'finalized', 'concluded', 'success', 'paga', 'pagamento_confirmado'
+        'finalized', 'concluded', 'success', 'paga', 'pagamento_confirmado',
+        'purchase_approved', 'venda_aprovada'
       ];
-      const isApproved = successStatuses.includes(String(status).toLowerCase()) || 
-                         payload.event === 'purchase_approved' || 
-                         payload.event === 'venda_aprovada';
+      
+      const statusStr = String(status || '').toLowerCase();
+      const eventStr = String(payload.event || '').toLowerCase();
+      const isApproved = successStatuses.includes(statusStr) || successStatuses.includes(eventStr);
 
       if (isApproved && (email || externalId) && firestore) {
-        console.log(`Processing approved payment for ${email || externalId}`);
-        
-        let userDoc: admin.firestore.DocumentReference | null = null;
-        
-        // Try finding by exactly matching externalId
-        if (externalId && String(externalId).length > 5) {
-          userDoc = firestore.collection('users').doc(String(externalId));
-          // Verify it exists, if not clear it to try email
-          const docSnap = await userDoc.get();
-          if (!docSnap.exists) {
-            userDoc = null;
-          }
-        }
-        
-        if (!userDoc && email) {
-          const usersSnap = await firestore.collection('users')
-            .where('email', '==', String(email).trim().toLowerCase())
-            .limit(1)
-            .get();
+        console.log(`Processing approved payment for Email: ${email}, ExtID: ${externalId}`);
+        try {
+          let userDoc: admin.firestore.DocumentReference | null = null;
           
-          if (!usersSnap.empty) {
-            userDoc = usersSnap.docs[0].ref;
+          if (externalId && String(externalId).length > 5) {
+            const ref = firestore.collection('users').doc(String(externalId));
+            const snap = await ref.get();
+            if (snap.exists) userDoc = ref;
           }
-        }
-
-        // Last ditch fallback for identification
-        if (!userDoc && !email && !externalId) {
-           const allPayload = JSON.stringify(payload).toLowerCase();
-           // Very loose check just to see if we can rescue this transaction
-           // But we need a target user, so we skip if no clear ID/Email
-        }
-
-        if (userDoc) {
+          
+          if (!userDoc && email) {
+            const snap = await firestore.collection('users')
+              .where('email', '==', String(email).trim().toLowerCase())
+              .limit(1)
+              .get();
+            if (!snap.empty) userDoc = snap.docs[0].ref;
+          }
+          
           const now = new Date();
-          const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
-          
-          await userDoc.update({
-            role: 'premium',
-            subscriptionStatus: 'active',
-            isPremium: true,
-            subscriptionExpiresAt: admin.firestore.Timestamp.fromDate(oneYearFromNow),
-            trialExpiresAt: null,
-            trialStartedAt: null,
-            paidAt: admin.firestore.Timestamp.fromDate(now),
-            updatedAt: admin.firestore.Timestamp.fromDate(now)
-          });
-          
-          console.log(`User ${email || externalId} upgraded to Premium successfully`);
-          return res.status(200).json({ success: true, message: 'Subscription updated' });
-        } else {
-          console.warn(`User not found for payment: Email=${email}, ExtID=${externalId}`);
-          // Still return 200 to acknowledge receipt to Cakto
-          return res.status(200).json({ success: false, message: 'User not found' });
+          const oneYearFromNow = new Date();
+          oneYearFromNow.setFullYear(now.getFullYear() + 1);
+
+          if (userDoc) {
+            await userDoc.update({
+              role: 'premium',
+              subscriptionStatus: 'active',
+              isPremium: true,
+              subscriptionExpiresAt: admin.firestore.Timestamp.fromDate(oneYearFromNow),
+              paidExpiresAt: admin.firestore.Timestamp.fromDate(oneYearFromNow),
+              trialExpiresAt: null,
+              trialStartedAt: null,
+              paidAt: admin.firestore.Timestamp.fromDate(now),
+              updatedAt: admin.firestore.Timestamp.fromDate(now)
+            });
+            console.log(`Successfully upgraded user ${email || externalId} to Premium`);
+            return res.status(200).json({ success: true, message: 'User upgraded' });
+          } else {
+            console.log(`User ${email || externalId} not found, creating placeholder...`);
+            const placeholderId = externalId ? String(externalId) : String(email).toLowerCase().replace(/[^a-z0-9]/g, '_');
+            await firestore.collection('users').doc(placeholderId).set({
+              email: String(email || '').toLowerCase(),
+              role: 'premium',
+              subscriptionStatus: 'active',
+              isPremium: true,
+              subscriptionExpiresAt: admin.firestore.Timestamp.fromDate(oneYearFromNow),
+              paidExpiresAt: admin.firestore.Timestamp.fromDate(oneYearFromNow),
+              paidAt: admin.firestore.Timestamp.fromDate(now),
+              updatedAt: admin.firestore.Timestamp.fromDate(now),
+              createdAt: admin.firestore.Timestamp.fromDate(now)
+            }, { merge: true });
+            return res.status(200).json({ success: true, message: 'Placeholder created' });
+          }
+        } catch (error) {
+          console.error('Webhook error:', error);
+          return res.status(500).json({ error: 'Processing error' });
         }
+      } else {
+        console.warn(`Payment not approved or data missing: Status=${status}, Email=${email}`);
+        return res.status(200).json({ success: false, message: 'Not approved or missing info' });
       }
-
-      // If it's a refund or cancellation
-      const cancelStatuses = ['refunded', 'canceled', 'chargeback', 'estornado', 'reembolsado', 'cancelado'];
-      const isCanceled = cancelStatuses.includes(String(status).toLowerCase());
-
-      if (isCanceled && (email || externalId) && firestore) {
-        let userDoc: admin.firestore.DocumentReference | null = null;
-        if (externalId && String(externalId).length > 5) {
-          userDoc = firestore.collection('users').doc(String(externalId));
-        }
-        
-        if (!userDoc && email) {
-          const usersSnap = await firestore.collection('users').where('email', '==', String(email).toLowerCase()).limit(1).get();
-          if (!usersSnap.empty) userDoc = usersSnap.docs[0].ref;
-        }
-
-        if (userDoc) {
-          await userDoc.update({
-            subscriptionStatus: 'expired',
-            updatedAt: admin.firestore.Timestamp.fromDate(new Date())
-          });
-          console.log(`User ${email || externalId} subscription revoked due to ${status}`);
-        }
-      }
-
-      res.status(200).json({ success: true, message: 'Webhook processed' });
     } catch (error) {
-      console.error('Error in Cakto webhook:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      console.error('Webhook endpoint error:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 

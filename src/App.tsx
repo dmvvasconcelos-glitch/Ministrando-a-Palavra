@@ -326,10 +326,19 @@ export default function App() {
                 updateObj.subscriptionExpiresAt = expectedTrialExpiry;
                 updateObj.trialDuration = 3;
               }
-            } else if (u.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com') {
+            } else if (u.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com' || u.uid === 'JeQerKACxsQrapbuKdU2svX7xqf1') {
               // Ensure admin is active/admin
               if (data?.role !== 'admin') updateObj.role = 'admin';
               if (data?.subscriptionStatus !== 'active') updateObj.subscriptionStatus = 'active';
+            }
+            
+            // Fix subscriptionStatus if missing
+            if (!data?.subscriptionStatus && !updateObj.subscriptionStatus) {
+              updateObj.subscriptionStatus = data?.role === 'premium' ? 'active' : 'trial';
+            }
+
+            if (data?.role === 'premium' && data?.isPremium !== true) {
+              updateObj.isPremium = true;
             }
             
             // Fix subscriptionExpiresAt if missing but status is trial
