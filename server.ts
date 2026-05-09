@@ -193,6 +193,20 @@ async function startServer() {
       const payload = req.body;
       console.log('Cakto Webhook received:', JSON.stringify(payload, null, 2));
 
+      // Optional: Store in Firestore for debugging (last 10 webhooks)
+      if (firestore) {
+        try {
+          await firestore.collection('webhook_logs').add({
+            receivedAt: admin.firestore.Timestamp.fromDate(new Date()),
+            payload,
+            headers: req.headers,
+            source: 'cakto'
+          });
+        } catch (e) {
+          console.error('Error saving webhook log:', e);
+        }
+      }
+
       // Helper to find key in nested objects
       const findValue = (obj: any, keys: string[]): any => {
         for (const key of keys) {
@@ -208,20 +222,23 @@ async function startServer() {
       };
 
       const statusKeys = ['status', 'transaction_status', 'event', 'venda_status', 'status_venda', 'situacao', 'payment_status', 'state'];
-      const emailKeys = ['customer_email', 'email', 'comprador_email', 'email_comprador', 'cliente_email', 'payer_email', 'user_email'];
-      const idKeys = ['external_id', 'ext_id', 'customer_id', 'metadata.external_id', 'reference', 'ref', 'custom_id', 'client_id'];
+      const emailKeys = ['customer_email', 'email', 'comprador_email', 'email_comprador', 'cliente_email', 'payer_email', 'user_email', 'email_contato'];
+      const idKeys = ['external_id', 'ext_id', 'customer_id', 'metadata.external_id', 'reference', 'ref', 'custom_id', 'client_id', 'pedido_id', 'transacao_id'];
 
       const status = findValue(payload, statusKeys);
       const email = findValue(payload, emailKeys);
       let externalId = findValue(payload, idKeys);
       
+      // Log for debugging
+      console.log(`Extracted: Status=${status}, Email=${email}, ExtID=${externalId}`);
+
       // Special check for nested metadata or params
       if (!externalId) {
-        externalId = payload.metadata?.external_id || payload.params?.external_id || payload.data?.external_id;
+        externalId = payload.metadata?.external_id || payload.params?.external_id || payload.data?.external_id || payload.external_id;
       }
 
       // Statuses that represent a successful payment
-      const successStatuses = ['approved', 'completed', 'paid', 'paid_success', 'venda_aprovada', 'pago', 'sucesso', 'aprovado', 'active'];
+      const successStatuses = ['approved', 'completed', 'paid', 'paid_success', 'venda_aprovada', 'pago', 'sucesso', 'aprovado', 'active', 'pago_sucesso', '1'];
       const isApproved = successStatuses.includes(String(status).toLowerCase());
 
       if (isApproved && (email || externalId) && firestore) {

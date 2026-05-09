@@ -27,10 +27,14 @@ import {
   Download,
   Calendar,
   CreditCard,
-  Building2
+  Building2,
+  X,
+  Copy,
+  Terminal,
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, deleteDoc, setDoc, deleteField } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, deleteDoc, setDoc, deleteField, limit } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { UserProfile, ContactMessage } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -65,6 +69,11 @@ export default function AdminDashboard() {
   const [replyText, setReplyText] = useState('');
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const [showIntegrationInfo, setShowIntegrationInfo] = useState(false);
+  const [webhookLogs, setWebhookLogs] = useState<any[]>([]);
+  const [showLogs, setShowLogs] = useState(false);
+
+  const webhookUrl = `${window.location.origin}/api/webhooks/cakto`;
 
   const exportToCSV = () => {
     try {
@@ -206,6 +215,15 @@ export default function AdminDashboard() {
       unsubMessages();
     };
   }, [sortField, sortOrder]);
+
+  useEffect(() => {
+    if (showLogs) {
+      const q = query(collection(db, 'webhook_logs'), orderBy('receivedAt', 'desc'), limit(10));
+      return onSnapshot(q, (snapshot) => {
+        setWebhookLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      });
+    }
+  }, [showLogs]);
 
   const toggleSort = (field: keyof UserProfile) => {
     if (sortField === field) {
@@ -602,6 +620,134 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8">
+      {/* Webhook Configuration Modal */}
+      <AnimatePresence>
+        {showIntegrationInfo && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowIntegrationInfo(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-app-card w-full max-w-lg rounded-[32px] p-8 border border-app-border shadow-2xl relative z-10"
+            >
+              <button 
+                onClick={() => setShowIntegrationInfo(false)}
+                className="absolute top-6 right-6 p-2 hover:bg-app-bg rounded-xl transition-colors text-app-secondary"
+              >
+                <X size={20} />
+              </button>
+              
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                  <Terminal size={28} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-app-text tracking-tight uppercase">Integração Cakto</h3>
+                  <p className="text-xs text-app-secondary font-bold uppercase tracking-widest opacity-60">Configuração de Webhooks</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="p-6 bg-app-bg rounded-3xl border border-app-border space-y-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">URL de Postback / Webhook</p>
+                  <div className="flex items-center gap-3">
+                    <code className="flex-1 text-[11px] bg-black/40 p-4 rounded-2xl break-all font-mono text-emerald-400 border border-white/5">
+                      {webhookUrl}
+                    </code>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(webhookUrl);
+                        alert('URL de Webhook copiada com sucesso!');
+                      }}
+                      className="p-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+                      title="Copiar URL"
+                    >
+                      <Copy size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-xs font-black uppercase tracking-widest text-app-text flex items-center gap-2">
+                     Instruções de Configuração
+                  </p>
+                  <div className="bg-app-bg/50 p-5 rounded-2xl border border-app-border/40">
+                    <ul className="text-[11px] text-app-secondary space-y-3">
+                      <li className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">1</span>
+                        <span>Acesse seu produto no painel da <b>Cakto</b>.</span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">2</span>
+                        <span>Vá em <b>Postbacks</b> ou <b>Webhooks</b>.</span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">3</span>
+                        <span>Adicione a URL acima e selecione o evento <b>"Venda Aprovada"</b>.</span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">4</span>
+                        <span>Salve as alterações. O sistema agora processará pagamentos automaticamente.</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setShowIntegrationInfo(false)}
+                className="w-full mt-8 bg-app-text text-app-card h-16 rounded-[20px] font-black uppercase text-xs tracking-[0.2em] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/10"
+              >
+                Entendi, Concluir
+              </button>
+
+              <button 
+                onClick={() => setShowLogs(!showLogs)}
+                className="w-full mt-3 text-app-secondary text-[10px] font-black uppercase tracking-widest hover:text-indigo-500 transition-colors"
+              >
+                {showLogs ? 'Ocultar Logs de Depuração' : 'Ver Logs de Webhook (Avançado)'}
+              </button>
+
+              <AnimatePresence>
+                {showLogs && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="mt-4 overflow-hidden"
+                  >
+                    <div className="bg-black/20 rounded-2xl p-4 max-h-[300px] overflow-y-auto space-y-3 font-mono text-[9px]">
+                      {webhookLogs.length === 0 ? (
+                        <p className="text-center py-4 opacity-50 italic">Nenhum log recebido ainda. Tente realizar uma transação de teste.</p>
+                      ) : (
+                        webhookLogs.map(log => (
+                          <div key={log.id} className="p-3 border border-white/5 rounded-xl bg-black/20">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-indigo-400">{log.receivedAt?.toDate ? format(log.receivedAt.toDate(), 'HH:mm:ss') : '-'}</span>
+                              <span className="text-emerald-500 font-bold uppercase">{log.payload?.status || log.payload?.event || 'N/A'}</span>
+                            </div>
+                            <pre className="text-app-secondary leading-tight whitespace-pre-wrap break-all">
+                              {JSON.stringify(log.payload, null, 2)}
+                            </pre>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -613,6 +759,14 @@ export default function AdminDashboard() {
             {activeTab === 'users' ? t('manageUsersDesc') : t('contactMessages')}
           </p>
         </div>
+        
+        <button 
+          onClick={() => setShowIntegrationInfo(true)}
+          className="flex items-center gap-3 px-6 py-4 bg-app-card border border-app-border text-app-text rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:border-indigo-500/50 transition-all shadow-sm group"
+        >
+          <Settings size={16} className="text-indigo-500 group-hover:rotate-90 transition-transform duration-500" />
+          Configurar Webhook
+        </button>
       </div>
 
       {/* Overview Stats */}
@@ -1019,23 +1173,19 @@ export default function AdminDashboard() {
                                     }
                                   }}
                                   disabled={isProcessing === user.uid}
-                                  className="h-9 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white flex items-center gap-2 transition-all border border-emerald-500/20 hover:border-transparent disabled:opacity-30 shadow-sm group/btn"
+                                  className="w-9 h-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white flex items-center justify-center transition-all border border-emerald-500/20 hover:border-transparent disabled:opacity-30 shadow-sm group/btn"
                                   title="Liberar 1 Ano Premium"
                                 >
-                                  <CreditCard size={14} />
-                                  <span className="text-[9px] font-black uppercase tracking-widest whitespace-nowrap">Liberar</span>
+                                  <CreditCard size={16} />
                                 </button>
 
                                 <button
                                   onClick={() => handleToggleBlock(user.uid, !!user.isBlocked)}
                                   disabled={isProcessing === user.uid || (user.role as string) === 'admin'}
-                                  className={`h-9 px-3 rounded-xl border flex items-center gap-2 transition-all shadow-sm ${user.isBlocked ? 'bg-red-500 text-white border-transparent' : 'bg-app-bg hover:bg-red-500 text-app-secondary hover:text-white border-app-border/40'}`}
+                                  className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all shadow-sm ${user.isBlocked ? 'bg-red-500 text-white border-transparent' : 'bg-app-bg hover:bg-red-500 text-app-secondary hover:text-white border-app-border/40'}`}
                                   title={user.isBlocked ? 'Desbloquear Usuário' : 'Bloquear Usuário'}
                                 >
-                                  <ShieldAlert size={14} />
-                                  <span className="text-[9px] font-black uppercase tracking-widest whitespace-nowrap">
-                                    {user.isBlocked ? 'Desbloquear' : 'Bloquear'}
-                                  </span>
+                                  <ShieldAlert size={16} />
                                 </button>
                               </>
                             )}
@@ -1156,11 +1306,10 @@ export default function AdminDashboard() {
                               }
                             }}
                             disabled={isProcessing === user.uid}
-                            className="p-3 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-500/20 transition-all disabled:opacity-30 flex flex-col items-center gap-1 min-w-[70px]"
+                            className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-500/20 transition-all disabled:opacity-30 flex items-center justify-center"
                             title={t('giveTrial')}
                           >
-                            <Sparkles size={18} />
-                            <span className="text-[8px] font-bold uppercase truncate">Teste</span>
+                            <Sparkles size={20} />
                           </button>
 
                           <button
@@ -1170,21 +1319,19 @@ export default function AdminDashboard() {
                               }
                             }}
                             disabled={isProcessing === user.uid}
-                            className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 transition-all disabled:opacity-30 flex flex-col items-center gap-1 min-w-[70px]"
+                            className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 transition-all disabled:opacity-30 flex items-center justify-center"
                             title="Liberar 1 Ano"
                           >
-                            <CreditCard size={18} />
-                            <span className="text-[8px] font-bold uppercase truncate">Liberar</span>
+                            <CreditCard size={20} />
                           </button>
 
                           <button
                             onClick={() => handleToggleBlock(user.uid, !!user.isBlocked)}
                             disabled={isProcessing === user.uid || (user.role as string) === 'admin'}
-                            className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1 min-w-[70px] ${user.isBlocked ? 'bg-red-500 text-white border-transparent' : 'bg-app-card border-app-border text-red-500 hover:bg-red-500 hover:text-white'}`}
+                            className={`w-12 h-12 rounded-2xl border transition-all flex items-center justify-center ${user.isBlocked ? 'bg-red-500 text-white border-transparent' : 'bg-app-card border-app-border text-red-500 hover:bg-red-500 hover:text-white'}`}
                             title={user.isBlocked ? 'Desbloquear Usuário' : 'Bloquear Usuário'}
                           >
-                            <ShieldAlert size={18} />
-                            <span className="text-[8px] font-bold uppercase truncate">{user.isBlocked ? 'Ativar' : 'Barrar'}</span>
+                            <ShieldAlert size={20} />
                           </button>
                         </>
                       )}
@@ -1195,11 +1342,10 @@ export default function AdminDashboard() {
                           handleDeleteUser(user.uid, user.email);
                         }}
                         disabled={isProcessing === user.uid || user.role === 'admin' || user.uid === auth.currentUser?.uid}
-                        className="p-3 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 transition-all disabled:opacity-30 flex flex-col items-center gap-1 min-w-[70px]"
+                        className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 transition-all disabled:opacity-30 flex items-center justify-center"
                         title={t('deleteUser')}
                       >
-                        <Trash2 size={18} />
-                        <span className="text-[8px] font-bold uppercase truncate">Excluir</span>
+                        <Trash2 size={20} />
                       </button>
                     </div>
                   </div>

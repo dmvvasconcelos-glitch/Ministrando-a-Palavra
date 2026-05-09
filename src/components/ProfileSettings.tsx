@@ -25,7 +25,8 @@ import {
   Info as InfoIcon,
   ClipboardList,
   Sparkles,
-  CreditCard
+  CreditCard,
+  ArrowUpDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
@@ -399,6 +400,18 @@ export default function ProfileSettings() {
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
   };
 
+  const handleSyncSubscription = async () => {
+    setLoading(true);
+    try {
+      // Just a small delay to make the user feel like something is happening
+      // and to allow some time for backend propagation if needed
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      window.location.reload();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -728,15 +741,25 @@ export default function ProfileSettings() {
                 </p>
               </div>
 
-              <a
-                href={getCheckoutUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full bg-indigo-600 text-white h-16 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20 hover:scale-[1.01] active:scale-[0.99]"
-              >
-                <CreditCard size={18} />
-                Fazer Aquisição Premium (Anual)
-              </a>
+              <div className="flex flex-col gap-3">
+                <a
+                  href={getCheckoutUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-indigo-600 text-white h-16 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20 hover:scale-[1.01] active:scale-[0.99]"
+                >
+                  <CreditCard size={18} />
+                  Fazer Aquisição Premium (Anual)
+                </a>
+                
+                <button
+                  onClick={handleSyncSubscription}
+                  className="w-full bg-app-card border border-app-border text-app-text h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-app-bg transition-all flex items-center justify-center gap-3 active:scale-95 group"
+                >
+                  <ArrowUpDown size={16} className="text-indigo-500 group-hover:rotate-180 transition-transform duration-500" />
+                  Já pagou? Clique aqui para sincronizar
+                </button>
+              </div>
             </div>
           )}
         </div>
