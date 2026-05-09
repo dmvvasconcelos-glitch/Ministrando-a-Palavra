@@ -37,7 +37,7 @@ import {
   Database
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, deleteDoc, setDoc, deleteField, limit } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, deleteDoc, setDoc, deleteField, limit, where, getDocs } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { UserProfile, ContactMessage } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -124,7 +124,58 @@ export default function AdminDashboard() {
     }
   };
 
+  const [logsError, setLogsError] = useState<string | null>(null);
+
   const webhookUrl = `${window.location.origin}/api/webhooks/cakto`;
+
+  const testWebhookConnectivity = async () => {
+    console.log('AdminDashboard: Testing webhook connectivity...');
+    try {
+      const res = await fetch('/api/webhooks/cakto');
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      console.log('AdminDashboard: Webhook test result:', data);
+      alert('Conectividade (GET): ' + (data.status === 'ok' ? 'OK! Endpoint alcançável.' : 'Erro: ' + JSON.stringify(data)));
+    } catch (e) {
+      console.error('AdminDashboard: Webhook test failed:', e);
+      alert('Falha ao conectar (GET) com o endpoint do servidor: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  };
+
+  const sendTestWebhook = async () => {
+    if (!window.confirm('Isso enviará um payload de teste POST para o servidor. Deseja prosseguir?')) return;
+    
+    console.log('AdminDashboard: Sending test webhook POST...');
+    try {
+      const res = await fetch('/api/webhooks/cakto', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          event: 'venda_aprovada',
+          status: 'paid',
+          email: 'teste_webhook@example.com',
+          external_id: 'test_user_id',
+          is_test: true,
+          venda: {
+             status: 'pago',
+             cliente: { email: 'teste_webhook@example.com' }
+          }
+        })
+      });
+      
+      const data = await res.json();
+      console.log('AdminDashboard: Webhook POST result:', data);
+      alert('Resultado (POST): ' + JSON.stringify(data));
+      setShowLogs(true); // Open logs to see if it arrived
+    } catch (e) {
+      console.error('AdminDashboard: Webhook POST failed:', e);
+      alert('Falha ao enviar POST para o servidor: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  };
 
   const exportToCSV = () => {
     try {
@@ -269,11 +320,13 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (showLogs) {
-      const q = query(collection(db, 'webhook_logs'), orderBy('receivedAt', 'desc'), limit(10));
+      setLogsError(null);
+      const q = query(collection(db, 'webhook_logs'), orderBy('receivedAt', 'desc'), limit(15));
       return onSnapshot(q, (snapshot) => {
         setWebhookLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       }, (err) => {
         console.error('AdminDashboard: Webhook logs error:', err);
+        setLogsError(err.message);
         handleFirestoreError(err, OperationType.LIST, 'webhook_logs');
       });
     }
@@ -723,16 +776,32 @@ export default function AdminDashboard() {
                     <code className="flex-1 text-[11px] bg-black/40 p-4 rounded-2xl break-all font-mono text-emerald-400 border border-white/5">
                       {webhookUrl}
                     </code>
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(webhookUrl);
-                        alert('URL de Webhook copiada com sucesso!');
-                      }}
-                      className="p-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
-                      title="Copiar URL"
-                    >
-                      <Copy size={20} />
-                    </button>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={testWebhookConnectivity}
+                        className="p-4 bg-amber-500 text-white rounded-2xl hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20 active:scale-95"
+                        title="Testar Conectividade (GET)"
+                      >
+                        <Activity size={20} />
+                      </button>
+                      <button 
+                        onClick={sendTestWebhook}
+                        className="p-4 bg-rose-500 text-white rounded-2xl hover:bg-rose-400 transition-all shadow-lg shadow-rose-500/20 active:scale-95"
+                        title="Enviar Payload Teste (POST)"
+                      >
+                        <Send size={20} />
+                      </button>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(webhookUrl);
+                          alert('URL de Webhook copiada com sucesso!');
+                        }}
+                        className="p-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+                        title="Copiar URL"
+                      >
+                        <Copy size={20} />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -2107,14 +2176,22 @@ export default function AdminDashboard() {
                 <button onClick={() => setShowLogs(false)} className="p-2 hover:bg-app-bg rounded-xl text-app-secondary"><X size={24}/></button>
               </div>
               <div className="flex-1 overflow-y-auto p-8 space-y-4 font-mono text-[10px]">
-                {webhookLogs.length === 0 ? (
+                {logsError && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-center">
+                    <ShieldAlert className="w-6 h-6 mx-auto mb-2" />
+                    <p className="font-bold">Erro de Permissão ou Índice</p>
+                    <p className="opacity-60">{logsError}</p>
+                    <p className="mt-2 text-[8px]">Certifique-se de que você está logado como administrador e que o índice foi criado.</p>
+                  </div>
+                )}
+                {!logsError && webhookLogs.length === 0 ? (
                   <div className="py-20 text-center opacity-30 italic">Nenhum log disponível</div>
                 ) : (
                   webhookLogs.map((log) => (
                     <div key={log.id} className="p-4 bg-app-bg/50 border border-app-border rounded-2xl space-y-2">
                        <div className="flex justify-between items-center text-indigo-500 font-bold border-b border-app-border/20 pb-2">
                           <span>Event: {log.payload?.event || 'N/A'} - Status: {log.payload?.status || log.payload?.venda_status || 'N/A'}</span>
-                          <span>{log.receivedAt ? format(log.receivedAt.toDate(), 'PPP HH:mm:ss', { locale: language === 'pt-BR' ? ptBR : enUS }) : '...'}</span>
+                          <span>{log.receivedAt ? format(log.receivedAt.toDate(), 'dd/MM HH:mm:ss', { locale: language === 'pt-BR' ? ptBR : enUS }) : '...'}</span>
                        </div>
                        <pre className="overflow-x-auto whitespace-pre-wrap text-app-secondary">
                           {JSON.stringify(log.payload, null, 2)}

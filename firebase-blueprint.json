@@ -236,6 +236,19 @@
     "contactMessages/{messageId}": {
       "schema": "ContactMessage",
       "description": "Messages sent to the system administrator"
+    },
+    "webhook_logs/{logId}": {
+      "schema": {
+        "title": "Webhook Log",
+        "description": "Incoming payment notifications",
+        "type": "object",
+        "properties": {
+          "receivedAt": { "type": "string", "format": "date-time" },
+          "payload": { "type": "object" },
+          "source": { "type": "string" }
+        }
+      },
+      "description": "Logs of all incoming webhook requests for debugging"
     }
   }
 }

@@ -187,24 +187,37 @@ async function startServer() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  app.get('/api/webhooks/cakto', (req, res) => {
+    res.json({ status: 'ok', message: 'Webhook endpoint is active. Use POST for actual data.' });
+  });
+
   // Webhook for Cakto Payments
   app.post('/api/webhooks/cakto', async (req, res) => {
     try {
       const payload = req.body;
-      console.log('[Webhook] Cakto payload received:', JSON.stringify(payload, null, 2));
+      console.log('[Webhook] Cakto/Payment payload received:', JSON.stringify(payload, null, 2));
 
-      // Optional: Store in Firestore for debugging (last 10 webhooks)
+      // ALWAYS store in Firestore for debugging (last 10 webhooks)
       if (firestore) {
         try {
+          // Log even if we can't process it
           await firestore.collection('webhook_logs').add({
             receivedAt: admin.firestore.Timestamp.fromDate(new Date()),
-            payload,
+            payload: payload || { empty: true },
             headers: req.headers,
-            source: 'cakto'
+            source: 'external_gateway'
           });
+          console.log('[Webhook] Log saved to bucket successfully');
         } catch (e) {
-          console.error('[Webhook] Error saving webhook log:', e);
+          console.error('[Webhook] CRITICAL Error saving webhook log to Firestore:', e);
         }
+      } else {
+        console.warn('[Webhook] Firestore not initialized, cannot save logs');
+      }
+
+      if (!payload || Object.keys(payload).length === 0) {
+        console.warn('[Webhook] Empty payload received');
+        return res.status(200).json({ success: false, error: 'Empty payload' });
       }
 
       // Helper to find key in nested objects (supports dot notation like 'data.customer.email')

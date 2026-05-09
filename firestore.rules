@@ -35,7 +35,7 @@ service cloud.firestore {
       return isSignedIn() && (
         request.auth.uid == 'JeQerKACxsQrapbuKdU2svX7xqf1' ||
         request.auth.uid == 'AA5tXaiYxgStyQq9ioPkiMSe1NA2' ||
-        request.auth.token.email == 'dmv.vasconcelos@gmail.com' ||
+        request.auth.token.get('email', '').lower() == 'dmv.vasconcelos@gmail.com' ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin')
       );
