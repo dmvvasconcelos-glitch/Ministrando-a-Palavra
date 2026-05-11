@@ -598,7 +598,7 @@ export default function SermonEditor({
   };
 
   const handleShare = async () => {
-    const url = window.location.href;
+    const url = 'https://ministrandoapalavra.com.br';
     try {
       await navigator.clipboard.writeText(url);
       alert(t('toolLinkCopied'));
