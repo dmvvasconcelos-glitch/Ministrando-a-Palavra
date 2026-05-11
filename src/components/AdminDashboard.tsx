@@ -34,7 +34,8 @@ import {
   Settings,
   Activity,
   Unlock,
-  Database
+  Database,
+  History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, deleteDoc, setDoc, deleteField, limit, where, getDocs } from 'firebase/firestore';
@@ -94,10 +95,15 @@ export default function AdminDashboard() {
       const snap = await getDocs(q);
       
       const now = serverTimestamp();
+      const expiresAt = new Date();
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      
       const updates = {
         role: 'premium' as const,
         isPremium: true,
         subscriptionStatus: 'active' as const,
+        subscriptionExpiresAt: expiresAt,
+        paidExpiresAt: expiresAt,
         paidAt: now,
         updatedAt: now
       };
@@ -206,7 +212,7 @@ export default function AdminDashboard() {
       ];
 
       const csvRows = users.map(user => {
-        const status = user.role === 'admin' ? 'Administrador' : (getUserStatus(user) === 'active' ? 'Ativo' : (getUserStatus(user) === 'expired' ? 'Expirado' : 'Teste'));
+        const status = user.role === 'admin' ? 'Administrador' : (user.isPremium ? 'PAGO' : (getUserStatus(user) === 'active' ? 'Ativo' : (getUserStatus(user) === 'expired' ? 'Expirado' : 'Teste')));
         const expiresAt = user.role === 'admin' ? 'Infinito' : (user.subscriptionExpiresAt ? format(user.subscriptionExpiresAt.toDate(), 'dd/MM/yyyy') : (user.trialExpiresAt ? format(user.trialExpiresAt.toDate(), 'dd/MM/yyyy') : '-'));
         const lastLogin = user.lastLogin ? format(user.lastLogin.toDate(), 'dd/MM/yyyy HH:mm') : '-';
         
@@ -652,7 +658,7 @@ export default function AdminDashboard() {
         user.displayName || user.fullName || '',
         user.email || '',
         user.role === 'admin' ? 'Administrador' : (user.subscriptionStatus || 'trial'),
-        getUserStatus(user) === 'active' ? 'Ativo' : (getUserStatus(user) === 'expired' ? 'Expirado' : 'Teste'),
+        user.role === 'admin' ? 'Ativo' : (user.isPremium ? 'PAGO' : (getUserStatus(user) === 'active' ? 'Ativo' : (getUserStatus(user) === 'expired' ? 'Expirado' : 'Teste'))),
         user.role === 'admin' ? 'Infinito' : (user.subscriptionExpiresAt ? format(user.subscriptionExpiresAt.toDate(), 'dd/MM/yyyy') : (user.trialExpiresAt ? format(user.trialExpiresAt.toDate(), 'dd/MM/yyyy') : '-')),
         user.birthDate || '',
         user.newBirthDate || '',
@@ -1262,7 +1268,7 @@ export default function AdminDashboard() {
                                   : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}
                           `}>
                             {user.role === 'admin' ? <ShieldCheck size={12} /> : getUserStatus(user) === 'active' ? <CheckCircle2 size={12} /> : getUserStatus(user) === 'expired' ? <XCircle size={12} /> : <Clock size={12} />}
-                            {user.role === 'admin' ? 'Administrador' : getUserStatus(user) === 'active' ? (t('statusActive')) : getUserStatus(user) === 'expired' ? (t('statusExpired')) : `TESTE (${getTrialDays(user)}D)`}
+                            {user.role === 'admin' ? 'Administrador' : user.isPremium ? 'PAGO' : getUserStatus(user) === 'active' ? (t('statusActive')) : getUserStatus(user) === 'expired' ? (t('statusExpired')) : `TESTE (${getTrialDays(user)}D)`}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -1383,7 +1389,7 @@ export default function AdminDashboard() {
                           ? 'bg-red-500/10 text-red-500'
                           : 'bg-amber-500/10 text-amber-500'}
                       `}>
-                        {user.role === 'admin' ? 'Administrador' : getUserStatus(user) === 'active' ? (t('statusActive')) : getUserStatus(user) === 'expired' ? (t('statusExpired')) : `TESTE (${getTrialDays(user)}D)`}
+                        {user.role === 'admin' ? 'Administrador' : user.isPremium ? 'PAGO' : getUserStatus(user) === 'active' ? (t('statusActive')) : getUserStatus(user) === 'expired' ? (t('statusExpired')) : `TESTE (${getTrialDays(user)}D)`}
                       </div>
                     </div>
 
@@ -2126,39 +2132,48 @@ export default function AdminDashboard() {
       </AnimatePresence>
 
       {/* Admin Quick Actions Footer */}
-      <div className="fixed bottom-0 left-0 right-0 z-[50] p-4 bg-app-bg/80 backdrop-blur-xl border-t border-app-border">
-        <div className="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="relative group">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-app-secondary group-focus-within:text-indigo-500 transition-colors" />
-              <input
-                type="email"
-                placeholder="Liberar Premium por E-mail"
-                className="pl-10 pr-4 py-2 bg-app-card border border-app-border rounded-xl text-sm text-app-text focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64 transition-all"
-                value={manualUpgradeEmail}
-                onChange={(e) => setManualUpgradeEmail(e.target.value)}
-              />
-            </div>
-            <button
-              onClick={handleManualUpgrade}
-              disabled={isUpgrading}
-              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/20"
-            >
-              <Unlock className="w-4 h-4" />
-              {isUpgrading ? 'Liberando...' : 'Liberar Premium'}
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3">
-             <button
-                onClick={() => setShowLogs(!showLogs)}
-                className={`flex items-center gap-2 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all
-                  ${showLogs ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-app-card border border-app-border text-app-secondary hover:text-app-text'}
-                `}
+      <div className="sticky bottom-0 z-[50] mt-auto -mx-8 -mb-8">
+        <div className="bg-app-card/80 backdrop-blur-xl border-t border-app-border p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
+          <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+              <div className="relative group w-full sm:w-80">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="w-4 h-4 text-app-secondary group-focus-within:text-indigo-500 transition-colors" />
+                </div>
+                <input
+                  type="email"
+                  placeholder="Liberar Premium por E-mail"
+                  className="w-full pl-11 pr-4 py-3.5 bg-app-bg/50 border border-app-border rounded-2xl text-sm text-app-text placeholder:text-app-secondary/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner"
+                  value={manualUpgradeEmail}
+                  onChange={(e) => setManualUpgradeEmail(e.target.value)}
+                />
+              </div>
+              <button
+                onClick={handleManualUpgrade}
+                disabled={isUpgrading}
+                className="w-full sm:w-auto h-12 px-10 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20 active:scale-95"
               >
-                <Activity className="w-4 h-4" />
-                {showLogs ? 'Ocultar Logs' : 'Logs de Vendas'}
+                <Unlock className="w-4 h-4" />
+                {isUpgrading ? 'Liberando...' : 'Liberar Premium'}
               </button>
+            </div>
+
+            <div className="flex items-center gap-4 w-full lg:w-auto">
+               <button
+                  onClick={() => setShowLogs(!showLogs)}
+                  className={`flex-1 lg:flex-none h-12 flex items-center justify-center gap-3 px-12 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border
+                    ${showLogs ? 'bg-amber-600 border-amber-500 text-white shadow-xl shadow-amber-600/20' : 'bg-app-bg border-app-border text-app-secondary hover:text-app-text hover:border-indigo-500/30'}
+                  `}
+               >
+                  <History className="w-4 h-4" />
+                  {showLogs ? 'Ocultar Logs de Vendas' : 'Ver Logs de Vendas'}
+               </button>
+               
+               <div className="hidden sm:flex items-center gap-2 px-6 py-3 bg-app-bg/50 border border-app-border rounded-2xl">
+                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                 <span className="text-[10px] font-black text-app-secondary uppercase tracking-[0.2em]">Painel de Controle Ativo</span>
+               </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2202,7 +2217,7 @@ export default function AdminDashboard() {
                     <div key={log.id} className="p-4 bg-app-bg/50 border border-app-border rounded-2xl space-y-2">
                        <div className="flex justify-between items-center text-indigo-500 font-bold border-b border-app-border/20 pb-2">
                           <span>Event: {log.payload?.event || 'N/A'} - Status: {log.payload?.status || log.payload?.venda_status || 'N/A'}</span>
-                          <span>{log.receivedAt ? format(log.receivedAt.toDate(), 'dd/MM HH:mm:ss', { locale: language === 'pt-BR' ? ptBR : enUS }) : '...'}</span>
+                          <span>{log.receivedAt ? format(log.receivedAt.toDate(), 'dd/MM HH:mm:ss', { locale: language === 'pt' ? ptBR : enUS }) : '...'}</span>
                        </div>
                        <pre className="overflow-x-auto whitespace-pre-wrap text-app-secondary">
                           {JSON.stringify(log.payload, null, 2)}

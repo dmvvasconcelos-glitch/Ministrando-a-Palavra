@@ -21,7 +21,9 @@ import {
   PanelLeftOpen,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  Clock,
+  Crown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -35,7 +37,7 @@ import {
   signOut,
   User
 } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDoc, serverTimestamp, query, collection, where, orderBy, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, serverTimestamp, query, collection, where, orderBy, updateDoc, limit, getDocs } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from './lib/firebase';
 import BibleReader from './components/BibleReader';
 import SermonEditor from './components/SermonEditor';
@@ -199,18 +201,19 @@ export default function App() {
       console.log('Auth observer triggered:', u ? `User: ${u.email}` : 'No active session');
       setUser(u);
       
+      // If we just logged in, force navigation out of landing ASAP
+      if (u && (sessionStorage.getItem('just_logged_in') === 'true' || localStorage.getItem('just_logged_in') === 'true')) {
+        setActiveTab('dashboard');
+        sessionStorage.removeItem('just_logged_in');
+        localStorage.removeItem('just_logged_in');
+      }
+
       if (u) {
         // Reset logging in state if we found a user
         setIsLoggingIn(false);
         
         // Ensure user document exists in 'users' collection for searching/sharing
         const userRef = doc(db, 'users', u.uid);
-
-        // If we just logged in, force navigation out of landing
-        if (sessionStorage.getItem('just_logged_in') === 'true') {
-          setActiveTab('dashboard');
-          sessionStorage.removeItem('just_logged_in');
-        }
         
         try {
           const userSnap = await getDoc(userRef);
@@ -392,6 +395,11 @@ export default function App() {
             
             const keysToSync = Object.keys(updateObj).filter(key => {
               if (isSelfAdmin) return true;
+              
+              // If we are promoting to premium because we found a valid payment/placeholder,
+              // we MUST allow role and subscriptionStatus to be updated.
+              if (updateObj.isPremium === true && restrictedFields.includes(key)) return true;
+              
               if (restrictedFields.includes(key)) return false;
               // Only update if value is different
               return updateObj[key] !== data?.[key];
@@ -962,20 +970,45 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto w-full relative transition-all duration-500 ease-in-out">
         {profile?.subscriptionStatus === 'trial' && !profile?.isPremium && profile?.role !== 'admin' && (
-          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-center gap-2 overflow-hidden shrink-0 animate-in fade-in slide-in-from-top duration-500">
-            <Sparkles size={14} className="text-amber-600 animate-pulse" />
-            <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-700">
-              Você está na <span className="text-amber-600">versão de teste</span> ({trialDurationDays} dias). 
-              <span className="ml-2 text-amber-900/60">Restam:</span> <span className="text-indigo-600">{trialTimeLeft}</span>
-              <a 
-                href={getCheckoutUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-4 text-indigo-600 hover:decoration-indigo-400 decoration-2 underline-offset-2 underline font-black bg-indigo-500/10 px-2 py-0.5 rounded-md"
-              >
-                Ativar Premium R$ 19,90 (Anual)
-              </a>
-            </p>
+          <div className="relative group overflow-hidden shrink-0">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-indigo-600/20 to-amber-500/10 opacity-70 pointer-events-none" />
+            <div className="relative backdrop-blur-xl border-b border-white/10 px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-500 shadow-lg shadow-amber-500/10 border border-amber-500/30">
+                  <Crown size={20} className="animate-pulse" />
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] bg-amber-500 text-white px-2 py-0.5 rounded-md">EXPERIMENTAL</span>
+                    <p className="text-xs font-black text-app-text tracking-tight uppercase">Período de Experiência Ativo</p>
+                  </div>
+                  <p className="text-[10px] font-bold text-app-secondary flex items-center gap-1.5 mt-0.5">
+                    <Clock size={12} className="text-amber-500" />
+                    Seu acesso expira em: <span className="text-app-text font-black underline">{trialTimeLeft}</span>
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-8">
+                <div className="hidden lg:flex flex-col items-end border-r border-app-border pr-8">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-app-secondary opacity-60">Promoção de Lançamento</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-app-secondary text-[10px] font-bold line-through opacity-40">R$ 59,90</span>
+                    <span className="text-lg font-black text-app-text italic">R$ 19,90 <span className="text-[9px] not-italic opacity-40 font-bold uppercase tracking-tighter">p/ano</span></span>
+                  </div>
+                </div>
+                
+                <a 
+                  href={getCheckoutUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-600/20 transition-all hover:scale-[1.03] active:scale-95 group/btn"
+                >
+                  <Sparkles size={16} className="fill-white/20 group-hover/btn:animate-pulse" />
+                  Ativar Premium Agora
+                </a>
+              </div>
+            </div>
           </div>
         )}
         <AnimatePresence mode="wait">

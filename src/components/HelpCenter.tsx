@@ -411,7 +411,7 @@ export default function HelpCenter() {
                     {t('sharedKeyInfoDesc')}
                   </p>
                   <div className="bg-app-bg px-3 py-2 rounded-lg text-[10px] font-bold text-app-secondary uppercase tracking-widest border border-app-border">
-                    15 {t('statPreachings').toLowerCase()} / dia
+                    5 {t('statPreachings').toLowerCase()} / dia
                   </div>
                 </div>
 
@@ -429,7 +429,7 @@ export default function HelpCenter() {
                     {t('individualKeyInfoDesc')}
                   </p>
                   <div className="bg-indigo-500/10 px-3 py-2 rounded-lg text-[10px] font-bold text-indigo-500 uppercase tracking-widest border border-indigo-500/20">
-                    30 {t('statPreachings').toLowerCase()} / dia
+                    15 {t('statPreachings').toLowerCase()} / dia
                   </div>
                 </div>
               </div>

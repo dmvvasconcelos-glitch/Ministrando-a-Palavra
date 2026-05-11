@@ -2,65 +2,121 @@ import 'dotenv/config';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
-import * as admin from 'firebase-admin';
+import { initializeApp as initializeClientApp } from 'firebase/app';
+import { 
+  getFirestore as getClientFirestore, 
+  collection, 
+  getDocs, 
+  limit, 
+  query, 
+  addDoc, 
+  updateDoc, 
+  doc, 
+  getDoc, 
+  where, 
+  setDoc,
+  deleteDoc,
+  Timestamp as ClientTimestamp,
+  type Firestore as ClientFirestore
+} from 'firebase/firestore';
+import admin from 'firebase-admin';
+import { initializeApp as initializeAdminApp, getApps, App } from 'firebase-admin/app';
+import { getMessaging, Messaging } from 'firebase-admin/messaging';
+import { getAuth, Auth } from 'firebase-admin/auth';
 import fs from 'fs';
 import { GoogleGenAI } from '@google/genai';
 
-// Firebase Admin Setup
-let firestore: admin.firestore.Firestore | null = null;
-let messaging: admin.messaging.Messaging | null = null;
+// Early environment setup
+const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
 let firebaseConfig: any = {};
+if (fs.existsSync(configPath)) {
+  try { firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8')); } catch (e) {}
+}
 
-try {
-  const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
-  
-  if (fs.existsSync(configPath)) {
-    firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-  }
+const TARGET_PROJECT = process.env.FIREBASE_PROJECT_ID || firebaseConfig.projectId;
+if (TARGET_PROJECT) {
+  process.env.GOOGLE_CLOUD_PROJECT = TARGET_PROJECT;
+  process.env.GCP_PROJECT = TARGET_PROJECT;
+}
 
-  const projectId = process.env.FIREBASE_PROJECT_ID || firebaseConfig.projectId;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+// Firebase Instances
+let firestore: any = null;
+let messaging: Messaging | null = null;
+let authAdmin: Auth | null = null;
+let firebaseAdminApp: App | null = null;
+let firebaseClientApp: any = null;
 
-  if (projectId) {
-    if (admin.apps.length === 0) {
-      if (clientEmail && privateKey) {
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId,
-            clientEmail,
-            privateKey,
-          }),
+// Helper to ensure Firestore is initialized
+async function safeGetFirestore() {
+  if (firestore) return firestore;
+  await initializeFirebase();
+  return firestore;
+}
+
+async function initializeFirebase() {
+  if (firestore) return;
+  try {
+    const projectId = firebaseConfig.projectId;
+    const databaseId = firebaseConfig.firestoreDatabaseId;
+
+    // 1. Initialize admin for Auth/Messaging/Firestore
+    if (getApps().length === 0) {
+      const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+      const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
+      const privateKey = privateKeyRaw?.replace(/\\n/g, '\n');
+
+      if (clientEmail && privateKey && projectId) {
+        firebaseAdminApp = initializeAdminApp({
+          credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
+          projectId
         });
-        console.log(`[Firebase] Initialized with Service Account (Project: ${projectId})`);
       } else {
-        admin.initializeApp({
-          projectId: projectId,
+        firebaseAdminApp = initializeAdminApp({ 
+          credential: admin.credential.applicationDefault(),
+          projectId: projectId
         });
-        console.log(`[Firebase] Initialized with Project ID (Project: ${projectId})`);
       }
     } else {
-      console.log(`[Firebase] Already initialized (Apps: ${admin.apps.length})`);
+      firebaseAdminApp = getApps()[0];
     }
     
-    try {
-      if (firebaseConfig.firestoreDatabaseId) {
-        firestore = admin.firestore(firebaseConfig.firestoreDatabaseId);
-        console.log(`[Firebase] Firestore set to database: ${firebaseConfig.firestoreDatabaseId}`);
-      } else {
-        firestore = admin.firestore();
-        console.log(`[Firebase] Firestore set to default database`);
+    if (firebaseAdminApp) {
+      messaging = getMessaging(firebaseAdminApp);
+      authAdmin = getAuth(firebaseAdminApp);
+
+      // Attempt to initialize Admin Firestore - it bypasses Security Rules
+      try {
+        console.log(`[Firebase] Connecting Admin Firestore (Project: ${projectId}, Database: ${databaseId || '(default)'})`);
+        const adminFs = new admin.firestore.Firestore({
+          projectId,
+          databaseId: (databaseId && databaseId !== '(default)') ? databaseId : undefined,
+        });
+        
+        // Final verification probe
+        await adminFs.collection('webhook_logs').limit(1).get();
+        console.log('[Firebase] Admin Firestore SUCCESS');
+        firestore = adminFs;
+      } catch (adminErr: any) {
+        console.warn(`[Firebase] Admin Firestore failed: ${adminErr.message}`);
+        
+        // Fallback to Client SDK if Admin lacks IAM permissions
+        if (firebaseConfig.apiKey) {
+          console.log('[Firebase] Falling back to Client SDK...');
+          if (!firebaseClientApp) {
+            firebaseClientApp = initializeClientApp(firebaseConfig);
+          }
+          firestore = getClientFirestore(firebaseClientApp, databaseId);
+        }
       }
-      messaging = admin.messaging();
-    } catch (fsErr) {
-      console.error('[Firebase] Error obtaining Firestore instance:', fsErr);
     }
-  } else {
-    console.warn('[Firebase] No Project ID found in environment or config file.');
+  } catch (err) {
+    console.error('[Firebase] Failed to initialize Firebase:', err);
   }
-} catch (err) {
-  console.error('[Firebase] Failed to initialize Firebase Admin:', err);
 }
+
+// Ensure startup
+initializeFirebase();
+
 
 // Middleware to verify Firebase Auth Token
 const authenticateAdmin = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -71,15 +127,22 @@ const authenticateAdmin = async (req: express.Request, res: express.Response, ne
 
   const idToken = authHeader.split('Bearer ')[1];
   try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    if (!authAdmin) throw new Error('Firebase Auth not initialized');
+    const decodedToken = await authAdmin.verifyIdToken(idToken);
     
     // Check if the user is an admin
     const isAdminEmail = decodedToken.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com';
     let isFirestoreAdmin = false;
 
-    if (!isAdminEmail && firestore) {
-      const userDoc = await firestore.collection('users').doc(decodedToken.uid).get();
-      isFirestoreAdmin = userDoc.data()?.role === 'admin';
+    const fs = await safeGetFirestore();
+    if (!isAdminEmail && fs) {
+      if ('collection' in fs && typeof (fs as any).collection === 'function') {
+        const userSnap = await (fs as any).collection('users').doc(decodedToken.uid).get();
+        isFirestoreAdmin = userSnap.data()?.role === 'admin';
+      } else {
+        const userSnap = await getDoc(doc(fs, 'users', decodedToken.uid));
+        isFirestoreAdmin = userSnap.data()?.role === 'admin';
+      }
     }
 
     if (isAdminEmail || isFirestoreAdmin) {
@@ -94,70 +157,120 @@ const authenticateAdmin = async (req: express.Request, res: express.Response, ne
   }
 };
 
+// Firestore Wrappers to support both Admin and Client SDKs
+async function dbGetDoc(fs: any, colPath: string, docId: string) {
+  if (typeof fs.doc === 'function') return await fs.doc(`${colPath}/${docId}`).get();
+  return await getDoc(doc(fs, colPath, docId));
+}
+
+async function dbUpdateDoc(ref: any, data: any) {
+  if (typeof ref.update === 'function') return await ref.update(data);
+  return await updateDoc(ref, data);
+}
+
+async function dbAddDoc(colRef: any, data: any) {
+  if (typeof colRef.add === 'function') return await colRef.add(data);
+  return await addDoc(colRef, data);
+}
+
+async function dbSetDoc(ref: any, data: any, options?: any) {
+  if (typeof ref.set === 'function') return await ref.set(data, options);
+  return await setDoc(ref, data, options);
+}
+
 // Background check for notifications
 async function checkNotifications() {
-  if (!firestore) return;
+  const currentFirestore = await safeGetFirestore();
+  if (!currentFirestore) {
+    console.warn('[Notifications] Firestore not initialized yet, skipping check.');
+    return;
+  }
   
-  console.log('Checking notifications...');
+  console.log('[Notifications] Checking notifications...');
+  
   try {
     const now = new Date();
     const future24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     const soon = new Date(now.getTime() + 30 * 60 * 1000); // 30 mins before
 
-    const agendaRef = firestore.collection('ministerial_agenda');
-    
-    // Check 24h reminders
-    try {
-      const q24h = await agendaRef
+    // Handle Query for both SDKs
+    let q24hDocs: any[] = [];
+    let qDayDocs: any[] = [];
+
+    if (typeof currentFirestore.collection === 'function') {
+      // Admin SDK
+      const q24h = await currentFirestore.collection('ministerial_agenda')
         .where('notify24h', '==', true)
         .where('notified24h', '==', false)
-        .where('date', '<=', admin.firestore.Timestamp.fromDate(future24h))
-        .where('date', '>=', admin.firestore.Timestamp.fromDate(now))
         .get();
+      q24hDocs = q24h.docs;
 
-      for (const doc of q24h.docs) {
-        const event = doc.data();
-        await sendPushNotification(event.userId, {
-          title: 'Lembrete: Evento em 24h',
-          body: `${event.title} amanhã às ${event.time || ''}`,
-        });
-        await doc.ref.update({ notified24h: true });
-      }
-    } catch (e) {
-      console.warn('Error checking 24h notifications (possibly missing index):', e);
-    }
-
-    // Check same day / soon reminders
-    try {
-      const qDay = await agendaRef
+      const qDay = await currentFirestore.collection('ministerial_agenda')
         .where('notifyDayOf', '==', true)
         .where('notifiedDayOf', '==', false)
-        .where('date', '<=', admin.firestore.Timestamp.fromDate(soon))
-        .where('date', '>=', admin.firestore.Timestamp.fromDate(now))
         .get();
+      qDayDocs = qDay.docs;
+    } else {
+      // Client SDK
+      const agendaRef = collection(currentFirestore, 'ministerial_agenda');
+      const q24hQuery = query(agendaRef, where('notify24h', '==', true), where('notified24h', '==', false));
+      const q24h = await getDocs(q24hQuery);
+      q24hDocs = q24h.docs;
 
-      for (const doc of qDay.docs) {
-        const event = doc.data();
-        await sendPushNotification(event.userId, {
-          title: 'Seu evento está começando!',
-          body: `${event.title} em breve às ${event.time || ''}`,
-        });
-        await doc.ref.update({ notifiedDayOf: true });
-      }
-    } catch (e) {
-      console.warn('Error checking day-of notifications (possibly missing index):', e);
+      const qDayQuery = query(agendaRef, where('notifyDayOf', '==', true), where('notifiedDayOf', '==', false));
+      const qDay = await getDocs(qDayQuery);
+      qDayDocs = qDay.docs;
     }
-  } catch (err) {
-    console.error('Error in notification background task:', err);
+    
+    // Process 24h reminders
+    for (const d of q24hDocs) {
+      try {
+        const event = d.data();
+        if (!event.date) continue;
+        const eventDate = typeof event.date.toDate === 'function' ? event.date.toDate() : new Date(event.date);
+        
+        if (eventDate <= future24h && eventDate >= now) {
+          await sendPushNotification(event.userId, {
+            title: 'Lembrete: Evento em 24h',
+            body: `${event.title} amanhã às ${event.time || ''}`,
+          });
+          await dbUpdateDoc(d.ref, { notified24h: true });
+        }
+      } catch (e: any) {
+        console.warn('[Notifications] Error processing 24h doc:', e.message);
+      }
+    }
+
+    // Process Day-of reminders
+    for (const d of qDayDocs) {
+      try {
+        const event = d.data();
+        if (!event.date) continue;
+        const eventDate = typeof event.date.toDate === 'function' ? event.date.toDate() : new Date(event.date);
+
+        if (eventDate <= soon && eventDate >= now) {
+          await sendPushNotification(event.userId, {
+            title: 'Seu evento está começando!',
+            body: `${event.title} em breve às ${event.time || ''}`,
+          });
+          await dbUpdateDoc(d.ref, { notifiedDayOf: true });
+        }
+      } catch (e: any) {
+        console.warn('[Notifications] Error processing day-of doc:', e.message);
+      }
+    }
+  } catch (err: any) {
+    console.error('[Notifications] Error in notification background task:', err.message);
   }
 }
 
 async function sendPushNotification(userId: string, payload: { title: string; body: string }) {
-  if (!firestore || !messaging) return;
+  const currentFirestore = await safeGetFirestore();
+  if (!currentFirestore || !messaging) return;
   
   try {
-    const userDoc = await firestore.collection('users').doc(userId).get();
-    const userData = userDoc.data();
+    const userSnap = await dbGetDoc(currentFirestore, 'users', userId);
+    const userData = userSnap.data();
     if (userData?.fcmToken && userData?.notificationsEnabled) {
       await messaging.send({
         token: userData.fcmToken,
@@ -204,36 +317,27 @@ async function startServer() {
       const payload = req.body;
       console.log('[Webhook] Cakto/Payment payload received:', JSON.stringify(payload, null, 2));
 
-      // Lazy check/init for Firestore if it failed at startup
-      if (!firestore && firebaseConfig.projectId) {
-        try {
-          console.log('[Webhook] Attempting late Firestore initialization...');
-          if (admin.apps.length === 0) {
-             admin.initializeApp({ projectId: firebaseConfig.projectId });
-          }
-          if (firebaseConfig.firestoreDatabaseId) {
-            firestore = admin.firestore(firebaseConfig.firestoreDatabaseId);
-          } else {
-            firestore = admin.firestore();
-          }
-          console.log('[Webhook] Late Firestore initialization successful');
-        } catch (initErr) {
-          console.error('[Webhook] Late Firestore initialization failed:', initErr);
-        }
-      }
+      // Ensure Firestore is initialized
+      const fs = await safeGetFirestore();
 
-      // ALWAYS store in Firestore for debugging (last 10 webhooks)
-      if (firestore) {
+      // ALWAYS store in Firestore for debugging
+      if (fs) {
         try {
-          await firestore.collection('webhook_logs').add({
-            receivedAt: admin.firestore.Timestamp.fromDate(new Date()),
+          const logData = {
+            receivedAt: typeof fs.app === 'undefined' ? ClientTimestamp.fromDate(new Date()) : new Date(),
             payload: payload || { empty: true },
             headers: req.headers,
             source: 'external_gateway_test'
-          });
+          };
+          
+          if (typeof fs.collection === 'function') {
+            await fs.collection('webhook_logs').add(logData);
+          } else {
+            await addDoc(collection(fs, 'webhook_logs'), logData);
+          }
           console.log('[Webhook] Log saved successfully');
-        } catch (e) {
-          console.error('[Webhook] Error saving log:', e);
+        } catch (e: any) {
+          console.error('[Webhook] Error saving log:', e.message || e);
         }
       }
 
@@ -326,66 +430,99 @@ async function startServer() {
 
       console.log(`[Webhook] Verdict: isApproved=${isApproved} (Status: ${statusStr}, Event: ${eventStr})`);
 
-      if (isApproved && (email || externalId) && firestore) {
+      if (isApproved && (email || externalId) && fs) {
         console.log(`[Webhook] Processing approved payment for Email: ${email}, ExtID: ${externalId}`);
         try {
-          let userDoc: admin.firestore.DocumentReference | null = null;
+          let userDocRef: any = null;
+          let userSnap: any = null;
           
           if (externalId && String(externalId).length > 5) {
-            const ref = firestore.collection('users').doc(String(externalId));
-            const snap = await ref.get();
-            if (snap.exists) {
+            if (typeof fs.doc === 'function') {
+              userDocRef = fs.doc(`users/${String(externalId)}`);
+              userSnap = await userDocRef.get();
+            } else {
+              userDocRef = doc(fs, 'users', String(externalId));
+              userSnap = await getDoc(userDocRef);
+            }
+
+            if (userSnap.exists && (typeof userSnap.exists === 'function' ? userSnap.exists() : userSnap.exists)) {
               console.log(`[Webhook] Found user by ExtID: ${externalId}`);
-              userDoc = ref;
             } else {
               console.log(`[Webhook] No user found with ID ${externalId}, will create/search by email`);
+              userDocRef = null;
             }
           }
           
-          if (!userDoc && email) {
+          if (!userDocRef && email) {
             console.log(`[Webhook] Searching user by email: ${email}`);
-            const snap = await firestore.collection('users')
-              .where('email', '==', String(email).trim().toLowerCase())
-              .limit(1)
-              .get();
-            if (!snap.empty) {
-              console.log(`[Webhook] Found user by email: ${email}`);
-              userDoc = snap.docs[0].ref;
+            const emailLower = String(email).trim().toLowerCase();
+            
+            if (typeof fs.collection === 'function') {
+              const snap = await fs.collection('users').where('email', '==', emailLower).limit(1).get();
+              if (!snap.empty) {
+                userDocRef = snap.docs[0].ref;
+                console.log(`[Webhook] Found user by email: ${email}`);
+              }
+            } else {
+              const q = query(collection(fs, 'users'), where('email', '==', emailLower), limit(1));
+              const snap = await getDocs(q);
+              if (!snap.empty) {
+                userDocRef = snap.docs[0].ref;
+                console.log(`[Webhook] Found user by email: ${email}`);
+              }
             }
           }
           
           const now = new Date();
           const oneYearFromNow = new Date();
           oneYearFromNow.setFullYear(now.getFullYear() + 1);
+          
+          const isClient = typeof fs.app === 'undefined';
+          const timestamp = isClient ? ClientTimestamp.fromDate(now) : now;
+          const expiryTs = isClient ? ClientTimestamp.fromDate(oneYearFromNow) : oneYearFromNow;
 
-          if (userDoc) {
-            await userDoc.update({
+          if (userDocRef) {
+            const updateData = {
               role: 'premium',
               subscriptionStatus: 'active',
               isPremium: true,
-              subscriptionExpiresAt: admin.firestore.Timestamp.fromDate(oneYearFromNow),
-              paidExpiresAt: admin.firestore.Timestamp.fromDate(oneYearFromNow),
+              subscriptionExpiresAt: expiryTs,
+              paidExpiresAt: expiryTs,
               trialExpiresAt: null,
               trialStartedAt: null,
-              paidAt: admin.firestore.Timestamp.fromDate(now),
-              updatedAt: admin.firestore.Timestamp.fromDate(now)
-            });
+              paidAt: timestamp,
+              updatedAt: timestamp
+            };
+
+            if (typeof userDocRef.update === 'function') {
+              await userDocRef.update(updateData);
+            } else {
+              await updateDoc(userDocRef, updateData);
+            }
             console.log(`[Webhook] Successfully upgraded user ${email || externalId} to Premium`);
             return res.status(200).json({ success: true, message: 'User upgraded' });
           } else {
             console.log(`[Webhook] User ${email || externalId} not found, creating placeholder...`);
             const placeholderId = externalId ? String(externalId) : (String(email).toLowerCase().replace(/[^a-z0-9]/g, '_') + '_p');
-            await firestore.collection('users').doc(placeholderId).set({
+            
+            const placeholderData = {
               email: String(email || '').toLowerCase(),
               role: 'premium',
               subscriptionStatus: 'active',
               isPremium: true,
-              subscriptionExpiresAt: admin.firestore.Timestamp.fromDate(oneYearFromNow),
-              paidExpiresAt: admin.firestore.Timestamp.fromDate(oneYearFromNow),
-              paidAt: admin.firestore.Timestamp.fromDate(now),
-              updatedAt: admin.firestore.Timestamp.fromDate(now),
-              createdAt: admin.firestore.Timestamp.fromDate(now)
-            }, { merge: true });
+              subscriptionExpiresAt: expiryTs,
+              paidExpiresAt: expiryTs,
+              paidAt: timestamp,
+              updatedAt: timestamp,
+              createdAt: timestamp
+            };
+
+            if (typeof fs.doc === 'function') {
+              await fs.doc(`users/${placeholderId}`).set(placeholderData, { merge: true });
+            } else {
+              const ref = doc(fs, 'users', placeholderId);
+              await setDoc(ref, placeholderData, { merge: true });
+            }
             console.log(`[Webhook] Created placeholder with ID: ${placeholderId}`);
             return res.status(200).json({ success: true, message: 'Placeholder created' });
           }
@@ -402,7 +539,9 @@ async function startServer() {
             isApproved,
             hasEmail: !!email,
             hasExtId: !!externalId,
-            hasFirestore: !!firestore,
+            hasFirestore: !!fs,
+            hasConfig: !!firebaseConfig.projectId,
+            configProjectId: firebaseConfig.projectId,
             extractedStatus: status,
             extractedEmail: email,
             extractedExtId: externalId,
@@ -423,14 +562,13 @@ async function startServer() {
       console.log(`Admin ${((req as any).user as any).email} requested deletion of user ${uid}`);
       
       // Delete from Firebase Auth
-      await admin.auth().deleteUser(uid);
+      if (!authAdmin) throw new Error('Firebase Auth not initialized');
+      await authAdmin.deleteUser(uid);
       
-      // Delete from Firestore (though rules should also allow client-side, we do it here for completeness)
-      if (firestore) {
-        await firestore.collection('users').doc(uid).delete();
-        
-        // Optionally delete other collection data
-        // For now, deleting the profile is the most important part
+      // Delete from Firestore
+      const fs = await safeGetFirestore();
+      if (fs) {
+        await deleteDoc(doc(fs, 'users', uid));
       }
       
       res.json({ success: true, message: 'User deleted successfully' });

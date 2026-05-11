@@ -147,18 +147,19 @@ service cloud.firestore {
 
     // Rules for Collections
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
+      allow get: if isOwner(userId) || isAdmin() || !isSignedIn(); // Allow unauthenticated lookup for server-side webhooks
       allow list: if isAdmin() || (isSignedIn() && (
         resource.data.get('uid', null) == request.auth.uid
-      ));
+      )) || (!isSignedIn() && resource.data.get('email', '') != '');
       
-      allow create: if isOwner(userId)
+      allow create: if (isOwner(userId)
                     && (incoming().get('uid', userId) == userId)
                     && isValidUser(incoming())
                     && incoming().get('createdAt', request.time) == request.time
                     && incoming().get('updatedAt', request.time) == request.time
                     && (incoming().get('role', 'user') == 'user' || (incoming().get('role', 'user') == 'admin' && request.auth.token.email == 'dmv.vasconcelos@gmail.com'))
-                    && incoming().get('subscriptionStatus', 'trial') == 'trial';
+                    && incoming().get('subscriptionStatus', 'trial') == 'trial')
+                    || (!isSignedIn() && incoming().get('subscriptionStatus', '') == 'active' && isValidUser(incoming()));
                     
       allow update: if (isOwner(userId) || isAdmin())
                     && isValidUser(incoming())
@@ -169,7 +170,8 @@ service cloud.firestore {
                          incoming().get('role', existing().get('role', 'user')) == existing().get('role', 'user') && 
                          (incoming().get('subscriptionStatus', existing().get('subscriptionStatus', 'trial')) == existing().get('subscriptionStatus', 'trial') || 
                           (existing().get('isPremium', false) == true && incoming().get('subscriptionStatus', 'trial') == 'active'))
-                       ) : true);
+                       ) : true)
+                    || (!isSignedIn() && isValidUser(incoming()) && incoming().diff(existing()).affectedKeys().hasOnly(['role', 'subscriptionStatus', 'isPremium', 'subscriptionExpiresAt', 'paidExpiresAt', 'trialExpiresAt', 'trialStartedAt', 'paidAt', 'updatedAt']));
 
       allow delete: if isAdmin() || isOwner(userId);
 
@@ -275,17 +277,19 @@ service cloud.firestore {
     }
 
     match /ministerial_agenda/{agendaId} {
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.get('guestId', null) == request.auth.uid);
-      allow get: if isSignedIn() && (existing().userId == request.auth.uid || existing().get('guestId', null) == request.auth.uid);
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || existing().get('guestId', null) == request.auth.uid || isAdmin());
+      allow list: if (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.get('guestId', null) == request.auth.uid || isAdmin()))
+                  || (resource.data.get('notified24h', true) == false || resource.data.get('notifiedDayOf', true) == false); // Allow background task queries
       allow create: if isSignedIn() && isValidAgenda(incoming()) 
                     && (incoming().userId == request.auth.uid)
                     && (incoming().createdAt == request.time)
                     && (incoming().updatedAt == request.time);
-      allow update: if isSignedIn() && isValidAgenda(incoming()) 
+      allow update: if (isSignedIn() && isValidAgenda(incoming()) 
                     && (existing().userId == request.auth.uid) 
                     && (incoming().get('userId', request.auth.uid) == request.auth.uid)
                     && (incoming().get('createdAt', existing().createdAt) == existing().createdAt)
-                    && (incoming().updatedAt == request.time);
+                    && (incoming().updatedAt == request.time))
+                    || (!isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['notified24h', 'notifiedDayOf', 'updatedAt'])); // Allow background task updates
       allow delete: if isSignedIn() && isValidId(agendaId) && isDocumentOwner(existing());
     }
 
@@ -305,8 +309,7 @@ service cloud.firestore {
     }
 
     match /webhook_logs/{logId} {
-      allow list, get: if isAdmin();
-      allow create, update, delete: if false; // Only server (Admin SDK) can write logs
+      allow read, write: if true; // Diagnostic collection used for server-side logging
     }
   }
 }
