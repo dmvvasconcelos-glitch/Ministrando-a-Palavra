@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Book as BookIcon, ChevronLeft, ChevronRight, Copy, Share2, Bookmark, BookMarked, ChevronDown, Check, TrendingUp, History, Trash2, X } from 'lucide-react';
+import { Search, Book as BookIcon, ChevronLeft, ChevronRight, Copy, Share2, Bookmark, BookMarked, ChevronDown, TrendingUp, History, Trash2, X } from 'lucide-react';
 import { fetchBiblePassage } from '../services/gemini';
 import { DAILY_VERSES, MINISTERIAL_TIPS } from '../constants/dailyInspirations';
 import { motion, AnimatePresence } from 'motion/react';
@@ -29,7 +29,6 @@ export default function BibleReader({ profile }: BibleReaderProps) {
   const [version, setVersion] = useState(() => {
     return localStorage.getItem('bible_version') || BIBLE_VERSIONS[4].id;
   });
-  const [showVersionMenu, setShowVersionMenu] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [ministerialTip, setMinisterialTip] = useState({ ref: '', text: '' });
   const [content, setContent] = useState<any>(() => {
@@ -48,8 +47,6 @@ export default function BibleReader({ profile }: BibleReaderProps) {
     localStorage.removeItem('bible_last_search');
     localStorage.removeItem('bible_last_content');
   };
-
-  const currentVersion = BIBLE_VERSIONS.find(v => v.id === version) || BIBLE_VERSIONS[0];
 
   // Persist version
   useEffect(() => {
@@ -239,6 +236,32 @@ export default function BibleReader({ profile }: BibleReaderProps) {
     handleCopy(text, t('passageContext'));
   };
 
+  const handleSharePassage = async () => {
+    if (!content) return;
+    const ref = content.reference;
+    const versionTag = `(${version.toUpperCase()})`;
+    const cleanRef = ref.replace(/\s*\([^)]*\)$/, '').trim();
+    const finalRef = `${cleanRef} ${versionTag}`;
+    
+    const text = `${finalRef}\n\n` + 
+                 content.verses.map((v: any) => `${v.n}. ${v.text}`).join('\n');
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: finalRef,
+          text: text,
+        });
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Error sharing:', err);
+        }
+      }
+    } else {
+      handleCopyPassage();
+    }
+  };
+
   const handleCopyVerse = (verse: any) => {
     if (!content) return;
     const ref = content.reference;
@@ -348,78 +371,26 @@ export default function BibleReader({ profile }: BibleReaderProps) {
         </form>
 
         {/* Version Selector */}
-        <div className="relative order-1 sm:order-2">
-          <button
-            onClick={() => setShowVersionMenu(!showVersionMenu)}
-            className="w-full sm:w-auto h-full px-4 sm:px-6 py-3 sm:py-4 bg-app-card/80 backdrop-blur-md rounded-full text-xs sm:text-sm font-black flex items-center justify-between sm:justify-start gap-3 hover:bg-app-card transition-all border border-app-border/40 whitespace-nowrap shadow-xl"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-app-accent text-white px-2 py-0.5 rounded-md text-[10px] font-black shadow-lg shadow-app-accent/20">
-                {version}
-              </div>
-              <span className="text-app-text opacity-90 line-clamp-1">— {currentVersion.name}</span>
+        <div className="relative order-1 sm:order-2 min-w-[140px]">
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2 mb-1">
+              <BookMarked size={14} /> {t('bibleVersionLabel')}
+            </label>
+            <div className="relative">
+              <select
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-app-accent/20 focus:border-app-accent outline-none text-app-text transition-all text-xs font-bold appearance-none cursor-pointer pr-10"
+                value={version}
+                onChange={(e) => setVersion(e.target.value)}
+              >
+                {BIBLE_VERSIONS.map((v) => (
+                  <option key={v.id} value={v.id} className="bg-app-bg text-app-text">
+                    {v.name} ({v.id})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-app-accent pointer-events-none" />
             </div>
-            <ChevronDown size={14} className={`text-app-accent transition-transform duration-300 ${showVersionMenu ? 'rotate-180' : ''}`} />
-          </button>
-
-          <AnimatePresence>
-            {showVersionMenu && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[60]"
-                  onClick={() => setShowVersionMenu(false)}
-                />
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                  className="absolute right-0 top-full mt-4 w-[320px] bg-app-card border border-app-border rounded-[2.5rem] p-4 shadow-2xl z-[70] grid grid-cols-1 gap-1.5"
-                >
-                  <p className="px-5 py-2 text-[10px] uppercase font-black tracking-[0.2em] text-app-accent opacity-60 mb-1">{t('bibleVersionLabel')}</p>
-                  <div className="max-h-[350px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-app-accent/20 scrollbar-track-transparent">
-                    {BIBLE_VERSIONS.map(v => (
-                      <button
-                        key={v.id}
-                        onClick={() => {
-                          setVersion(v.id);
-                          setShowVersionMenu(false);
-                        }}
-                        className={`w-full group flex items-center justify-between px-5 py-4 rounded-3xl text-left transition-all relative overflow-hidden border ${
-                          version === v.id 
-                            ? 'bg-app-accent text-white border-transparent shadow-lg shadow-app-accent/20' 
-                            : 'bg-app-bg/50 text-app-text border-app-border/60 hover:bg-app-accent/10 hover:border-app-accent/40 shadow-sm'
-                        }`}
-                      >
-                        <div className="flex flex-col relative z-10">
-                          <span className={`text-sm font-black tracking-widest ${version === v.id ? 'text-white' : 'text-app-text group-hover:text-app-accent'}`}>
-                            {v.id}
-                          </span>
-                          <span className={`text-[13px] font-semibold leading-tight mt-0.5 ${version === v.id ? 'text-white/90' : 'text-app-text/70 group-hover:text-app-text'}`}>
-                            {v.name}
-                          </span>
-                        </div>
-                        {version === v.id ? (
-                          <div className="bg-white/20 p-1.5 rounded-full relative z-10">
-                            <Check size={14} strokeWidth={4} />
-                          </div>
-                        ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-app-border/40 group-hover:border-app-accent/30 transition-colors" />
-                        )}
-                        
-                        {/* Subtle interactive background for hover state */}
-                        {version !== v.id && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-app-accent/0 to-app-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
+          </div>
         </div>
       </div>
 
@@ -459,6 +430,7 @@ export default function BibleReader({ profile }: BibleReaderProps) {
                       <Copy size={20} />
                     </button>
                     <button 
+                      onClick={handleSharePassage}
                       className="p-2 hover:bg-app-card rounded-full text-app-secondary transition-colors active:scale-95"
                     >
                       <Share2 size={20} />

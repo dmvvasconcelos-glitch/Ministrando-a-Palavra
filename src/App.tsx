@@ -647,7 +647,7 @@ export default function App() {
   }
 
   const getCheckoutUrl = () => {
-    const baseUrl = 'https://pay.cakto.com.br/38ydnyy_878109';
+    const baseUrl = 'https://pay.cakto.com.br/3e8jisv_879064';
     if (!user) return baseUrl;
     const params = new URLSearchParams();
     if (user.email) params.append('email', user.email);
@@ -693,7 +693,7 @@ export default function App() {
                   <p className="text-indigo-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Promoção de Lançamento</p>
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-app-text text-xl font-bold italic">R$</span>
-                    <span className="text-5xl font-black text-app-text tracking-tighter">19,90</span>
+                    <span className="text-5xl font-black text-app-text tracking-tighter">29,90</span>
                   </div>
                   <p className="text-app-secondary text-[11px] font-bold uppercase tracking-widest mt-1 opacity-60">Licença Premium • 1 Ano</p>
                 </div>
@@ -994,7 +994,7 @@ export default function App() {
                   <span className="text-[10px] font-bold uppercase tracking-widest text-app-secondary opacity-60">Promoção de Lançamento</span>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-app-secondary text-[10px] font-bold line-through opacity-40">R$ 59,90</span>
-                    <span className="text-lg font-black text-app-text italic">R$ 19,90 <span className="text-[9px] not-italic opacity-40 font-bold uppercase tracking-tighter">p/ano</span></span>
+                    <span className="text-lg font-black text-app-text italic">R$ 29,90 <span className="text-[9px] not-italic opacity-40 font-bold uppercase tracking-tighter">p/ano</span></span>
                   </div>
                 </div>
                 

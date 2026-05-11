@@ -388,7 +388,7 @@ export default function ProfileSettings() {
   };
 
   const getCheckoutUrl = () => {
-    const baseUrl = 'https://pay.cakto.com.br/38ydnyy_878109';
+    const baseUrl = 'https://pay.cakto.com.br/3e8jisv_879064';
     if (!auth.currentUser) return baseUrl;
     const params = new URLSearchParams();
     if (auth.currentUser.email) params.append('email', auth.currentUser.email);
@@ -737,7 +737,7 @@ export default function ProfileSettings() {
               <div className="bg-indigo-500/5 rounded-2xl p-4 border border-indigo-500/10">
                 <p className="text-[10px] text-indigo-500 font-black uppercase tracking-widest mb-1">Oferta Exclusiva</p>
                 <p className="text-xs text-app-secondary font-medium leading-relaxed">
-                  Adquira o plano anual por apenas <span className="text-app-text font-black">R$ 19,90</span> e tenha acesso ilimitado a todas as ferramentas de IA, gestão ministerial e notificações push por 1 ano.
+                  Adquira o plano anual por apenas <span className="text-app-text font-black">R$ 29,90</span> e tenha acesso ilimitado a todas as ferramentas de IA, gestão ministerial e notificações push por 1 ano.
                 </p>
               </div>
 

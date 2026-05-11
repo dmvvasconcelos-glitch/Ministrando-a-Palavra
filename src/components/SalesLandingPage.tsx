@@ -5,7 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 export default function SalesLandingPage({ onLogin, isLoading = false }: { onLogin: () => void, isLoading?: boolean }) {
   const { t } = useLanguage();
-  const CHECKOUT_URL = 'https://pay.cakto.com.br/38ydnyy_878109';
+  const CHECKOUT_URL = 'https://pay.cakto.com.br/3e8jisv_879064';
 
   useEffect(() => {
     document.title = "Ministrando a Palavra | Premium";
@@ -531,7 +531,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                     </div>
                     <div className="flex items-baseline gap-3 md:gap-4">
                       <span className="text-slate-400 text-3xl md:text-4xl font-serif italic">por</span>
-                      <span className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">19,90</span>
+                      <span className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">29,90</span>
                       <div className="flex flex-col items-start leading-[1.1] transform translate-y-[-5px] md:translate-y-[-10px]">
                         <span className="text-indigo-400 font-black text-xl md:text-2xl">R$</span>
                         <span className="text-slate-500 font-bold uppercase text-[10px] md:text-[12px] tracking-widest leading-none mt-1 md:mt-2">/ ano</span>
