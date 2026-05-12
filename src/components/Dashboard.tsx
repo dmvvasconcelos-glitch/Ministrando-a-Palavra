@@ -472,7 +472,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                 <Mic2 size={14} />
                 {t('ministerialAgenda')}
               </h2>
-              <p className="text-[10px] text-slate-500 font-medium ml-6 mt-1">{t('nextAppointmentsSub')}</p>
+              <p className="text-[10px] text-app-secondary font-medium ml-6 mt-1">{t('nextAppointmentsSub')}</p>
             </div>
             <button 
               onClick={onSeeAgenda}

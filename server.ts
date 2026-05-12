@@ -97,15 +97,21 @@ async function initializeFirebase() {
         console.log('[Firebase] Admin Firestore SUCCESS');
         firestore = adminFs;
       } catch (adminErr: any) {
-        console.warn(`[Firebase] Admin Firestore failed: ${adminErr.message}`);
+        // If we get PERMISSION_DENIED (Code 7), it means the service account lacks IAM roles for this specific database
+        // This is common in some restricted environments, so we log it and move to fallback.
+        if (adminErr.code === 7 || String(adminErr.message).includes('PERMISSION_DENIED')) {
+          console.log(`[Firebase] Admin Firestore access restricted (IAM). Switching to service-level Client SDK fallback.`);
+        } else {
+          console.warn(`[Firebase] Admin Firestore initialization error: ${adminErr.message}`);
+        }
         
         // Fallback to Client SDK if Admin lacks IAM permissions
         if (firebaseConfig.apiKey) {
-          console.log('[Firebase] Falling back to Client SDK...');
           if (!firebaseClientApp) {
             firebaseClientApp = initializeClientApp(firebaseConfig);
           }
           firestore = getClientFirestore(firebaseClientApp, databaseId);
+          console.log('[Firebase] Client SDK Fallback Initialized successfully');
         }
       }
     }

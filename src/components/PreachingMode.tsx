@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { Sermon } from '../types';
-
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface PreachingModeProps {

@@ -3,7 +3,7 @@ import {
   Save, Trash2, ArrowLeft, Eye, Edit3, BookMarked, Tag, Trash, FileText, 
   Highlighter, Palette, Type, CaseSensitive, ChevronDown, Share2, MessageSquare, X,
   Users, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight,
-  Eraser, Info, Undo2, Redo2, Sparkles
+  Eraser, Info, Undo2, Redo2, Sparkles, Volume2, Square, Globe, Play, Pause, ChevronUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { marked } from 'marked';
@@ -619,7 +619,7 @@ export default function SermonEditor({
     setContent(prev => prev + formattedText);
   };
 
-  if (loading) return <div className="p-8 text-center text-slate-500 animate-pulse">{t('loadingMinistry')}</div>;
+  if (loading) return <div className="p-8 text-center text-app-secondary animate-pulse">{t('loadingMinistry')}</div>;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -783,7 +783,7 @@ export default function SermonEditor({
                     <h4 className="text-sm font-black text-indigo-400 uppercase tracking-widest">
                       {conflictDraft.isNew ? t('sessionRestoration') : t('versionConflict')}
                     </h4>
-                    <p className="text-[11px] text-slate-400 font-medium leading-relaxed max-w-md">
+                    <p className="text-[11px] text-app-secondary font-medium leading-relaxed max-w-md">
                       {conflictDraft.isNew 
                         ? t('draftFoundMsg')
                         : t('versionConflictMsg')}
@@ -1079,7 +1079,7 @@ export default function SermonEditor({
                 <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
                   <MessageSquare size={12} /> {t('personalNote')}
                 </span>
-                <button onClick={() => setNotePopup(null)} className="text-slate-500 hover:text-white transition-colors">
+                <button onClick={() => setNotePopup(null)} className="text-app-secondary hover:text-indigo-500 transition-colors">
                   <X size={14} />
                 </button>
               </div>
@@ -1100,8 +1100,8 @@ export default function SermonEditor({
         )}
       </div>
 
-      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 px-4 text-slate-500">
-        <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-600">
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 px-4 text-app-secondary">
+        <div className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-80">
           Escrituras Vivas • Sistema de Ministrações
         </div>
       </div>
@@ -1128,8 +1128,8 @@ export default function SermonEditor({
                   <MessageSquare size={24} className="text-indigo-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">{t('spiritualNote')}</h3>
-                  <p className="text-sm text-slate-400">{t('spiritualNoteSub')}</p>
+                  <h3 className="text-xl font-bold text-app-text">{t('spiritualNote')}</h3>
+                  <p className="text-sm text-app-secondary">{t('spiritualNoteSub')}</p>
                 </div>
               </div>
 

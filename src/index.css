@@ -25,19 +25,19 @@
 
 [data-theme='light'] {
   --bg-color: #f8fafc; /* Crisp off-white */
-  --text-primary: #0f172a; /* Slate-900 for high contrast */
-  --text-secondary: #64748b; /* Slate-500 */
+  --text-primary: #020617; /* Darker Slate-950 for maximum contrast */
+  --text-secondary: #1e293b; /* Slate-800 for even better readability */
   --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-border: rgba(0, 0, 0, 0.1); /* Slightly darker border */
   --card-bg: #ffffff;
-  --card-border: rgba(0, 0, 0, 0.04);
-  --nav-bg: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(0, 0, 0, 0.06); /* Slightly more visible border */
+  --nav-bg: rgba(255, 255, 255, 0.85);
   --mesh-blob-1: rgba(99, 102, 241, 0.12);
   --mesh-blob-2: rgba(245, 158, 11, 0.1);
   --mesh-blob-3: rgba(168, 85, 247, 0.1);
   --accent: #4f46e5; /* indigo-600 */
-  --quote-bg: rgba(79, 70, 229, 0.03);
-  --quote-text: #1e293b;
+  --quote-bg: rgba(79, 70, 229, 0.05);
+  --quote-text: #0f172a; /* Slate-900 for quotes */
 }
 
 @theme {

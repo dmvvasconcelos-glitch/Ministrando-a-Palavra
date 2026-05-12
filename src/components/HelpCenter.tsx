@@ -549,8 +549,16 @@ export default function HelpCenter() {
                 </form>
 
                 <div className="pt-8 space-y-4 text-center lg:text-left">
-                  <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-app-secondary opacity-60">Siga-nos nas redes</p>
-                  <div className="flex justify-center lg:justify-start gap-4">
+                  <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-app-secondary opacity-60">Siga-nos nas redes / Suporte Direto</p>
+                  <div className="flex flex-wrap justify-center lg:justify-start gap-4">
+                    <a 
+                      href="https://wa.me/5531973148166" 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-xl text-xs font-bold text-green-500 hover:bg-green-500 hover:text-white transition-all hover:shadow-md"
+                    >
+                      WhatsApp
+                    </a>
                     {['Instagram'].map(social => (
                       <button key={social} className="px-4 py-2 bg-app-card border border-app-border rounded-xl text-xs font-bold text-app-secondary hover:text-indigo-500 transition-all hover:shadow-md">
                         {social}

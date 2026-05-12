@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Book as BookIcon, ChevronLeft, ChevronRight, Copy, Share2, Bookmark, BookMarked, ChevronDown, TrendingUp, History, Trash2, X } from 'lucide-react';
+import { Search, Book as BookIcon, ChevronLeft, ChevronRight, Copy, Share2, Bookmark, BookMarked, ChevronDown, TrendingUp, History, Trash2, X, Check, MessageCircle } from 'lucide-react';
 import { fetchBiblePassage } from '../services/gemini';
 import { DAILY_VERSES, MINISTERIAL_TIPS } from '../constants/dailyInspirations';
 import { motion, AnimatePresence } from 'motion/react';
@@ -40,6 +40,7 @@ export default function BibleReader({ profile }: BibleReaderProps) {
     const saved = localStorage.getItem('recent_bible_searches');
     return saved ? JSON.parse(saved) : ['Gênesis 1', 'Salmo 23', 'Efésios 6', 'João 3:16'];
   });
+  const [copySuccess, setCopySuccess] = useState<string | null>(null);
 
   const handleClear = () => {
     setSearch('');
@@ -203,9 +204,11 @@ export default function BibleReader({ profile }: BibleReaderProps) {
 
   const handleCopy = async (text: string, label: string = t('verseContext')) => {
     try {
-      await navigator.clipboard.writeText(text);
-      // In a real app we'd use a toast, but for now we'll use a silent success or console
-      console.log(`${label} ${t('copiedToClipboard')}`);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        throw new Error('Clipboard API not available');
+      }
     } catch (err) {
       console.error('Failed to copy: ', err);
       // Simple fallback
@@ -219,6 +222,16 @@ export default function BibleReader({ profile }: BibleReaderProps) {
         console.error('Fallback failed: ', fallbackErr);
       }
       document.body.removeChild(textArea);
+    } finally {
+      setCopySuccess(label);
+      setTimeout(() => setCopySuccess(null), 3000);
+      console.log(`${label} ${t('copiedToClipboard')}`);
+      
+      // If we are in the fallback path or sharing API wasn't used/supported, 
+      // the label will be 'passage' or similar. We should alert the user specifically on mobile if API is missing.
+      if (!navigator.share) {
+        // Just rely on the on-screen toast (copySuccess) for better UX than alert
+      }
     }
   };
 
@@ -246,15 +259,18 @@ export default function BibleReader({ profile }: BibleReaderProps) {
     const text = `${finalRef}\n\n` + 
                  content.verses.map((v: any) => `${v.n}. ${v.text}`).join('\n');
     
-    if (navigator.share) {
+    if (navigator.share && window.isSecureContext) {
       try {
         await navigator.share({
           title: finalRef,
           text: text,
         });
+        setCopySuccess(t('share'));
+        setTimeout(() => setCopySuccess(null), 2000);
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
           console.error('Error sharing:', err);
+          handleCopyPassage();
         }
       }
     } else {
@@ -424,17 +440,58 @@ export default function BibleReader({ profile }: BibleReaderProps) {
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={handleCopyPassage}
-                      className="p-2 hover:bg-app-card rounded-full text-app-secondary transition-colors active:scale-95"
+                      className="p-2 hover:bg-app-card rounded-full text-app-secondary transition-colors active:scale-95 relative"
                       title={t('copyPassage')}
                     >
-                      <Copy size={20} />
+                      <AnimatePresence mode="wait">
+                        {copySuccess === t('passageContext') ? (
+                          <motion.div key="check" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}>
+                            <Check size={20} className="text-green-500" />
+                          </motion.div>
+                        ) : (
+                          <motion.div key="copy" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}>
+                            <Copy size={20} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      {copySuccess === t('passageContext') && (
+                        <motion.span 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="absolute -top-8 left-1/2 -translate-x-1/2 bg-app-card text-[10px] font-bold px-2 py-1 rounded border border-app-border whitespace-nowrap"
+                        >
+                          {t('copiedToClipboard')}
+                        </motion.span>
+                      )}
                     </button>
                     <button 
                       onClick={handleSharePassage}
-                      className="p-2 hover:bg-app-card rounded-full text-app-secondary transition-colors active:scale-95"
+                      className="p-2 hover:bg-app-card rounded-full text-app-secondary transition-colors active:scale-95 relative"
+                      title={t('share')}
                     >
-                      <Share2 size={20} />
+                      <AnimatePresence mode="wait">
+                        {copySuccess === t('share') ? (
+                          <motion.div key="check-share" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}>
+                            <Check size={20} className="text-green-500" />
+                          </motion.div>
+                        ) : (
+                          <motion.div key="share" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}>
+                            <Share2 size={20} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </button>
+                    <a 
+                      href={`https://wa.me/?text=${encodeURIComponent(
+                        content ? `${content.reference} (${version.toUpperCase()})\n\n` + content.verses.map((v: any) => `${v.n}. ${v.text}`).join('\n') : ''
+                      )}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-2 hover:bg-app-card rounded-full text-green-500 transition-colors active:scale-95"
+                      title="WhatsApp"
+                    >
+                      <MessageCircle size={20} />
+                    </a>
                   </div>
                 </div>
                 

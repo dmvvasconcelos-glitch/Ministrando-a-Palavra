@@ -472,10 +472,10 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                 className="p-20 text-center bg-white/3 rounded-[48px] border border-dashed border-white/10"
               >
                 <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Mic2 size={40} className="text-slate-700" />
+                  <Mic2 size={40} className="text-app-secondary opacity-40" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-500">{t('emptyAgendaTitle')}</h3>
-                <p className="text-slate-600 mt-2 max-w-xs mx-auto">{t('emptyAgendaSub')}</p>
+                <h3 className="text-xl font-bold text-app-secondary">{t('emptyAgendaTitle')}</h3>
+                <p className="text-app-secondary/80 mt-2 max-w-xs mx-auto">{t('emptyAgendaSub')}</p>
               </motion.div>
             ) : null}
           </AnimatePresence>
@@ -485,7 +485,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
         {filteredItems.filter(e => (e.date?.toDate?.() || new Date(e.date)) < new Date()).length > 0 && (
           <section className="space-y-4">
              <div className="flex items-center gap-3 px-2">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 opacity-60">{t('completedSection')}</h2>
+              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-app-secondary opacity-80">{t('completedSection')}</h2>
               <div className="flex-1 h-px bg-white/5" />
             </div>
 
@@ -587,7 +587,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-black text-app-text tracking-tight uppercase">{viewingItem.title}</h2>
-                    <div className="flex items-center gap-4 mt-1.5 text-slate-400 font-medium text-xs">
+                    <div className="flex items-center gap-4 mt-1.5 text-app-secondary font-medium text-xs">
                       <div className="flex items-center gap-1.5">
                         <Calendar size={14} className="text-indigo-500" />
                         <span>{format(viewingItem.date?.toDate?.() || new Date(viewingItem.date), "dd 'de' MMMM", { locale })}</span>
@@ -596,8 +596,8 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                         <Clock size={14} className="text-indigo-500" />
                         <span>{format(viewingItem.date?.toDate?.() || new Date(viewingItem.date), "HH:mm")}h</span>
                         {isAfter(viewingItem.date?.toDate?.() || new Date(viewingItem.date), new Date()) && (
-                          <span className="text-[9px] font-black uppercase text-indigo-400 ml-1 px-2 py-0.5 bg-indigo-500/10 rounded-full border border-indigo-500/20">
-                            {(language === 'en' ? 'In ' : language === 'es' ? 'En ' : 'Em ') + formatDistanceToNow(viewingItem.date?.toDate?.() || new Date(viewingItem.date), { locale })}
+                           <span className="text-[9px] font-black uppercase text-indigo-400 ml-1 px-2 py-0.5 bg-indigo-500/10 rounded-full border border-indigo-500/20">
+                             {(language === 'en' ? 'In ' : language === 'es' ? 'En ' : 'Em ') + formatDistanceToNow(viewingItem.date?.toDate?.() || new Date(viewingItem.date), { locale })}
                           </span>
                         )}
                       </div>
@@ -611,7 +611,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">{t('locationLabel')}</span>
+                        <span className="text-[9px] font-black uppercase text-app-secondary tracking-widest">{t('locationLabel')}</span>
                         {viewingItem.address && (
                           <button 
                             onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(viewingItem.address!)}`, '_blank')}
@@ -631,7 +631,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                       </div>
                       <p className="text-sm font-bold text-app-text mt-0.5">{viewingItem.location}</p>
                       {viewingItem.address && (
-                        <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">{viewingItem.address}</p>
+                        <p className="text-[11px] text-app-secondary opacity-80 mt-0.5 line-clamp-2">{viewingItem.address}</p>
                       )}
                     </div>
                   </div>
@@ -664,9 +664,9 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
  
                 {viewingItem.description && (
                   <div className="space-y-2">
-                    <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-1">{t('observations')}</span>
+                    <span className="text-[9px] font-black uppercase text-app-secondary tracking-widest ml-1">{t('observations')}</span>
                     <div className="p-5 bg-white/5 rounded-2xl border border-white/5">
-                      <p className="text-slate-300 text-xs leading-relaxed italic">{viewingItem.description}</p>
+                      <p className="text-app-secondary text-xs leading-relaxed italic">{viewingItem.description}</p>
                     </div>
                   </div>
                 )}
@@ -972,13 +972,13 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                           </div>
                           <div>
                             <p className="text-xs font-bold text-app-text">{selectedGuest.displayName}</p>
-                            <p className="text-[9px] text-slate-500">{selectedGuest.email}</p>
+                            <p className="text-[9px] text-app-secondary">{selectedGuest.email}</p>
                           </div>
                         </div>
                         <button 
                           type="button"
                           onClick={() => setSelectedGuest(null)}
-                          className="p-1.5 hover:bg-white/5 rounded-full text-slate-400"
+                          className="p-1.5 hover:bg-white/5 rounded-full text-app-secondary"
                         >
                           <X size={16} />
                         </button>

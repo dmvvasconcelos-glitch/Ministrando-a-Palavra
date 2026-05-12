@@ -36,6 +36,8 @@ service cloud.firestore {
         request.auth.uid == 'JeQerKACxsQrapbuKdU2svX7xqf1' ||
         request.auth.uid == 'AA5tXaiYxgStyQq9ioPkiMSe1NA2' ||
         request.auth.token.get('email', '').lower() == 'dmv.vasconcelos@gmail.com' ||
+        request.auth.token.get('email', '').lower() == 'admin@ministrandoapalavra.com' ||
+        request.auth.token.get('email', '').lower() == 'vasconcelos@cakto.com.br' ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin')
       );
@@ -146,11 +148,15 @@ service cloud.firestore {
     }
 
     // Rules for Collections
+    match /test/connection {
+      allow read: if true;
+    }
+
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin() || !isSignedIn(); // Allow unauthenticated lookup for server-side webhooks
       allow list: if isAdmin() || (isSignedIn() && (
         resource.data.get('uid', null) == request.auth.uid
-      )) || (!isSignedIn() && resource.data.get('email', '') != '');
+      ));
       
       allow create: if (isOwner(userId)
                     && (incoming().get('uid', userId) == userId)
@@ -309,7 +315,8 @@ service cloud.firestore {
     }
 
     match /webhook_logs/{logId} {
-      allow read, write: if true; // Diagnostic collection used for server-side logging
+      allow read: if isAdmin();
+      allow write: if true; // Diagnostic collection used for server-side logging
     }
   }
 }
