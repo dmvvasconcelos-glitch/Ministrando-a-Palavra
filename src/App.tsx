@@ -950,13 +950,13 @@ export default function App() {
                 <p className="text-[10px] text-app-secondary truncate">{user.email}</p>
                 <button 
                   onClick={handleCopyEmail}
-                  className="p-1 hover:bg-app-card rounded-md text-app-secondary hover:text-indigo-400 transition-all opacity-0 group-hover/email:opacity-100"
+                  className="p-1 hover:bg-app-card rounded-md text-app-secondary hover:text-app-accent transition-all opacity-0 group-hover/email:opacity-100"
                   title={t('copyEmailTitle')}
                 >
                   {copiedEmail ? <Check size={10} className="text-green-500" /> : <Copy size={10} />}
                 </button>
               </div>
-              <button id="btn-logout" onClick={(e) => { e.stopPropagation(); signOut(auth); }} className="text-[10px] uppercase font-bold text-app-secondary hover:text-indigo-400 transition-colors mt-1">{t('logout')}</button>
+              <button id="btn-logout" onClick={(e) => { e.stopPropagation(); signOut(auth); }} className="text-[10px] uppercase font-bold text-app-secondary hover:text-app-accent transition-colors mt-1">{t('logout')}</button>
             </div>
           </div>
         </div>

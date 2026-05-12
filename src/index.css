@@ -25,8 +25,8 @@
 
 [data-theme='light'] {
   --bg-color: #f8fafc; /* Crisp off-white */
-  --text-primary: #020617; /* Darker Slate-950 for maximum contrast */
-  --text-secondary: #1e293b; /* Slate-800 for even better readability */
+  --text-primary: #0f172a; /* Slate-900 */
+  --text-secondary: #475569; /* Slate-600 */
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(0, 0, 0, 0.1); /* Slightly darker border */
   --card-bg: #ffffff;

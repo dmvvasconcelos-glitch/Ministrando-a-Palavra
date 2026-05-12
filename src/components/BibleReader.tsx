@@ -376,7 +376,7 @@ export default function BibleReader({ profile }: BibleReaderProps) {
                       }}
                       className="w-full flex items-center gap-3 px-6 py-3 hover:bg-app-accent/10 text-left text-app-secondary hover:text-app-text transition-all rounded-xl"
                     >
-                      {BIBLE_BOOKS.includes(s) ? <BookIcon size={16} className="text-app-accent" /> : <TrendingUp size={16} className="text-indigo-400" />}
+                      {BIBLE_BOOKS.includes(s) ? <BookIcon size={16} className="text-app-accent" /> : <TrendingUp size={16} className="text-app-accent" />}
                       <span className="font-medium">{s}</span>
                     </button>
                   ))}

@@ -52,7 +52,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] text-[#1E293B] font-sans selection:bg-indigo-100 overflow-x-hidden">
+    <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] font-sans selection:bg-indigo-100 overflow-x-hidden">
       {/* Background decoration with animated feel */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <motion.div 
@@ -84,12 +84,12 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
           <div className="flex items-center gap-2 md:gap-3">
             <motion.div 
               whileHover={{ rotate: 10, scale: 1.1 }}
-              className="w-10 h-10 md:w-11 md:h-11 bg-[#0F172A] rounded-xl flex items-center justify-center shadow-lg shadow-slate-900/10"
+              className="w-10 h-10 md:w-11 md:h-11 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20"
             >
               <BookOpen className="text-white" size={20} />
             </motion.div>
             <div className="flex flex-col leading-tight">
-              <span className="font-serif italic text-xl md:text-2xl text-[#0F172A] tracking-tight">Ministrando</span>
+              <span className="font-serif italic text-xl md:text-2xl text-slate-900 tracking-tight">Ministrando</span>
               <span className="font-bold tracking-[0.4em] text-[8px] md:text-[9px] text-[#C2945E] uppercase mt-0.5">a palavra</span>
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
               type="button"
               disabled={isLoading}
               onClick={onLogin}
-              className="text-slate-500 font-bold text-xs md:text-sm hover:text-[#0F172A] transition-colors px-2 md:px-4 py-2 flex items-center gap-2 disabled:opacity-50"
+              className="text-slate-500 font-bold text-xs md:text-sm hover:text-indigo-600 transition-colors px-2 md:px-4 py-2 flex items-center gap-2 disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="animate-spin" size={14} /> : 'Entrar'}
             </button>
@@ -106,7 +106,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
               href={CHECKOUT_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-2 bg-[#0F172A] text-white px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-xs md:text-sm hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-95"
+              className="hidden sm:flex items-center gap-2 bg-indigo-600 text-white px-6 md:px-8 py-2 md:py-3 rounded-full font-bold text-xs md:text-sm hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 active:scale-95"
             >
               Assinar Agora
             </a>
@@ -121,20 +121,20 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md text-[#9A7B4F] px-4 md:px-5 py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-8 md:mb-12 border border-white shadow-sm">
-            <Sparkles size={14} className="fill-[#9A7B4F]/20" /> Tecnologia inspirada para o seu chamado
+          <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md text-indigo-600 px-4 md:px-5 py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-8 md:mb-12 border border-white shadow-sm">
+            <Sparkles size={14} className="fill-indigo-600/20" /> Tecnologia inspirada para o seu chamado
           </div>
           
-          <div className="relative mb-8 md:mb-10">
-            <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-[7.5rem] font-serif italic text-[#0F172A] leading-[1.05] mb-8 md:mb-12 tracking-tight max-w-6xl mx-auto relative z-10">
-              Sua pregação merece a melhor <span className="text-[#0F172A] not-italic font-sans font-black tracking-tighter inline-block relative">
+          <div className="relative mb-8 md:mb-10 text-center">
+            <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-[7.5rem] font-serif italic text-slate-900 leading-[1.05] mb-8 md:mb-12 tracking-tight max-w-6xl mx-auto relative z-10">
+              Sua pregação merece a melhor <span className="text-indigo-600 not-italic font-sans font-black tracking-tighter inline-block relative">
                 ferramenta
-                <svg className="absolute -bottom-2 left-0 w-full h-3 text-[#F5E6D3] -z-10" viewBox="0 0 100 12" preserveAspectRatio="none"><path d="M0,10 C30,0 70,0 100,10" stroke="currentColor" strokeWidth="8" fill="none" /></svg>
+                <svg className="absolute -bottom-2 left-0 w-full h-3 text-indigo-500/10 -z-10" viewBox="0 0 100 12" preserveAspectRatio="none"><path d="M0,10 C30,0 70,0 100,10" stroke="currentColor" strokeWidth="8" fill="none" /></svg>
               </span>
             </h1>
           </div>
           
-          <p className="text-lg md:text-2xl text-slate-600 max-w-3xl mx-auto mb-12 md:mb-20 font-medium leading-relaxed px-4">
+          <p className="text-lg md:text-2xl text-slate-500 max-w-3xl mx-auto mb-12 md:mb-20 font-medium leading-relaxed px-4">
             A ferramenta definitiva para pastores e ministros. Crie esboços profundos com IA, organize sua agenda e pregue com a excelência que a Palavra exige.
           </p>
           
@@ -143,7 +143,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
               href={CHECKOUT_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="group w-full sm:w-auto bg-[#0F172A] text-white px-10 md:px-14 py-5 md:py-7 rounded-[2.5rem] font-black uppercase text-xs md:text-sm tracking-widest hover:bg-slate-800 transition-all shadow-2xl shadow-slate-900/20 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95"
+              className="group w-full sm:w-auto bg-indigo-600 text-white px-10 md:px-14 py-5 md:py-7 rounded-[2.5rem] font-black uppercase text-xs md:text-sm tracking-widest hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-600/30 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95"
             >
               Assinar Premium <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </a>
@@ -165,11 +165,11 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
           </div>
           
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 opacity-50 grayscale group-hover:grayscale-0 transition-all duration-700">
-             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em] uppercase"><ShieldCheck size={16} className="text-[#9A7B4F]" /> Alta Segurança</div>
+             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em] uppercase"><ShieldCheck size={16} className="text-indigo-600" /> Alta Segurança</div>
              <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-300" />
-             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em] uppercase"><TrendingUp size={16} className="text-[#9A7B4F]" /> IA Teológica</div>
+             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em] uppercase"><TrendingUp size={16} className="text-indigo-600" /> IA Teológica</div>
              <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-300" />
-             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em] uppercase"><CheckCircle2 size={16} className="text-[#9A7B4F]" /> 7 Dias Garantia</div>
+             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em] uppercase"><CheckCircle2 size={16} className="text-indigo-600" /> 7 Dias Garantia</div>
           </div>
 
           {/* Scroll Indicator */}
@@ -433,11 +433,11 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                viewport={{ once: true }}
                className="flex-1 space-y-10"
              >
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-800 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm border border-slate-100">
-                   <Sparkles size={14} className="text-[#C2945E]" /> Inteligência Teológica
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm border border-indigo-100">
+                   <Sparkles size={14} className="text-indigo-500" /> Inteligência Teológica
                 </div>
                 <h2 className="text-5xl md:text-7xl font-serif italic text-slate-900 leading-tight">
-                  Sua ferramenta para a <span className="text-[#C2945E] font-sans font-black not-italic block md:inline">Palavra</span>
+                  Sua ferramenta para a <span className="text-indigo-600 font-sans font-black not-italic block md:inline">Palavra</span>
                 </h2>
                 <p className="text-xl text-slate-600 leading-relaxed max-w-xl">
                   Não é apenas uma ferramenta, é um parceiro que aprende com o seu estilo ao longo do tempo, ajudando você a encontrar as melhores palavras, referências e insights para abençoar a sua igreja.
@@ -451,7 +451,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                       <p className="text-slate-500 text-sm">Compare traduções em tempo real enquanto escreve seu sermão.</p>
                    </div>
                    <div className="space-y-4">
-                      <div className="w-12 h-12 bg-white rounded-2xl shadow-lg border border-slate-50 flex items-center justify-center text-[#C2945E]">
+                      <div className="w-12 h-12 bg-white rounded-2xl shadow-lg border border-slate-50 flex items-center justify-center text-indigo-600">
                          <Zap size={24} />
                       </div>
                       <h4 className="font-bold text-slate-900">Velocidade Divina</h4>
@@ -594,7 +594,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
       <section className="bg-white py-40 px-6 border-t border-slate-100">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-24">
-            <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight">O que você recebe no <span className="text-[#C2945E] italic font-serif font-medium">Premium</span></h2>
+            <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight">O que você recebe no <span className="text-indigo-600 italic font-serif font-medium">Premium</span></h2>
             <p className="text-slate-500 text-xl max-w-2xl mx-auto">Tudo o que você precisa para uma jornada ministerial produtiva, intuitiva e abençoada.</p>
           </div>
 
@@ -605,7 +605,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                 whileHover={{ y: -10 }}
                 className="p-10 rounded-[3rem] bg-slate-50 border border-slate-200/50 hover:border-slate-300 hover:bg-white hover:shadow-2xl hover:shadow-slate-950/5 transition-all group"
               >
-                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-[#0F172A] group-hover:text-white transition-colors duration-500 border border-slate-100 group-hover:border-slate-900">
+                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-500 border border-slate-100 group-hover:border-indigo-500">
                   <feature.icon size={32} />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-4">{feature.title}</h3>
@@ -778,9 +778,9 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
       </section>
 
       {/* Pricing / Irresistible Offer - Deep and Impactful */}
-      <section id="offers" className="py-32 md:py-48 px-6 bg-[#0B0D11] text-white overflow-hidden relative">
-        <div className="absolute top-[10%] right-[-10%] w-[600px] h-[600px] bg-slate-100/5 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-[10%] left-[-10%] w-[600px] h-[600px] bg-[#C2945E]/5 blur-[120px] rounded-full pointer-events-none" />
+      <section id="offers" className="py-32 md:py-48 px-6 bg-slate-900 text-white overflow-hidden relative">
+        <div className="absolute top-[10%] right-[-10%] w-[600px] h-[600px] bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-[10%] left-[-10%] w-[600px] h-[600px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16 md:mb-24">
@@ -790,7 +790,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                viewport={{ once: true }}
             >
               <h2 className="text-4xl md:text-8xl font-black mb-8 tracking-tighter leading-tight">
-                Um convite para a <br /><span className="text-[#C2945E] font-serif italic font-medium">excelência ministerial</span>
+                Um convite para a <br /><span className="text-indigo-400 font-serif italic font-medium">excelência ministerial</span>
               </h2>
               <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium px-4">
                 Recupere o seu tempo e potencialize o seu chamado com a melhor ferramenta de apoio para pregadores do Brasil.
@@ -800,29 +800,29 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
           
           <div className="flex flex-col lg:flex-row items-stretch gap-8 md:gap-10 max-w-6xl mx-auto">
              <motion.div 
-               whileHover={{ y: -5 }}
-               className="flex-[1.5] bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[3rem] md:rounded-[4rem] p-8 md:p-20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] relative overflow-hidden group"
+                whileHover={{ y: -5 }}
+                className="flex-[1.5] bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[3rem] md:rounded-[4rem] p-8 md:p-20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] relative overflow-hidden group"
              >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-slate-100/5 rounded-full blur-[80px] -m-32 transition-opacity group-hover:opacity-100 opacity-60" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[80px] -m-32 transition-opacity group-hover:opacity-100 opacity-60" />
                 
                 <div className="relative z-10 flex flex-col h-full">
                   <div className="flex items-center gap-4 mb-10 md:mb-12">
-                     <div className="w-12 h-12 md:w-16 md:h-16 bg-[#C2945E] text-white rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg shadow-amber-900/40">
+                     <div className="w-12 h-12 md:w-16 md:h-16 bg-indigo-600 text-white rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/40">
                         <Star className="fill-white w-7 h-7 md:w-8 md:h-8" />
                      </div>
-                     <span className="text-[#C2945E] font-black uppercase tracking-[0.4em] text-[9px] md:text-[10px]">Acesso Premium Anual</span>
+                     <span className="text-indigo-400 font-black uppercase tracking-[0.4em] text-[9px] md:text-[10px]">Acesso Premium Anual</span>
                   </div>
 
                   <div className="flex flex-col md:flex-row items-baseline gap-4 md:gap-8 mb-12 md:mb-16">
                     <div className="relative">
                       <span className="text-slate-500 text-2xl md:text-3xl line-through decoration-rose-500 font-bold opacity-60">R$ 147</span>
-                      <div className="absolute -top-6 md:-top-8 -left-4 md:-left-8 bg-[#C2945E] text-white text-[9px] md:text-[10px] font-black px-3 md:px-4 py-1.5 md:py-2 rounded-xl shadow-xl">LANÇAMENTO</div>
+                      <div className="absolute -top-6 md:-top-8 -left-4 md:-left-8 bg-indigo-500 text-white text-[9px] md:text-[10px] font-black px-3 md:px-4 py-1.5 md:py-2 rounded-xl shadow-xl">LANÇAMENTO</div>
                     </div>
                     <div className="flex items-baseline gap-3 md:gap-4">
                       <span className="text-slate-400 text-3xl md:text-4xl font-serif italic">por</span>
                       <span className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">29,90</span>
                       <div className="flex flex-col items-start leading-[1.1] transform translate-y-[-5px] md:translate-y-[-10px]">
-                        <span className="text-[#C2945E] font-black text-xl md:text-2xl">R$</span>
+                        <span className="text-indigo-400 font-black text-xl md:text-2xl">R$</span>
                         <span className="text-slate-500 font-bold uppercase text-[10px] md:text-[12px] tracking-widest leading-none mt-1 md:mt-2">/ ano</span>
                       </div>
                     </div>
@@ -837,7 +837,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                       href={CHECKOUT_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full bg-[#C2945E] text-white py-6 md:py-8 rounded-[2rem] md:rounded-[2.5rem] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] hover:bg-[#B3854F] transition-all shadow-2xl shadow-amber-900/40 block text-center text-lg md:text-xl active:scale-[0.98] hover:scale-[1.01]"
+                      className="w-full bg-indigo-600 text-white py-6 md:py-8 rounded-[2rem] md:rounded-[2.5rem] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-600/40 block text-center text-lg md:text-xl active:scale-[0.98] hover:scale-[1.01]"
                     >
                       Ativar Premium Agora
                     </a>
@@ -887,28 +887,33 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
       {/* Social Proof / Numbers Section */}
       <section className="py-48 bg-[#FDFCFB] border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-6">
-           <div className="flex flex-col lg:flex-row items-center gap-32">
-              <div className="flex-1">
-                 <Quote className="text-slate-200/50 fill-slate-200/50 -mb-6 -ml-10 opacity-60" size={120} />
-                 <h3 className="text-5xl md:text-7xl font-serif italic text-slate-900 leading-tight mb-12 relative z-10">
+           <div className="flex flex-col lg:flex-row items-center gap-20 md:gap-32">
+              <div className="flex-1 lg:max-w-2xl">
+                 <Quote className="text-slate-200/50 fill-slate-200/50 -mb-6 lg:-ml-10 opacity-60" size={120} />
+                 <h3 className="text-4xl md:text-6xl font-serif italic text-slate-900 leading-tight mb-12 relative z-10">
                     "O Ministrando mudou a forma como me preparo para o altar. Mais tempo para oração, menos tempo em pastas e cadernos."
                  </h3>
                  <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 bg-slate-200 rounded-[2rem]" />
+                    <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-100 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center text-slate-400 border border-slate-200">
+                       <User size={32} />
+                    </div>
                     <div>
-                       <p className="font-black text-2xl text-slate-900 leading-none">Pr. André Silveira</p>
-                       <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.3em] mt-3">Ministério Caminho de Fé</p>
+                       <p className="font-black text-xl md:text-2xl text-slate-900 leading-none">Pr. André Silveira</p>
+                       <p className="text-slate-400 text-[10px] md:text-sm font-bold uppercase tracking-[0.3em] mt-3">Ministério Caminho de Fé</p>
                     </div>
                  </div>
-                        <div className="bg-white p-8 md:p-16 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl border border-slate-100 text-center space-y-4 md:space-y-6 hover:-translate-y-3 transition-transform duration-500 overflow-hidden relative group">
-                    <div className="absolute inset-0 bg-[#0F172A]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="text-4xl sm:text-5xl md:text-7xl font-black text-[#0F172A] tracking-tighter transition-transform group-hover:scale-110 duration-500">500+</div>
-                    <p className="text-slate-400 text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] relative z-10">Pastores Ativos</p>
+              </div>
+              
+              <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 md:gap-8">
+                 <div className="bg-white p-10 md:p-12 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl border border-slate-100 text-center space-y-4 hover:-translate-y-2 transition-transform duration-500 overflow-hidden relative group">
+                    <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter transition-transform group-hover:scale-110 duration-500">500+</div>
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] relative z-10">Pastores Ativos</p>
                  </div>
-                 <div className="bg-[#0F172A] p-8 md:p-16 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl text-center space-y-4 md:space-y-6 mt-8 md:mt-12 hover:-translate-y-3 transition-transform duration-500 overflow-hidden relative group">
+                 <div className="bg-indigo-600 p-10 md:p-12 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl text-center space-y-4 hover:-translate-y-2 transition-transform duration-500 overflow-hidden relative group">
                     <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="text-4xl sm:text-5xl md:text-7xl font-black text-[#C2945E] tracking-tighter transition-transform group-hover:scale-110 duration-500">98%</div>
-                    <p className="text-[#C2945E]/60 text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] relative z-10">Satisfação Geral</p>
+                    <div className="text-5xl md:text-7xl font-black text-indigo-400 tracking-tighter transition-transform group-hover:scale-110 duration-500">98%</div>
+                    <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.4em] relative z-10">Satisfação Geral</p>
                  </div>
               </div>
            </div>
@@ -919,7 +924,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
       <section className="py-48 bg-white overflow-hidden relative">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-32">
-             <h2 className="text-5xl md:text-8xl font-serif italic text-slate-900 mb-8">Dúvidas Frequentes</h2>
+             <h2 className="text-4xl md:text-6xl lg:text-7xl font-serif italic text-slate-900 mb-8">Dúvidas Frequentes</h2>
              <p className="text-2xl text-slate-500 font-medium opacity-80 italic">Tudo o que você precisa saber.</p>
           </div>
           
@@ -938,18 +943,18 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                  transition={{ delay: idx * 0.1 }}
                  className="p-12 bg-slate-50 rounded-[3rem] border border-slate-100 hover:border-[#C2945E]/30 hover:bg-white hover:shadow-xl transition-all cursor-default group"
                >
-                  <h4 className="font-bold text-2xl text-slate-900 mb-6 group-hover:text-[#0F172A] transition-colors tracking-tight">{item.q}</h4>
+                  <h4 className="font-bold text-2xl text-slate-900 mb-6 group-hover:text-indigo-600 transition-colors tracking-tight">{item.q}</h4>
                   <p className="text-slate-500 leading-relaxed text-xl opacity-90">{item.a}</p>
                </motion.div>
              ))}
           </div>
           
-          <div className="mt-32 text-center p-16 bg-[#0F172A] rounded-[4rem] text-white space-y-10 shadow-[0_40px_100px_-20px_rgba(15,23,42,0.3)] relative overflow-hidden group">
+          <div className="mt-32 text-center p-16 bg-indigo-600 rounded-[4rem] text-white space-y-10 shadow-[0_40px_100px_-20px_rgba(79,70,229,0.3)] relative overflow-hidden group">
              <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-[100px] -m-48 transition-transform group-hover:scale-125 duration-1000" />
              <h3 className="text-4xl md:text-5xl font-serif italic relative z-10">Ainda tem alguma pergunta?</h3>
              <p className="text-xl opacity-80 max-w-xl mx-auto relative z-10">Nossa equipe está pronta para te atender agora mesmo e tirar qualquer dúvida.</p>
              <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
-                <a href="mailto:suporte@ministrandoapalavra.com.br" className="bg-white text-[#0F172A] px-12 py-6 rounded-3xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
+                <a href="mailto:suporte@ministrandoapalavra.com.br" className="bg-white text-indigo-600 px-12 py-6 rounded-3xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
                    Enviar E-mail <MessageSquare size={20} />
                 </a>
                 <a href="https://wa.me/5531973148166" target="_blank" rel="noreferrer" className="bg-green-500 text-white px-12 py-6 rounded-3xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
@@ -964,7 +969,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
       <footer className="bg-slate-50 py-32 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-24">
           <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-[#0F172A] rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-900/20">
+            <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-600/20">
               <BookOpen className="text-white" size={28} />
             </div>
             <div className="flex flex-col">

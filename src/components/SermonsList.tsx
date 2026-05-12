@@ -143,7 +143,7 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-app-text">{t('myMinistries')}</h1>
-          <p className="text-app-secondary font-serif italic text-lg leading-snug transition-colors">{t('myMinistriesSub')}</p>
+          <p className="text-app-secondary font-medium tracking-wide uppercase transition-colors">{t('myMinistriesSub')}</p>
         </div>
         <button 
           onClick={onNew}

@@ -662,16 +662,16 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
             {/* Usage Progress */}
             <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full">
               <div className="flex items-center gap-2">
-                <TrendingUpIcon size={12} className="text-app-accent" />
+                <TrendingUpIcon size={12} className="text-indigo-500" />
                 <span className="text-[10px] font-black text-app-secondary uppercase tracking-tighter">
                   {usageCount}/{currentLimit}
                 </span>
               </div>
               <div className="w-20 h-1 bg-white/10 rounded-full overflow-hidden relative">
                 <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(usageCount / currentLimit) * 100}%` }}
-                  className={`h-full ${usageCount >= currentLimit ? 'bg-red-500' : 'bg-app-accent'}`}
+                   initial={{ width: 0 }}
+                   animate={{ width: `${(usageCount / currentLimit) * 100}%` }}
+                   className={`h-full ${usageCount >= currentLimit ? 'bg-red-500' : 'bg-indigo-600'}`}
                 />
                 {isLearning && (
                   <motion.div 
@@ -719,14 +719,14 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
           <div className="bg-white/5 border border-white/10 p-1 rounded-2xl flex items-center gap-1">
             <button
               onClick={() => setMode('sermon')}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${mode === 'sermon' ? 'bg-app-accent text-white shadow-lg' : 'text-app-secondary hover:text-app-text hover:bg-white/5'}`}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${mode === 'sermon' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-app-secondary hover:text-app-text hover:bg-white/5'}`}
             >
               <Wand2 size={16} />
               {t('sermonMode') || 'Gerar Esboço'}
             </button>
             <button
               onClick={() => setMode('chat')}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${mode === 'chat' ? 'bg-app-accent text-white shadow-lg' : 'text-app-secondary hover:text-app-text hover:bg-white/5'}`}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${mode === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-app-secondary hover:text-app-text hover:bg-white/5'}`}
             >
               <MessageSquare size={16} />
               {t('chatMode') || 'Modo Conversa'}
@@ -898,7 +898,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
               <button
                 type="submit"
                 disabled={loading || (!theme && !passage)}
-                className="w-full bg-app-accent text-white py-5 rounded-[20px] font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-app-accent/30 disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden relative"
+                className="w-full bg-indigo-600 text-white py-5 rounded-[20px] font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-indigo-600/30 disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden relative"
               >
                 <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                 <div className="relative flex items-center justify-center gap-3">
@@ -1058,7 +1058,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                   </div>
                   <button 
                     onClick={mode === 'chat' ? handleNewChat : handleNewOutline}
-                    className="p-2 border border-app-accent/20 text-app-accent rounded-xl hover:bg-app-accent hover:text-white transition-all"
+                    className="p-2 border border-indigo-500/20 text-indigo-500 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
                     title={mode === 'chat' ? (language === 'pt' ? 'Nova Conversa' : 'New Chat') : (language === 'pt' ? 'Novo Esboço' : 'New Outline')}
                   >
                     <Plus size={14} />
@@ -1066,7 +1066,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                   {mode === 'sermon' && outline && (
                     <button 
                       onClick={() => onApplyOutline(outline)}
-                      className="text-[10px] bg-app-accent text-white px-4 py-2 rounded-xl font-bold hover:opacity-80 transition-all shadow-lg shadow-app-accent/10"
+                      className="text-[10px] bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20"
                     >
                       {t('useThisOutline')}
                     </button>
@@ -1093,7 +1093,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
               <button 
                 type="submit"
                 disabled={!chatInput.trim() || refining}
-                className="aspect-square w-11 flex items-center justify-center bg-app-accent text-white rounded-xl hover:opacity-80 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="aspect-square w-11 flex items-center justify-center bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-indigo-600/20"
               >
                 {refining ? <RefreshCw size={18} className="animate-spin" /> : <ArrowRight size={18} />}
               </button>
@@ -1111,10 +1111,10 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                       className="h-full flex flex-col items-center justify-center text-center space-y-4 py-12"
                     >
                       <div className="animate-pulse space-y-3 w-full">
-                        <div className="h-4 bg-app-accent/10 rounded-full w-3/4 mx-auto"></div>
-                        <div className="h-4 bg-app-accent/5 rounded-full w-1/2 mx-auto"></div>
-                        <div className="h-20 bg-app-accent/5 rounded-3xl w-full"></div>
-                        <div className="h-4 bg-app-accent/5 rounded-full w-5/6 mx-auto"></div>
+                        <div className="h-4 bg-indigo-500/10 rounded-full w-3/4 mx-auto"></div>
+                        <div className="h-4 bg-indigo-500/5 rounded-full w-1/2 mx-auto"></div>
+                        <div className="h-20 bg-indigo-500/5 rounded-3xl w-full"></div>
+                        <div className="h-4 bg-indigo-500/5 rounded-full w-5/6 mx-auto"></div>
                       </div>
                       <p className="text-app-secondary font-serif italic text-lg mt-6">{t('refiningMessage')}</p>
                     </motion.div>
@@ -1129,7 +1129,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                     </motion.div>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-center text-app-secondary py-12">
-                      <Sparkles size={48} className="opacity-5 mb-4 text-app-accent" />
+                      <Sparkles size={48} className="opacity-5 mb-4 text-indigo-500" />
                       <p className="font-serif italic text-xl">{t('readyToStartAi')}</p>
                       <p className="text-xs uppercase tracking-widest mt-4 max-w-xs mx-auto font-bold opacity-60">{t('fillAndGenerate')}</p>
                     </div>
@@ -1150,7 +1150,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                             animate={{ opacity: 1, y: 0 }}
                             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                           >
-                            <div className={`max-w-[85%] rounded-3xl p-5 ${msg.role === 'user' ? 'bg-app-accent text-white rounded-tr-none' : 'bg-white/5 border border-white/10 text-app-text rounded-tl-none font-serif'}`}>
+                            <div className={`max-w-[85%] rounded-3xl p-5 ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none shadow-lg' : 'bg-white/5 border border-white/10 text-app-text rounded-tl-none font-serif'}`}>
                               <ReactMarkdown>{msg.content}</ReactMarkdown>
                             </div>
                           </motion.div>

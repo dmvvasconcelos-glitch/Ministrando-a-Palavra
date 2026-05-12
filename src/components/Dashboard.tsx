@@ -336,7 +336,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
               </div>
             )}
           </div>
-          <p className="text-base text-app-secondary font-medium font-serif italic transition-colors">{t('prepareMessage')}</p>
+          <p className="text-xs text-app-secondary font-medium tracking-wide uppercase transition-colors">{t('prepareMessage')}</p>
         </div>
         <button 
           id="btn-new-sermon"
