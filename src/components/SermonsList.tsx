@@ -142,11 +142,11 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-app-text flex items-center gap-2">
-            <div className="w-1.5 h-6 bg-app-accent rounded-full opacity-60" />
+          <h1 className="text-xl font-black tracking-tight text-app-text flex items-center gap-2">
+            <div className="w-1.5 h-5 bg-app-accent rounded-full opacity-60" />
             {t('myMinistries')}
           </h1>
-          <p className="text-app-secondary font-medium text-sm mt-1 opacity-70">{t('myMinistriesSub')}</p>
+          <p className="text-app-secondary font-medium text-xs mt-0.5 opacity-70">{t('myMinistriesSub')}</p>
         </div>
         <button 
           onClick={onNew}
@@ -184,7 +184,7 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <AnimatePresence mode="popLayout">
           {filteredSermons.map((sermon) => {
             const isOwner = sermon.ownerId === auth.currentUser?.uid;
@@ -198,7 +198,7 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   whileHover={{ y: -4, backgroundColor: 'var(--glass-bg)' }}
-                  className="frosted-glass rounded-[32px] p-6 flex flex-col group hover:border-indigo-500/30 transition-all border border-app-border relative overflow-hidden group/card shadow-sm hover:shadow-xl cursor-pointer"
+                  className="frosted-glass rounded-[28px] p-4 flex flex-col group hover:border-indigo-500/30 transition-all border border-app-border relative overflow-hidden group/card shadow-sm hover:shadow-xl cursor-pointer"
                   onClick={() => onEdit(sermon.id)}
                 >
                   <div className="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:opacity-10 transition-all pointer-events-none duration-700 group-hover:scale-125 group-hover:-rotate-12">
@@ -207,9 +207,9 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
                   
                   <div className="absolute left-[-1px] top-4 bottom-4 w-1.5 bg-indigo-500 rounded-r-lg opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0" />
                   
-                  <div className="flex justify-between items-start mb-5 relative z-10">
-                    <div className="w-14 h-14 rounded-2xl bg-app-bg border border-app-border flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-app-accent/10 group-hover:border-app-accent/20 transition-all duration-500 shadow-sm">
-                      {isOwner ? <FileText size={24} className="text-app-secondary group-hover:text-app-accent transition-colors" /> : <Users size={24} className="text-indigo-400" />}
+                  <div className="flex justify-between items-start mb-4 relative z-10">
+                    <div className="w-11 h-11 rounded-xl bg-app-bg border border-app-border flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-app-accent/10 group-hover:border-app-accent/20 transition-all duration-500 shadow-sm">
+                      {isOwner ? <FileText size={20} className="text-app-secondary group-hover:text-app-accent transition-colors" /> : <Users size={20} className="text-indigo-400" />}
                     </div>
                     <div className="flex gap-1 items-center relative z-20">
                       <AnimatePresence mode="wait">
@@ -295,12 +295,12 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
                         )}
                       </div>
 
-                      <h3 className="text-lg font-bold text-app-text leading-tight group-hover:text-app-accent transition-colors tracking-wide truncate">
+                      <h3 className="text-base font-bold text-app-text leading-tight group-hover:text-app-accent transition-colors tracking-wide truncate">
                         {sermon.title || t('untitled')}
                       </h3>
                       
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-app-bg text-app-secondary border border-app-border rounded-full text-[9px] font-black tracking-widest truncate max-w-[200px]">
+                        <span className="px-2 py-0.5 bg-app-bg text-app-secondary border border-app-border rounded-full text-[8px] font-black tracking-widest truncate max-w-[200px]">
                           {sermon.theme || t('noTheme')}
                         </span>
                       </div>

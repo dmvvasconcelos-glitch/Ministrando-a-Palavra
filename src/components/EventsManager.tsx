@@ -237,11 +237,11 @@ export default function EventsManager() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-app-border/40">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-app-text flex items-center gap-2 md:normal-case">
-            <div className="w-1.5 h-6 bg-app-accent rounded-full opacity-60" />
+          <h1 className="text-xl font-black tracking-tight text-app-text flex items-center gap-2 md:normal-case">
+            <div className="w-1.5 h-5 bg-app-accent rounded-full opacity-60" />
             {t('myEventsHeader')}
           </h1>
-          <p className="text-app-secondary font-medium text-sm mt-1 opacity-70">{t('myEventsSub')}</p>
+          <p className="text-app-secondary font-medium text-xs mt-0.5 opacity-70">{t('myEventsSub')}</p>
         </div>
 
         <div className="flex items-center gap-2 self-start md:self-center">

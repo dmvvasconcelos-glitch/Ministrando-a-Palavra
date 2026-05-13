@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Book as BookIcon, ChevronLeft, ChevronRight, Copy, Share2, Bookmark, BookMarked, ChevronDown, TrendingUp, History, Trash2, X, Check, MessageCircle } from 'lucide-react';
+import { Search, BookOpen as BookIcon, ChevronLeft, ChevronRight, Copy, Share2, Bookmark, BookMarked, ChevronDown, TrendingUp, History, Trash2, X, Check, MessageCircle } from 'lucide-react';
 import { fetchBiblePassage } from '../services/gemini';
 import { DAILY_VERSES, MINISTERIAL_TIPS } from '../constants/dailyInspirations';
 import { motion, AnimatePresence } from 'motion/react';
@@ -525,8 +525,8 @@ export default function BibleReader({ profile }: BibleReaderProps) {
             ) : (
               <div className="frosted-glass p-20 rounded-[32px] text-center">
                 <BookIcon className="mx-auto text-app-secondary/20" size={64} />
-                <h3 className="mt-4 text-xl font-bold text-app-text">{t('readyToDive')}</h3>
-                <p className="text-app-secondary mt-2 font-medium">{t('searchInstructions')}</p>
+                <h3 className="mt-4 text-lg font-bold text-app-text">{t('readyToDive')}</h3>
+                <p className="text-app-secondary mt-2 font-medium text-sm">{t('searchInstructions')}</p>
               </div>
             )}
           </AnimatePresence>

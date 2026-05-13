@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { 
-  Book, 
   PlusCircle, 
   Sparkles, 
   Mic2, 
@@ -635,7 +634,7 @@ export default function App() {
           transition={{ repeat: Infinity, duration: 2 }}
           className="text-indigo-500 flex flex-col items-center gap-4"
         >
-          <Book size={48} />
+          <BookOpen size={48} />
           <p className="font-serif italic text-lg text-slate-500">{t('graceAndPeace')}</p>
         </motion.div>
       </div>
@@ -733,7 +732,7 @@ export default function App() {
   const tabs = [
     { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
     { id: 'ministrations', label: t('ministrations'), icon: BookOpen },
-    { id: 'bible', label: t('bible'), icon: Book },
+    { id: 'bible', label: t('bible'), icon: BookOpen },
     { id: 'editor', label: t('newSermon'), icon: PlusCircle },
     { id: 'ai', label: t('aiAssistant'), icon: Sparkles },
     { id: 'events', label: t('events'), icon: Calendar },
@@ -777,8 +776,8 @@ export default function App() {
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-4 bg-app-bg/8 backdrop-blur-lg border-b border-app-border z-50">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-indigo-500 rounded-lg flex items-center justify-center shadow-lg">
-            <Book className="text-white" size={12} />
+          <div className="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <BookOpen className="text-white" size={18} />
           </div>
           <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
             <span className="font-serif italic text-xl text-app-text px-1 drop-shadow-sm">Ministrando</span>
@@ -817,22 +816,22 @@ export default function App() {
         {/* Mobile Header Inside Sidebar context */}
         <div className="md:hidden flex items-center gap-3 p-8 border-b border-app-border mb-6 px-6">
           <div className="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <Book className="text-white" size= {16} />
+            <BookOpen className="text-white" size={20} />
           </div>
           <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
             <span className="font-serif italic text-xl text-app-text px-1 tracking-tight">Ministrando</span>
-            <span className="font-bold tracking-[0.4em] text-[10px] text-indigo-500 mt-0.5">a palavra</span>
+            <span className="font-bold tracking-[0.3em] text-[10px] text-indigo-500 mt-0.5 uppercase">a palavra</span>
           </div>
         </div>
         <div className="p-8 hidden md:flex items-center justify-between gap-2 mb-10 border-b border-app-border/10 px-6">
           <div className="flex items-center gap-2 overflow-hidden">
             <div className="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-              <Book className="text-white" size={16} />
+              <BookOpen className="text-white" size={20} />
             </div>
             {!isSidebarCollapsed && (
               <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
-                <span className="text-lg font-serif italic text-app-text px-1 tracking-tight">Ministrando</span>
-                <span className="text-[9px] font-bold tracking-[0.3em] text-indigo-500 mt-0.5">a palavra</span>
+                <span className="text-xl font-serif italic text-app-text px-1 tracking-tight">Ministrando</span>
+                <span className="text-[12px] font-black tracking-[0.2em] text-indigo-500 mt-0.5 uppercase">a palavra</span>
               </div>
             )}
           </div>
