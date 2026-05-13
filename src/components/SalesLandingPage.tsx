@@ -83,14 +83,14 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
         <div className="max-w-7xl mx-auto flex items-center justify-between bg-white/70 backdrop-blur-xl border border-white/40 shadow-sm rounded-[2rem] px-6 py-3 pointer-events-auto">
           <div className="flex items-center gap-2 md:gap-3">
             <motion.div 
-              whileHover={{ rotate: 10, scale: 1.1 }}
+              whileHover={{ scale: 1.1, rotate: 5 }}
               className="w-10 h-10 md:w-11 md:h-11 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20"
             >
               <BookOpen className="text-white" size={20} />
             </motion.div>
             <div className="flex flex-col leading-tight">
-              <span className="font-serif italic text-xl md:text-2xl text-slate-900 tracking-tight">Ministrando</span>
-              <span className="font-bold tracking-[0.4em] text-[8px] md:text-[9px] text-[#C2945E] mt-0.5">a palavra</span>
+              <span className="font-serif italic text-lg md:text-xl text-slate-900 tracking-tight">Ministrando</span>
+              <span className="font-bold tracking-[0.2em] text-[10px] md:text-[12px] text-[#C2945E] mt-0.5 uppercase">a palavra</span>
             </div>
           </div>
           <div className="flex items-center gap-4 md:gap-6">
@@ -628,11 +628,11 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                   Veja como a ferramenta <span className="text-indigo-600 font-sans font-black not-italic block md:inline">potencializa seu chamado</span>
                 </h2>
                 <p className="text-xl text-slate-500 leading-relaxed max-w-xl">
-                  Testamos o Ministrando com centenas de pastores. O resultado? Uma economia média de 6 horas semanais na preparação de estudos, com mais profundidade bíblica.
+                  Testamos o Ministrando com centenas de pastores. O resultado? Uma clareza teológica sem precedentes, garantindo mais tempo para oração e preparação, com total foco no que realmente importa: a mensagem.
                 </p>
                 <div className="flex flex-col gap-6 pt-4">
                   {[
-                    { label: 'Esboços Personalizados', val: 'Em 45 segundos' },
+                    { label: 'Esboços Personalizados', val: 'Em 15 segundos' },
                     { label: 'Sincronização Cloud', val: 'Tempo Real' }
                   ].map((stat, i) => (
                     <div key={i} className="flex justify-between items-center p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
@@ -908,12 +908,12 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                  <div className="bg-white p-10 md:p-12 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl border border-slate-100 text-center space-y-4 hover:-translate-y-2 transition-transform duration-500 overflow-hidden relative group">
                     <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter transition-transform group-hover:scale-110 duration-500">500+</div>
-                    <p className="text-slate-400 text-[10px] font-black tracking-[0.4em] relative z-10">Pastores Ativos</p>
+                    <p className="text-slate-400 text-[10px] font-black tracking-[0.4em] relative z-10 uppercase">Pastores e Ministros Ativos</p>
                  </div>
                  <div className="bg-indigo-600 p-10 md:p-12 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl text-center space-y-4 hover:-translate-y-2 transition-transform duration-500 overflow-hidden relative group">
                     <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="text-5xl md:text-7xl font-black text-indigo-400 tracking-tighter transition-transform group-hover:scale-110 duration-500">98%</div>
-                    <p className="text-white/60 text-[10px] font-black tracking-[0.4em] relative z-10">Satisfação Geral</p>
+                    <div className="text-5xl md:text-7xl font-black text-indigo-400 tracking-tighter transition-transform group-hover:scale-110 duration-500">99%</div>
+                    <p className="text-white/60 text-[10px] font-black tracking-[0.4em] relative z-10 uppercase">Satisfação Geral</p>
                  </div>
               </div>
            </div>
@@ -972,9 +972,9 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
             <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-600/20">
               <BookOpen className="text-white" size={28} />
             </div>
-            <div className="flex flex-col">
-              <span className="font-serif italic text-3xl text-slate-900">Ministrando a Palavra</span>
-              <span className="text-[10px] font-black text-[#C2945E] tracking-[0.5em] mt-2 ml-1 opacity-60">Soli Deo Gloria</span>
+            <div className="flex flex-col leading-tight">
+              <span className="font-serif italic text-3xl text-slate-900 tracking-tight">Ministrando</span>
+              <span className="text-[10px] font-black text-[#C2945E] tracking-[0.3em] mt-1 ml-1 uppercase opacity-80">a Palavra</span>
             </div>
           </div>
           

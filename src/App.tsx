@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   Sun,
   Moon,
+  Book,
   BookOpen,
   Copy,
   Check,
@@ -731,7 +732,7 @@ export default function App() {
 
   const tabs = [
     { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
-    { id: 'ministrations', label: t('ministrations'), icon: BookOpen },
+    { id: 'ministrations', label: t('ministrations'), icon: Book },
     { id: 'bible', label: t('bible'), icon: BookOpen },
     { id: 'editor', label: t('newSermon'), icon: PlusCircle },
     { id: 'ai', label: t('aiAssistant'), icon: Sparkles },
@@ -776,12 +777,15 @@ export default function App() {
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-4 bg-app-bg/8 backdrop-blur-lg border-b border-app-border z-50">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <motion.div 
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            className="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20"
+          >
             <BookOpen className="text-white" size={18} />
-          </div>
+          </motion.div>
           <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
             <span className="font-serif italic text-xl text-app-text px-1 drop-shadow-sm">Ministrando</span>
-            <span className="font-bold tracking-[0.3em] text-[8px] text-indigo-500 mt-0.5">a palavra</span>
+            <span className="font-bold tracking-[0.3em] text-[10px] text-indigo-500 mt-0.5 uppercase">a palavra</span>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -815,19 +819,25 @@ export default function App() {
       `}>
         {/* Mobile Header Inside Sidebar context */}
         <div className="md:hidden flex items-center gap-3 p-8 border-b border-app-border mb-6 px-6">
-          <div className="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <motion.div 
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            className="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20"
+          >
             <BookOpen className="text-white" size={20} />
-          </div>
+          </motion.div>
           <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
             <span className="font-serif italic text-xl text-app-text px-1 tracking-tight">Ministrando</span>
-            <span className="font-bold tracking-[0.3em] text-[10px] text-indigo-500 mt-0.5 uppercase">a palavra</span>
+            <span className="font-bold tracking-[0.3em] text-[12px] text-indigo-500 mt-0.5 uppercase">a palavra</span>
           </div>
         </div>
         <div className="p-8 hidden md:flex items-center justify-between gap-2 mb-10 border-b border-app-border/10 px-6">
           <div className="flex items-center gap-2 overflow-hidden">
-            <div className="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+            <motion.div 
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            className="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0"
+          >
               <BookOpen className="text-white" size={20} />
-            </div>
+            </motion.div>
             {!isSidebarCollapsed && (
               <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
                 <span className="text-xl font-serif italic text-app-text px-1 tracking-tight">Ministrando</span>
