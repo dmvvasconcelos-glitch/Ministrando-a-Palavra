@@ -142,12 +142,15 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-app-text">{t('myMinistries')}</h1>
-          <p className="text-app-secondary font-medium tracking-wide uppercase transition-colors">{t('myMinistriesSub')}</p>
+          <h1 className="text-2xl font-black tracking-tight text-app-text flex items-center gap-2">
+            <div className="w-1.5 h-6 bg-app-accent rounded-full opacity-60" />
+            {t('myMinistries')}
+          </h1>
+          <p className="text-app-secondary font-medium text-sm mt-1 opacity-70">{t('myMinistriesSub')}</p>
         </div>
         <button 
           onClick={onNew}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-[11px] hover:bg-indigo-500 hover:shadow-indigo-500/25 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all shadow-lg shadow-indigo-600/20 self-start border border-white/10 uppercase tracking-widest"
+          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-[11px] hover:bg-indigo-500 hover:shadow-indigo-500/25 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all shadow-lg shadow-indigo-600/20 self-start border border-white/10 tracking-widest"
         >
           <Plus size={14} className="stroke-[3]" />
           <span>{t('newMinistry')}</span>
@@ -171,7 +174,7 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
               key={f}
               onClick={() => setFilter(f)}
               className={`
-                px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex-1 md:flex-none whitespace-nowrap
+                px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all flex-1 md:flex-none whitespace-nowrap
                 ${filter === f ? 'bg-app-accent text-white shadow-lg' : 'text-app-secondary hover:text-app-text'}
               `}
             >
@@ -219,7 +222,7 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
                           >
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleDelete(sermon.id); }}
-                              className="px-3 py-1.5 bg-red-500 text-white text-[10px] font-black uppercase rounded-lg hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+                              className="px-3 py-1.5 bg-red-500 text-white text-[10px] font-black rounded-lg hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
                             >
                               {t('confirm')}
                             </button>
@@ -269,7 +272,7 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
                   <div className="space-y-4 relative z-10 flex-1">
                     <div className="space-y-3 pb-4 border-b border-app-border/40">
                       <div className="flex items-center flex-wrap gap-2">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${
+                        <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black tracking-widest border ${
                           sermon.status === 'published' 
                             ? 'bg-emerald-500/5 text-emerald-500 border-emerald-500/20' 
                             : 'bg-amber-500/5 text-amber-500 border-amber-500/20'
@@ -278,26 +281,26 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
                         </span>
                         
                         {!isOwner && (
-                          <div className="flex items-center gap-1 text-[8px] bg-indigo-500/5 text-indigo-400 px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-indigo-500/10 shadow-sm">
+                          <div className="flex items-center gap-1 text-[8px] bg-indigo-500/5 text-indigo-400 px-2 py-0.5 rounded-full font-black tracking-widest border border-indigo-500/10 shadow-sm">
                             <Shield size={10} />
                             {permission === 'edit' ? t('editorTool') : t('reader')}
                           </div>
                         )}
 
                         {isOwner && sermon.sharedWith && Object.keys(sermon.sharedWith).length > 0 && (
-                          <div className="flex items-center gap-1 text-[8px] bg-emerald-500/5 text-emerald-400 px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-emerald-500/10 shadow-sm" title={t('sharedWithUsers').replace('{count}', Object.keys(sermon.sharedWith).length.toString())}>
+                          <div className="flex items-center gap-1 text-[8px] bg-emerald-500/5 text-emerald-400 px-2 py-0.5 rounded-full font-black tracking-widest border border-emerald-500/10 shadow-sm" title={t('sharedWithUsers').replace('{count}', Object.keys(sermon.sharedWith).length.toString())}>
                             <Users size={10} />
                             <span>{Object.keys(sermon.sharedWith).length}</span>
                           </div>
                         )}
                       </div>
 
-                      <h3 className="text-lg font-bold text-app-text leading-tight group-hover:text-app-accent transition-colors uppercase tracking-wide truncate">
+                      <h3 className="text-lg font-bold text-app-text leading-tight group-hover:text-app-accent transition-colors tracking-wide truncate">
                         {sermon.title || t('untitled')}
                       </h3>
                       
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-app-bg text-app-secondary border border-app-border rounded-full text-[9px] font-black uppercase tracking-widest truncate max-w-[200px]">
+                        <span className="px-2 py-0.5 bg-app-bg text-app-secondary border border-app-border rounded-full text-[9px] font-black tracking-widest truncate max-w-[200px]">
                           {sermon.theme || t('noTheme')}
                         </span>
                       </div>
@@ -305,7 +308,7 @@ export default function SermonsList({ onEdit, onPreach, onNew }: SermonsListProp
                   </div>
 
                   <div className="mt-4 flex items-center justify-between text-app-secondary relative z-10">
-                    <div className="flex items-center gap-1.5 text-[10px] text-app-secondary/80 uppercase tracking-tight font-bold">
+                    <div className="flex items-center gap-1.5 text-[10px] text-app-secondary/80 tracking-tight font-bold">
                       <Clock size={12} className="text-app-secondary/40" />
                       <span>{sermon.status === 'published' ? t('publishedLabel') : t('savedProgress')} {formatSermonDate(sermon.updatedAt)}</span>
                     </div>

@@ -676,7 +676,7 @@ export default function App() {
               <ShieldCheck className="text-red-500" size={40} />
             </div>
             
-            <h1 className="text-3xl font-black text-app-text mb-4 tracking-tighter uppercase leading-tight">
+            <h1 className="text-3xl font-black text-app-text mb-4 tracking-tighter leading-tight">
               Acesso <span className="text-red-500">{isManuallyBlocked ? 'Suspenso' : 'Expirado'}</span>
             </h1>
             
@@ -690,12 +690,12 @@ export default function App() {
               
               {!isManuallyBlocked && (
                 <div className="bg-indigo-500/5 rounded-3xl p-6 border border-indigo-500/10 shadow-inner">
-                  <p className="text-indigo-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Promoção de Lançamento</p>
+                  <p className="text-indigo-500 text-[10px] font-black tracking-[0.2em] mb-1">Promoção de Lançamento</p>
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-app-text text-xl font-bold italic">R$</span>
                     <span className="text-5xl font-black text-app-text tracking-tighter">29,90</span>
                   </div>
-                  <p className="text-app-secondary text-[11px] font-bold uppercase tracking-widest mt-1 opacity-60">Licença Premium • 1 Ano</p>
+                  <p className="text-app-secondary text-[11px] font-bold tracking-widest mt-1 opacity-60">Licença Premium • 1 Ano</p>
                 </div>
               )}
             </div>
@@ -706,7 +706,7 @@ export default function App() {
                   href={getCheckoutUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full bg-indigo-600 text-white h-16 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full bg-indigo-600 text-white h-16 rounded-2xl font-black text-[11px] tracking-[0.2em] hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Sparkles size={18} />
                   Fazer Aquisição Premium (Anual)
@@ -715,13 +715,13 @@ export default function App() {
               
               <button
                 onClick={() => signOut(auth)}
-                className="w-full h-12 bg-app-card text-app-secondary border border-app-border rounded-xl font-black uppercase text-[9px] tracking-[0.2em] hover:bg-app-accent/10 transition-all"
+                className="w-full h-12 bg-app-card text-app-secondary border border-app-border rounded-xl font-black text-[9px] tracking-[0.2em] hover:bg-app-accent/10 transition-all"
               >
                 Sair da Conta
               </button>
             </div>
 
-            <p className="mt-8 text-[9px] text-app-secondary uppercase font-black tracking-widest opacity-40">
+            <p className="mt-8 text-[9px] text-app-secondary font-black tracking-widest opacity-40">
               Suporte: suporte@ministrandoapalavra.com.br
             </p>
           </motion.div>
@@ -782,7 +782,7 @@ export default function App() {
           </div>
           <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
             <span className="font-serif italic text-xl text-app-text px-1 drop-shadow-sm">Ministrando</span>
-            <span className="font-bold tracking-[0.3em] text-[8px] text-indigo-500 uppercase mt-0.5">a palavra</span>
+            <span className="font-bold tracking-[0.3em] text-[8px] text-indigo-500 mt-0.5">a palavra</span>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -821,7 +821,7 @@ export default function App() {
           </div>
           <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
             <span className="font-serif italic text-xl text-app-text px-1 tracking-tight">Ministrando</span>
-            <span className="font-bold tracking-[0.4em] text-[10px] text-indigo-500 uppercase mt-0.5">a palavra</span>
+            <span className="font-bold tracking-[0.4em] text-[10px] text-indigo-500 mt-0.5">a palavra</span>
           </div>
         </div>
         <div className="p-8 hidden md:flex items-center justify-between gap-2 mb-10 border-b border-app-border/10 px-6">
@@ -832,7 +832,7 @@ export default function App() {
             {!isSidebarCollapsed && (
               <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
                 <span className="text-lg font-serif italic text-app-text px-1 tracking-tight">Ministrando</span>
-                <span className="text-[9px] font-bold tracking-[0.3em] text-indigo-500 uppercase mt-0.5">a palavra</span>
+                <span className="text-[9px] font-bold tracking-[0.3em] text-indigo-500 mt-0.5">a palavra</span>
               </div>
             )}
           </div>
@@ -871,7 +871,7 @@ export default function App() {
                 `}
               >
                 <tab.icon size={18} className={activeTab === tab.id ? 'text-indigo-500' : ''} />
-                <span className="font-bold text-[10px] uppercase tracking-widest">{tab.label}</span>
+                <span className="font-bold text-[11.5px] tracking-[0.05em]">{tab.label}</span>
                 {tab.badge !== undefined && tab.badge > 0 && (
                   <span className="absolute right-4 w-4 h-4 bg-red-500 text-white text-[8px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-app-card transition-all">
                     {tab.badge}
@@ -902,7 +902,7 @@ export default function App() {
                 `}
               >
                 <ShieldCheck size={20} />
-                <span className="font-bold text-xs uppercase tracking-[0.2em]">{t('admin') || 'Admin'}</span>
+                <span className="font-bold text-xs tracking-[0.2em]">{t('admin') || 'Admin'}</span>
                 {adminNewMsgCount > 0 && (
                   <span className="absolute right-4 w-5 h-5 bg-red-500 text-white text-[10px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-app-card transition-all">
                     {adminNewMsgCount}
@@ -920,9 +920,9 @@ export default function App() {
               <button
                 key={lang}
                 onClick={() => setLanguage(lang)}
-                className={`text-[9px] font-black uppercase tracking-[0.2em] transition-all p-1 ${language === lang ? 'text-indigo-500 underline underline-offset-4' : 'text-slate-600 hover:text-slate-400'}`}
+                className={`text-[9px] font-black tracking-[0.2em] transition-all p-1 ${language === lang ? 'text-indigo-500 underline underline-offset-4' : 'text-slate-600 hover:text-slate-400'}`}
               >
-                {lang}
+                {lang.toUpperCase()}
               </button>
             ))}
           </div>
@@ -932,7 +932,7 @@ export default function App() {
             className={`w-full mb-4 py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all ${currentSermonId ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-app-card text-app-secondary border border-app-border cursor-not-allowed'}`}
           >
             <Play size={16} fill={currentSermonId ? "currentColor" : "none"} />
-            <span className="font-bold uppercase text-[9px] tracking-widest">{t('pulpitMode')}</span>
+            <span className="font-bold text-[9px] tracking-widest">{t('pulpitMode')}</span>
           </button>
 
           <div 
@@ -956,7 +956,7 @@ export default function App() {
                   {copiedEmail ? <Check size={10} className="text-green-500" /> : <Copy size={10} />}
                 </button>
               </div>
-              <button id="btn-logout" onClick={(e) => { e.stopPropagation(); signOut(auth); }} className="text-[10px] uppercase font-bold text-app-secondary hover:text-app-accent transition-colors mt-1">{t('logout')}</button>
+              <button id="btn-logout" onClick={(e) => { e.stopPropagation(); signOut(auth); }} className="text-[10px] font-bold text-app-secondary hover:text-app-accent transition-colors mt-1">{t('logout')}</button>
             </div>
           </div>
         </div>
@@ -979,8 +979,8 @@ export default function App() {
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] bg-amber-500 text-white px-2 py-0.5 rounded-md">EXPERIMENTAL</span>
-                    <p className="text-xs font-black text-app-text tracking-tight uppercase">Período de Experiência Ativo</p>
+                    <span className="text-[9px] font-black tracking-[0.2em] bg-amber-500 text-white px-2 py-0.5 rounded-md">EXPERIMENTAL</span>
+                    <p className="text-xs font-black text-app-text tracking-tight">Período de Experiência Ativo</p>
                   </div>
                   <p className="text-[10px] font-bold text-app-secondary flex items-center gap-1.5 mt-0.5">
                     <Clock size={12} className="text-amber-500" />
@@ -991,10 +991,10 @@ export default function App() {
               
               <div className="flex items-center gap-8">
                 <div className="hidden lg:flex flex-col items-end border-r border-app-border pr-8">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-app-secondary opacity-60">Promoção de Lançamento</span>
+                  <span className="text-[10px] font-bold tracking-widest text-app-secondary opacity-60">Promoção de Lançamento</span>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-app-secondary text-[10px] font-bold line-through opacity-40">R$ 59,90</span>
-                    <span className="text-lg font-black text-app-text italic">R$ 29,90 <span className="text-[9px] not-italic opacity-40 font-bold uppercase tracking-tighter">p/ano</span></span>
+                    <span className="text-lg font-black text-app-text italic">R$ 29,90 <span className="text-[9px] not-italic opacity-40 font-bold tracking-tighter">p/ano</span></span>
                   </div>
                 </div>
                 
@@ -1002,7 +1002,7 @@ export default function App() {
                   href={getCheckoutUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-600/20 transition-all hover:scale-[1.03] active:scale-95 group/btn"
+                  className="flex items-center gap-3 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-2xl text-[10px] font-black tracking-[0.2em] shadow-xl shadow-indigo-600/20 transition-all hover:scale-[1.03] active:scale-95 group/btn"
                 >
                   <Sparkles size={16} className="fill-white/20 group-hover/btn:animate-pulse" />
                   Ativar Premium Agora

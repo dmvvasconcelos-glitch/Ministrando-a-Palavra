@@ -634,11 +634,11 @@ export default function SermonEditor({
           </button>
           <div className="space-y-0.5 sm:space-y-1 overflow-hidden relative pl-4">
             <div className="absolute left-0 top-1 bottom-1 w-1 bg-indigo-500 rounded-full opacity-60" />
-            <h2 className="text-lg sm:text-xl font-black tracking-tight text-app-text truncate uppercase lg:normal-case">
+            <h2 className="text-lg sm:text-xl font-black tracking-tight text-app-text truncate">
               {activeId ? t('editSermon') : t('newMinistration')}
             </h2>
             <div className="flex items-center gap-3">
-              <p className="text-app-secondary text-[10px] sm:text-xs font-bold tracking-widest uppercase opacity-70 italic">{t('oficinaDaPalavra')}</p>
+              <p className="text-app-secondary text-[10px] sm:text-xs font-bold italic opacity-70">{t('oficinaDaPalavra')}</p>
             </div>
           </div>
         </div>
@@ -714,13 +714,13 @@ export default function SermonEditor({
                     >
                       <button
                         onClick={() => setShowDeleteConfirm(false)}
-                        className="px-2 py-2 text-[8px] font-black uppercase text-app-secondary hover:text-app-text"
+                        className="px-2 py-2 text-[10px] font-medium text-app-secondary hover:text-app-text"
                       >
                         {t('no')}
                       </button>
                       <button
                         onClick={handleDelete}
-                        className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[8px] font-black uppercase rounded-lg shadow-lg shadow-rose-600/20"
+                        className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-medium rounded-lg shadow-lg shadow-rose-600/20"
                       >
                         {t('yes')}
                       </button>
@@ -780,7 +780,7 @@ export default function SermonEditor({
                     <FileText size={24} />
                   </div>
                   <div className="space-y-0.5">
-                    <h4 className="text-sm font-black text-indigo-400 uppercase tracking-widest">
+                    <h4 className="text-sm font-black text-indigo-400 tracking-widest">
                       {conflictDraft.isNew ? t('sessionRestoration') : t('versionConflict')}
                     </h4>
                     <p className="text-[11px] text-app-secondary font-medium leading-relaxed max-w-md">
@@ -794,21 +794,21 @@ export default function SermonEditor({
                   {!conflictDraft.isNew && (
                     <button
                       onClick={applyDraft}
-                      className="px-5 py-2.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 ring-1 ring-white/20"
+                      className="px-5 py-2.5 bg-indigo-600 text-white text-[11px] font-medium rounded-xl hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 ring-1 ring-white/20"
                     >
                       {t('useLocal')}
                     </button>
                   )}
                   <button
                     onClick={discardDraft}
-                    className="px-5 py-2.5 bg-app-card/40 border border-app-border text-app-secondary text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-app-card hover:text-app-text transition-all"
+                    className="px-5 py-2.5 bg-app-card/40 border border-app-border text-app-secondary text-[11px] font-medium rounded-xl hover:bg-app-card hover:text-app-text transition-all"
                   >
                     {conflictDraft.isNew ? t('discard') : t('useServer')}
                   </button>
                   {conflictDraft.isNew && (
                     <button
                       onClick={() => setConflictDraft(null)}
-                      className="px-5 py-2.5 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-500/30 transition-all"
+                      className="px-5 py-2.5 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 text-[11px] font-medium rounded-xl hover:bg-indigo-500/30 transition-all"
                     >
                       {t('ignore')}
                     </button>
@@ -822,7 +822,7 @@ export default function SermonEditor({
           <div className="flex flex-col flex-1">
             <div className="p-8 space-y-4 border-b border-app-border/60 bg-app-card/30 relative">
               {lastAutoSave && (
-                <div className="absolute top-4 right-8 px-3 py-1 bg-app-bg/40 rounded-full border border-app-border text-[9px] text-app-secondary font-black uppercase tracking-widest flex items-center gap-2 shadow-sm">
+                <div className="absolute top-4 right-8 px-3 py-1 bg-app-bg/40 rounded-full border border-app-border text-[10px] text-app-secondary font-medium flex items-center gap-2 shadow-sm opacity-70">
                   <div className={`w-1.5 h-1.5 rounded-full ${saving ? 'bg-indigo-500 animate-ping' : 'bg-green-500'}`} />
                   <span>{t('synced')} {lastAutoSave.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
@@ -831,9 +831,9 @@ export default function SermonEditor({
               <div className="flex flex-col md:flex-row gap-6 relative">
                 <div className="hidden md:block absolute left-[-20px] top-4 bottom-4 w-1 bg-app-accent rounded-full opacity-40 shadow-[0_0_10px_rgba(79,70,229,0.2)]" />
                 <div className="flex-1 space-y-1">
-                  <label className={`text-[8px] font-black uppercase tracking-widest ${titleError ? 'text-rose-500' : 'text-app-accent'} ml-1 mb-1 block transition-colors`}>
+                  <label className={`text-[10px] font-medium ${titleError ? 'text-rose-500' : 'text-app-accent'} ml-1 mb-1 block transition-colors opacity-70`}>
                     {t('sermonTitleLabel')}
-                    {titleError && <span className="ml-2 lowercase font-medium italic opacity-80">({t('titleRequired')})</span>}
+                    {titleError && <span className="ml-2 lowercase italic">({t('titleRequired')})</span>}
                   </label>
                   <input
                     id="editor-title"
@@ -849,7 +849,7 @@ export default function SermonEditor({
                   />
                 </div>
                 <div className="w-full md:w-1/3 space-y-1 pt-1">
-                  <label className="text-[8px] font-black uppercase tracking-widest text-emerald-500 ml-1 mb-1 block">{t('sermonThemeLabel')}</label>
+                  <label className="text-[10px] font-medium text-emerald-500 ml-1 mb-1 block opacity-70">{t('sermonThemeLabel')}</label>
                   <div className="relative group">
                     <Tag className="absolute left-0 top-1/2 -translate-y-1/2 text-app-secondary group-hover:text-emerald-500 transition-colors" size={16} />
                     <input
@@ -958,8 +958,8 @@ export default function SermonEditor({
                   </div>
                   <div className="w-px h-3.5 bg-app-border mx-0.5" />
                   <div className="flex gap-0.5">
-                    <button onClick={() => handleFontFamily('Inter')} className="px-1.5 py-1 hover:bg-app-card/60 rounded-md text-[8px] font-bold uppercase tracking-tighter text-app-secondary">Sans</button>
-                    <button onClick={() => handleFontFamily('serif')} className="px-1.5 py-1 hover:bg-app-card/60 rounded-md text-[8px] font-serif font-bold text-app-secondary">Serif</button>
+                    <button onClick={() => handleFontFamily('Inter')} className="px-1.5 py-1 hover:bg-app-card/60 rounded-md text-[10px] font-medium text-app-secondary">Sans</button>
+                    <button onClick={() => handleFontFamily('serif')} className="px-1.5 py-1 hover:bg-app-card/60 rounded-md text-[10px] font-serif font-medium text-app-secondary">Serif</button>
                   </div>
                 </div>
 
@@ -1076,7 +1076,7 @@ export default function SermonEditor({
               }}
             >
               <div className="flex items-start justify-between gap-4 mb-2">
-                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                <span className="text-sm font-medium text-indigo-400 flex items-center gap-2 opacity-70">
                   <MessageSquare size={12} /> {t('personalNote')}
                 </span>
                 <button onClick={() => setNotePopup(null)} className="text-app-secondary hover:text-indigo-500 transition-colors">
@@ -1101,7 +1101,7 @@ export default function SermonEditor({
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 px-4 text-app-secondary">
-        <div className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-80">
+        <div className="text-[11px] font-medium opacity-70">
           Escrituras Vivas • Sistema de Ministrações
         </div>
       </div>

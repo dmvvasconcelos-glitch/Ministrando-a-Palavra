@@ -272,7 +272,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-app-border/40">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-app-text flex items-center gap-2 uppercase md:normal-case">
+          <h1 className="text-2xl font-black tracking-tight text-app-text flex items-center gap-2 md:normal-case">
             <div className="w-1.5 h-6 bg-app-accent rounded-full opacity-60" />
             {t('ministerialAgendaHeader')}
           </h1>
@@ -289,7 +289,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
           </button>
           <button 
             onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-[9px] uppercase tracking-widest hover:bg-indigo-500 active:scale-95 transition-all shadow-xl shadow-indigo-600/20 border border-indigo-400/20"
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-[9px] tracking-widest hover:bg-indigo-500 active:scale-95 transition-all shadow-xl shadow-indigo-600/20 border border-indigo-400/20"
           >
             <Plus size={14} />
             <span>{t('schedulePreachingBtn')}</span>
@@ -315,7 +315,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
           { label: t('statInvitations'), count: items.filter(e => e.guestId === auth.currentUser?.uid && e.userId !== e.guestId).length, color: 'indigo-400', textColor: 'text-indigo-400' }
         ].map(stat => (
           <div key={stat.label} className="bg-app-card/30 border border-app-border/40 rounded-xl p-3.5 relative overflow-hidden group hover:border-indigo-500/20 transition-all cursor-default shadow-sm">
-            <span className="text-[8px] font-black uppercase tracking-widest text-app-secondary opacity-60 block mb-0.5">{stat.label}</span>
+            <span className="text-[8px] font-black tracking-widest text-app-secondary opacity-60 block mb-0.5">{stat.label}</span>
             <span className={`text-xl font-black ${stat.textColor} tracking-tight`}>{stat.count}</span>
             <div className={`absolute -right-2 -bottom-2 w-10 h-10 bg-white/5 rounded-full blur-lg group-hover:scale-150 transition-transform duration-700`} />
           </div>
@@ -339,7 +339,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
         {/* Upcoming Section */}
         <section className="space-y-4">
           <div className="flex items-center gap-3 px-2">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400/80">{t('upcomingSection')}</h2>
+            <h2 className="text-[10px] font-black tracking-[0.2em] text-indigo-400/80">{t('upcomingSection')}</h2>
             <div className="flex-1 h-px bg-indigo-500/10" />
           </div>
 
@@ -394,7 +394,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
     
                       <div className="flex-1 min-w-0 space-y-2">
                         <div className="flex items-center flex-wrap gap-2">
-                           <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border transition-all ${
+                           <span className={`px-2 py-0.5 rounded-full text-[8px] font-black tracking-widest border transition-all ${
                              isToday ? 'bg-indigo-500 text-white border-white/20' : 'bg-app-bg text-app-secondary border-app-border'
                            }`}>
                             {item.type === 'preaching' ? t('preaching') : 
@@ -404,14 +404,14 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                              item.type === 'extra' ? t('others') : t('preaching')}
                           </span>
                           {(item.notify24h || item.notifyDayOf) && (
-                            <div className="flex items-center gap-1 text-[8px] font-black tracking-widest uppercase text-indigo-400">
+                            <div className="flex items-center gap-1 text-[8px] font-black tracking-widest text-indigo-400">
                               <Bell size={10} className="fill-current" />
                               <span>{t('activeAlerts')}</span>
                             </div>
                           )}
                         </div>
     
-                        <h3 className="text-lg font-bold text-app-text group-hover:text-indigo-500 transition-colors tracking-tight line-clamp-1 uppercase">{item.title}</h3>
+                        <h3 className="text-lg font-bold text-app-text group-hover:text-indigo-500 transition-colors tracking-tight line-clamp-1">{item.title}</h3>
                         
                         <div className="flex flex-wrap items-center gap-4 text-app-secondary font-medium text-[11px]">
                           <div className="flex items-center gap-1.5 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
@@ -485,7 +485,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
         {filteredItems.filter(e => (e.date?.toDate?.() || new Date(e.date)) < new Date()).length > 0 && (
           <section className="space-y-4">
              <div className="flex items-center gap-3 px-2">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-app-secondary opacity-80">{t('completedSection')}</h2>
+              <h2 className="text-[10px] font-black tracking-[0.2em] text-app-secondary opacity-80">{t('completedSection')}</h2>
               <div className="flex-1 h-px bg-white/5" />
             </div>
 
@@ -522,7 +522,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                         <div className="absolute -right-1 -top-1 opacity-20">
                           {getIconSmall(item.type || 'preaching')}
                         </div>
-                        <span className="text-[6px] font-black uppercase tracking-tighter opacity-60">
+                        <span className="text-[6px] font-black tracking-tighter opacity-60">
                           {format(eventDate, 'MMM', { locale })}
                         </span>
                         <span className="text-sm font-black leading-none">{format(eventDate, 'dd')}</span>
@@ -531,7 +531,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                       <div className="flex-1 min-w-0">
                         <h3 className="text-xs font-bold text-app-text truncate line-clamp-1">{item.title}</h3>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className="text-[8px] font-black uppercase text-emerald-500/60 flex items-center gap-1">
+                          <span className="text-[8px] font-black text-emerald-500/60 flex items-center gap-1">
                             <CheckCircle2 size={10} />
                             {t('completed')}
                           </span>
@@ -569,7 +569,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                 className="relative w-full max-w-xl bg-[#0f172a] rounded-[32px] border border-white/10 shadow-2xl p-7 overflow-hidden"
               >
               <div className="flex justify-between items-center mb-5">
-                <div className="px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-500/20">
+                <div className="px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[9px] font-black tracking-widest border border-indigo-500/20">
                   {viewingItem.type === 'preaching' ? t('preaching') : 
                    viewingItem.type === 'culto' ? t('cult') :
                    viewingItem.type === 'celula' ? t('cell') :
@@ -586,7 +586,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
  
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-black text-app-text tracking-tight uppercase">{viewingItem.title}</h2>
+                  <h2 className="text-2xl font-black text-app-text tracking-tight">{viewingItem.title}</h2>
                     <div className="flex items-center gap-4 mt-1.5 text-app-secondary font-medium text-xs">
                       <div className="flex items-center gap-1.5">
                         <Calendar size={14} className="text-indigo-500" />
@@ -596,7 +596,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                         <Clock size={14} className="text-indigo-500" />
                         <span>{format(viewingItem.date?.toDate?.() || new Date(viewingItem.date), "HH:mm")}h</span>
                         {isAfter(viewingItem.date?.toDate?.() || new Date(viewingItem.date), new Date()) && (
-                           <span className="text-[9px] font-black uppercase text-indigo-400 ml-1 px-2 py-0.5 bg-indigo-500/10 rounded-full border border-indigo-500/20">
+                           <span className="text-[9px] font-black text-indigo-400 ml-1 px-2 py-0.5 bg-indigo-500/10 rounded-full border border-indigo-500/20">
                              {(language === 'en' ? 'In ' : language === 'es' ? 'En ' : 'Em ') + formatDistanceToNow(viewingItem.date?.toDate?.() || new Date(viewingItem.date), { locale })}
                           </span>
                         )}
@@ -611,7 +611,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-black uppercase text-app-secondary tracking-widest">{t('locationLabel')}</span>
+                        <span className="text-[9px] font-black text-app-secondary tracking-widest">{t('locationLabel')}</span>
                         {viewingItem.address && (
                           <button 
                             onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(viewingItem.address!)}`, '_blank')}
@@ -644,7 +644,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                         <BookOpen size={18} />
                       </div>
                       <div>
-                        <span className="text-[9px] font-black uppercase text-emerald-600/60 tracking-widest">Ministração Associada</span>
+                        <span className="text-[9px] font-black text-emerald-600/60 tracking-widest">Ministração Associada</span>
                         <p className="text-sm font-bold mt-0.5 text-app-text">
                           {sermons.find(s => s.id === viewingItem.sermonId)?.title || t('privateSermon')}
                         </p>
@@ -664,7 +664,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
  
                 {viewingItem.description && (
                   <div className="space-y-2">
-                    <span className="text-[9px] font-black uppercase text-app-secondary tracking-widest ml-1">{t('observations')}</span>
+                    <span className="text-[9px] font-black text-app-secondary tracking-widest ml-1">{t('observations')}</span>
                     <div className="p-5 bg-white/5 rounded-2xl border border-white/5">
                       <p className="text-app-secondary text-xs leading-relaxed italic">{viewingItem.description}</p>
                     </div>
@@ -680,7 +680,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                           <UserIcon size={20} />
                         </div>
                         <div>
-                          <p className="text-[8px] font-black uppercase tracking-[0.2em] text-indigo-400/60 mb-0.5">
+                          <p className="text-[8px] font-black tracking-[0.2em] text-indigo-400/60 mb-0.5">
                             {viewingItem.userId === auth.currentUser?.uid ? t('invitedPerson') : t('organizerSentBy')}
                           </p>
                           <p className="text-sm font-black text-indigo-300">
@@ -708,7 +708,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                               }
                             }
                           }}
-                          className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-indigo-600/20"
+                          className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-xl text-[9px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-indigo-600/20"
                         >
                           {t('removeGuest')}
                         </button>
@@ -722,7 +722,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                     <>
                       <button 
                         onClick={() => handleEdit(viewingItem)}
-                        className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/10"
+                        className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold text-[10px] tracking-widest hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/10"
                       >
                         {t('edit')}
                       </button>
@@ -731,19 +731,19 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                           setViewingItem(null);
                           setDeletingId(viewingItem.id);
                         }}
-                        className="flex-1 py-3 bg-rose-500/10 text-rose-500 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-rose-500/20 transition-all"
+                        className="flex-1 py-3 bg-rose-500/10 text-rose-500 rounded-xl font-bold text-[10px] tracking-widest hover:bg-rose-500/20 transition-all"
                       >
                         {t('delete')}
                       </button>
                     </>
                   ) : (
-                    <div className="flex-1 py-3 bg-white/5 text-slate-500 rounded-xl font-bold text-[10px] uppercase tracking-widest text-center opacity-50 border border-white/5">
+                    <div className="flex-1 py-3 bg-white/5 text-slate-500 rounded-xl font-bold text-[10px] tracking-widest text-center opacity-50 border border-white/5">
                       {t('viewOnly')}
                     </div>
                   )}
                   <button 
                     onClick={() => setViewingItem(null)}
-                    className="flex-1 py-3 bg-white/5 text-slate-400 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all"
+                    className="flex-1 py-3 bg-white/5 text-slate-400 rounded-xl font-bold text-[10px] tracking-widest hover:bg-white/10 transition-all"
                   >
                     {t('close')}
                   </button>
@@ -782,13 +782,13 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
               <div className="flex gap-4">
                 <button 
                   onClick={() => setDeletingId(null)}
-                  className="flex-1 py-4 bg-white/5 text-slate-400 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-white/10 transition-all"
+                  className="flex-1 py-4 bg-white/5 text-slate-400 rounded-2xl font-bold text-xs tracking-widest hover:bg-white/10 transition-all"
                 >
                   {t('cancel')}
                 </button>
                 <button 
                   onClick={() => handleDelete(deletingId)}
-                  className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 hover:opacity-90 transition-all"
+                  className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold text-xs tracking-widest shadow-lg shadow-red-500/20 hover:opacity-90 transition-all"
                 >
                   {t('confirm')}
                 </button>
@@ -820,7 +820,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-indigo-500/10 blur-3xl opacity-50 -z-10" />
 
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-black uppercase tracking-widest text-app-text flex items-center gap-3">
+                <h2 className="text-xl font-black tracking-widest text-app-text flex items-center gap-3">
                   <Mic2 size={24} className="text-indigo-400" />
                   {editingItemId ? t('editScheduling') : t('newScheduling')}
                 </h2>
@@ -835,7 +835,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">{t('categoryLabel')}</label>
+                    <label className="text-[9px] font-black tracking-[0.2em] text-indigo-400 ml-1">{t('categoryLabel')}</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {[
                         { id: 'preaching', label: t('preaching'), icon: <Mic2 size={14} /> },
@@ -848,7 +848,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                           key={cat.id}
                           type="button"
                           onClick={() => setType(cat.id)}
-                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all text-[10px] font-bold uppercase tracking-wider ${
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all text-[10px] font-bold tracking-wider ${
                             type === cat.id 
                               ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/20' 
                               : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
@@ -862,7 +862,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">{t('titleLabel')}</label>
+                    <label className="text-[9px] font-black tracking-[0.2em] text-indigo-400 ml-1">{t('titleLabel')}</label>
                     <input 
                       required
                       value={title}
@@ -874,7 +874,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
 
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">{t('associatedSermon')}</label>
+                      <label className="text-[9px] font-black tracking-[0.2em] text-indigo-400 ml-1">{t('associatedSermon')}</label>
                       <div className="relative">
                         <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={16} />
                         <select
@@ -906,7 +906,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
-                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">{t('dateLabel')}</label>
+                        <label className="text-[9px] font-black tracking-[0.2em] text-indigo-400 ml-1">{t('dateLabel')}</label>
                         <div className="relative">
                           <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={14} />
                           <input 
@@ -919,7 +919,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                         </div>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">{t('timeLabel')}</label>
+                        <label className="text-[9px] font-black tracking-[0.2em] text-indigo-400 ml-1">{t('timeLabel')}</label>
                         <div className="relative">
                           <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={14} />
                           <input 
@@ -936,7 +936,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">{t('locationLabel')}</label>
+                      <label className="text-[9px] font-black tracking-[0.2em] text-indigo-400 ml-1">{t('locationLabel')}</label>
                       <div className="relative">
                         <Plus className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 rotate-45" size={16} />
                         <input 
@@ -949,7 +949,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">{t('addressLabel')}</label>
+                      <label className="text-[9px] font-black tracking-[0.2em] text-indigo-400 ml-1">{t('addressLabel')}</label>
                       <div className="relative">
                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={16} />
                         <input 
@@ -963,7 +963,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">{t('invitePartner')}</label>
+                    <label className="text-[9px] font-black tracking-[0.2em] text-indigo-400 ml-1">{t('invitePartner')}</label>
                     {selectedGuest ? (
                       <div className="flex items-center justify-between p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
                         <div className="flex items-center gap-3">
@@ -1034,7 +1034,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                       }`}
                     >
                       <div className="flex flex-col items-start gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-tight">{t('notify24hLabel')}</span>
+                        <span className="text-[10px] font-black tracking-tight">{t('notify24hLabel')}</span>
                         <span className="text-[9px] text-slate-500">{language === 'en' ? 'Reminder' : language === 'es' ? 'Recordatorio' : 'Lembrete'}</span>
                       </div>
                       <div className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
@@ -1052,7 +1052,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                       }`}
                     >
                       <div className="flex flex-col items-start gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-tight">{t('notifyDayOfLabel')}</span>
+                        <span className="text-[10px] font-black tracking-tight">{t('notifyDayOfLabel')}</span>
                         <span className="text-[9px] text-slate-500">{language === 'en' ? 'Reminder' : language === 'es' ? 'Recordatorio' : 'Lembrete'}</span>
                       </div>
                       <div className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
@@ -1072,13 +1072,13 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                       setEditingItemId(null);
                       resetForm();
                     }}
-                    className="flex-1 py-5 rounded-[28px] font-black uppercase text-xs tracking-widest text-slate-500 hover:bg-white/5 transition-all"
+                    className="flex-1 py-5 rounded-[28px] font-black text-xs tracking-widest text-slate-500 hover:bg-white/5 transition-all"
                   >
                     {t('cancel')}
                   </button>
                   <button 
                     type="submit"
-                    className="flex-[2] bg-app-accent text-white py-5 rounded-[28px] font-black uppercase text-xs tracking-widest shadow-xl shadow-app-accent/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    className="flex-[2] bg-app-accent text-white py-5 rounded-[28px] font-black text-xs tracking-widest shadow-xl shadow-app-accent/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
                     {editingItemId ? t('updateAppointment') : t('confirmAppointment')}
                   </button>

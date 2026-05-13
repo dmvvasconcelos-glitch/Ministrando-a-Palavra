@@ -628,7 +628,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                 <div className="pt-4">
                   <button
                     onClick={() => setShowUsageAlert(false)}
-                    className="w-full py-4 bg-red-500 text-white rounded-2xl text-sm font-bold hover:bg-red-600 transition-all shadow-xl shadow-red-500/20 uppercase tracking-widest"
+                    className="w-full py-4 bg-red-500 text-white rounded-2xl text-sm font-bold hover:bg-red-600 transition-all shadow-xl shadow-red-500/20 tracking-widest"
                   >
                     {t('understood')}
                   </button>
@@ -652,7 +652,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
         <div className="flex flex-col items-center gap-4 py-4">
           <div className="flex flex-wrap items-center justify-center gap-4">
             {/* Individual Key Status */}
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${profile?.geminiApiKey ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-500'}`}>
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[11px] font-medium transition-all ${profile?.geminiApiKey ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-500'}`}>
               <div className={`w-2 h-2 rounded-full ${profile?.geminiApiKey ? 'bg-green-400 animate-pulse' : 'bg-amber-500 shadow-[0_0_8px_orange]'}`} />
               {profile?.geminiApiKey 
                 ? t('individualLimitActive')
@@ -663,7 +663,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
             <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full">
               <div className="flex items-center gap-2">
                 <TrendingUpIcon size={12} className="text-indigo-500" />
-                <span className="text-[10px] font-black text-app-secondary uppercase tracking-tighter">
+                <span className="text-[11px] font-medium text-app-secondary opacity-70">
                   {usageCount}/{currentLimit}
                 </span>
               </div>
@@ -708,7 +708,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
             className="flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full w-fit mx-auto mt-2"
           >
             <BrainCircuit size={10} className="text-cyan-400 animate-pulse" />
-            <span className="text-[8px] font-black uppercase text-cyan-400 tracking-widest">
+            <span className="text-[10px] font-medium text-cyan-400 opacity-70">
               {t('assistantLearning')}
             </span>
           </motion.div>
@@ -750,7 +750,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2">
+                    <label className="text-[11px] font-medium text-app-accent flex items-center gap-2 opacity-70">
                       <Layers size={14} /> {t('aiThemeLabel')}
                     </label>
                     <span className="text-[9px] text-app-secondary/50 font-medium italic">{language === 'pt' ? 'Obrigatório' : 'Required'}</span>
@@ -771,7 +771,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2">
+                    <label className="text-[11px] font-medium text-app-accent flex items-center gap-2 opacity-70">
                       <Video size={14} /> {language === 'pt' ? 'Link do Vídeo' : 'Video Link'}
                     </label>
                     <span className="text-[9px] text-app-secondary/50 font-medium italic">{language === 'pt' ? 'Opcional' : 'Optional'}</span>
@@ -792,7 +792,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
               <div className="space-y-4 bg-black/20 p-5 rounded-2xl border border-white/5 flex flex-col items-center">
                 <div className="flex items-center gap-2 opacity-80">
                   <TrendingUp size={12} className="text-app-accent" />
-                  <span className="text-[9px] uppercase font-bold tracking-widest text-app-text text-center">{t('dailySuggestionsLabel')}</span>
+                  <span className="text-[10px] font-medium text-app-text text-center opacity-70">{t('dailySuggestionsLabel')}</span>
                 </div>
                 <div className="flex flex-wrap gap-2.5 justify-center">
                   {seasonalSuggestions.map((s, idx) => (
@@ -823,7 +823,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
             {/* Secondary Section: Refined Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4 border-t border-white/5">
               <div className="space-y-3">
-                <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-medium text-app-accent flex items-center gap-2 opacity-70">
                   <BookMarked size={14} /> {t('bibleVersionLabel') || (language === 'pt' ? 'Versão da Bíblia' : 'Bible Version')}
                 </label>
                 <div className="relative">
@@ -843,7 +843,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-medium text-app-accent flex items-center gap-2 opacity-70">
                   <BookMarked size={14} /> {t('bibleTextOptional')}
                 </label>
                 <input 
@@ -856,7 +856,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-medium text-app-accent flex items-center gap-2 opacity-70">
                   <Users size={14} /> {t('audienceLabel')}
                 </label>
                 <div className="relative">
@@ -876,7 +876,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-medium text-app-accent flex items-center gap-2 opacity-70">
                   <Wand2 size={14} /> {t('preachingStyleLabel')}
                 </label>
                 <div className="flex bg-white/5 border border-white/10 rounded-xl p-1">
@@ -885,7 +885,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                       key={s}
                       type="button"
                       onClick={() => setStyle(s)}
-                      className={`flex-1 py-2.5 rounded-lg text-[9px] font-black uppercase transition-all tracking-wider ${style === s ? 'bg-app-accent text-white shadow-lg' : 'text-app-secondary hover:text-app-text hover:bg-white/5'}`}
+                      className={`flex-1 py-2.5 rounded-lg text-[10px] font-medium transition-all ${style === s ? 'bg-app-accent text-white shadow-lg' : 'text-app-secondary hover:text-app-text hover:bg-white/5'}`}
                     >
                       {s === 'expositivo' ? t('styleExpository') : s === 'tematico' ? t('styleThematic') : t('styleNarrative')}
                     </button>
@@ -938,7 +938,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                 className="absolute inset-y-0 left-0 w-full sm:w-72 bg-[#0f172a]/95 backdrop-blur-2xl z-50 border-r border-white/10 shadow-2xl p-6 flex flex-col"
               >
                 <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-app-accent">{mode === 'chat' ? (t('pastConversations') || 'Conversas') : (language === 'pt' ? 'Esboços Anteriores' : 'Past Outlines')}</h3>
+                  <h3 className="text-[11px] font-medium text-app-accent opacity-70">{mode === 'chat' ? (t('pastConversations') || 'Conversas') : (language === 'pt' ? 'Esboços Anteriores' : 'Past Outlines')}</h3>
                   <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
                     <ArrowRight className="rotate-180 text-app-secondary" size={18} />
                   </button>
@@ -946,7 +946,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                 
                 <button 
                   onClick={mode === 'chat' ? handleNewChat : handleNewOutline}
-                  className="w-full mb-4 py-3 bg-app-accent/10 border border-app-accent/20 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase text-app-accent hover:bg-app-accent hover:text-white transition-all tracking-wider"
+                  className="w-full mb-4 py-3 bg-app-accent/10 border border-app-accent/20 rounded-xl flex items-center justify-center gap-2 text-[11px] font-medium text-app-accent hover:bg-app-accent hover:text-white transition-all shadow-sm opacity-90"
                 >
                   <Plus size={14} />
                   {mode === 'chat' 
@@ -958,7 +958,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                   {((mode === 'chat' ? pastChats : pastOutlines).length === 0) ? (
                     <div className="text-center py-12 opacity-30">
                       <MessageSquare size={32} className="mx-auto mb-2" />
-                      <p className="text-[10px] font-bold uppercase">{language === 'pt' ? 'Nenhum histórico' : 'No history'}</p>
+                      <p className="text-[11px] font-medium opacity-60">{language === 'pt' ? 'Nenhum histórico' : 'No history'}</p>
                     </div>
                   ) : (
                     (mode === 'chat' ? pastChats : pastOutlines).map((item) => (
@@ -991,7 +991,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                     <button 
                       onClick={handleClearHistory}
                       onMouseLeave={() => !showClearHistoryConfirm && setShowClearHistoryConfirm(false)}
-                      className={`flex items-center justify-center gap-2 text-[10px] font-bold transition-all py-3 rounded-xl uppercase tracking-tighter w-full ${showClearHistoryConfirm ? 'bg-red-500 text-white shadow-lg' : 'text-red-400 hover:bg-red-500/10'}`}
+                      className={`flex items-center justify-center gap-2 text-[10px] font-bold transition-all py-3 rounded-xl tracking-tighter w-full ${showClearHistoryConfirm ? 'bg-red-500 text-white shadow-lg' : 'text-red-400 hover:bg-red-500/10'}`}
                     >
                       <Trash2 size={12} />
                       {showClearHistoryConfirm 
@@ -1001,7 +1001,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                     {showClearHistoryConfirm && (
                       <button 
                         onClick={() => setShowClearHistoryConfirm(false)}
-                        className="text-[9px] font-bold text-app-secondary hover:text-app-text transition-colors uppercase"
+                        className="text-[9px] font-bold text-app-secondary hover:text-app-text transition-colors"
                       >
                         {t('cancel')}
                       </button>
@@ -1020,9 +1020,9 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                 title={t('history')}
               >
                 <History size={16} />
-                <span className="text-[10px] font-black uppercase tracking-tight hidden sm:block">{t('history') || 'Histórico'}</span>
+                <span className="text-[11px] font-medium opacity-70 hidden sm:block">{t('history') || 'Histórico'}</span>
               </button>
-              <span className="text-[10px] font-bold text-app-accent uppercase tracking-widest">
+              <span className="text-[11px] font-medium text-app-accent opacity-70">
                 {mode === 'sermon' ? t('suggestedResult') : (t('historyOfMessages') || 'Mensagens')}
               </span>
             </div>
@@ -1034,13 +1034,13 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                       <div className="flex items-center gap-1 bg-red-500/20 p-1 rounded-xl border border-red-500/30 animate-in fade-in zoom-in duration-200">
                         <button 
                           onClick={handleClear}
-                          className="px-3 py-1.5 bg-red-500 text-white text-[9px] font-bold uppercase rounded-lg hover:bg-red-600 transition-all"
+                          className="px-3 py-1.5 bg-red-500 text-white text-[9px] font-bold rounded-lg hover:bg-red-600 transition-all"
                         >
                           {t('confirm')}
                         </button>
                         <button 
                           onClick={() => setShowClearConfirm(false)}
-                          className="px-3 py-1.5 text-[9px] font-bold uppercase text-red-100 rounded-lg hover:bg-white/10 transition-all"
+                          className="px-3 py-1.5 text-[9px] font-bold text-red-100 rounded-lg hover:bg-white/10 transition-all"
                         >
                           {t('cancel')}
                         </button>
@@ -1052,7 +1052,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                         title={t('clearAll')}
                       >
                         <Trash2 size={14} />
-                        <span className="text-[10px] font-bold uppercase tracking-tight">{t('clear')}</span>
+                        <span className="text-[11px] font-medium opacity-70">{t('clear')}</span>
                       </button>
                     )}
                   </div>
@@ -1131,7 +1131,7 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                     <div className="h-full flex flex-col items-center justify-center text-center text-app-secondary py-12">
                       <Sparkles size={48} className="opacity-5 mb-4 text-indigo-500" />
                       <p className="font-serif italic text-xl">{t('readyToStartAi')}</p>
-                      <p className="text-xs uppercase tracking-widest mt-4 max-w-xs mx-auto font-bold opacity-60">{t('fillAndGenerate')}</p>
+                      <p className="text-[11px] font-medium opacity-60 mt-4 max-w-xs mx-auto">{t('fillAndGenerate')}</p>
                     </div>
                   )
                 ) : (

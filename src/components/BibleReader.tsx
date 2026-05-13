@@ -389,7 +389,7 @@ export default function BibleReader({ profile }: BibleReaderProps) {
         {/* Version Selector */}
         <div className="relative order-1 sm:order-2 min-w-[140px]">
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-app-accent uppercase tracking-widest flex items-center gap-2 mb-1">
+            <label className="text-[11px] font-medium text-app-accent flex items-center gap-2 mb-1 opacity-70">
               <BookMarked size={14} /> {t('bibleVersionLabel')}
             </label>
             <div className="relative">
@@ -538,12 +538,12 @@ export default function BibleReader({ profile }: BibleReaderProps) {
             <div className="flex items-center justify-between mb-4 px-1">
               <div className="flex items-center gap-2">
                 <History size={14} className="text-app-accent" />
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-app-accent">{t('recentSearches')}</h4>
+                <h4 className="text-[11px] font-medium text-app-accent opacity-70">{t('recentSearches')}</h4>
               </div>
               {recentSearches.length > 0 && (
                 <button 
                   onClick={clearRecentSearches}
-                  className="text-[10px] font-bold text-app-secondary hover:text-rose-500 transition-colors uppercase tracking-tight"
+                  className="text-[10px] font-bold text-app-secondary hover:text-rose-500 transition-colors tracking-tight"
                 >
                   {t('clearAll')}
                 </button>
@@ -583,11 +583,11 @@ export default function BibleReader({ profile }: BibleReaderProps) {
 
           <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-6 rounded-[32px] text-white shadow-xl shadow-indigo-600/10 relative overflow-hidden">
             <BookMarked size={120} className="absolute -bottom-10 -right-10 opacity-5 pointer-events-none" />
-            <h4 className="text-[11px] font-bold uppercase tracking-widest opacity-60 mb-b">{t('ministerialTip')}</h4>
+            <h4 className="text-[11px] font-medium opacity-60 mb-b">{t('ministerialTip')}</h4>
             <p className="font-serif italic leading-relaxed mt-2 text-lg">
               "{ministerialTip.text}"
             </p>
-            <p className="text-[10px] mt-4 opacity-60 font-bold uppercase tracking-tighter">— {ministerialTip.ref}</p>
+            <p className="text-[10px] mt-4 opacity-60 font-medium">— {ministerialTip.ref}</p>
           </div>
         </aside>
       </div>

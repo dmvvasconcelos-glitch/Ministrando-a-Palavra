@@ -237,7 +237,7 @@ export default function EventsManager() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-app-border/40">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-app-text flex items-center gap-2 uppercase md:normal-case">
+          <h1 className="text-2xl font-black tracking-tight text-app-text flex items-center gap-2 md:normal-case">
             <div className="w-1.5 h-6 bg-app-accent rounded-full opacity-60" />
             {t('myEventsHeader')}
           </h1>
@@ -254,7 +254,7 @@ export default function EventsManager() {
           </button>
           <button 
             onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-[9px] uppercase tracking-widest hover:bg-indigo-500 active:scale-95 transition-all shadow-xl shadow-indigo-600/20 border border-indigo-400/20"
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-[9px] tracking-widest hover:bg-indigo-500 active:scale-95 transition-all shadow-xl shadow-indigo-600/20 border border-indigo-400/20"
           >
             <Plus size={14} />
             <span>{t('newEventBtn')}</span>
@@ -280,7 +280,7 @@ export default function EventsManager() {
           { label: t('statInvitations'), count: events.filter(e => e.guestId === auth.currentUser?.uid && e.userId !== e.guestId).length, color: 'indigo-400', textColor: 'text-indigo-400' }
         ].map(stat => (
           <div key={stat.label} className="bg-app-card/30 border border-app-border/40 rounded-xl p-3.5 relative overflow-hidden group hover:border-indigo-500/20 transition-all cursor-default shadow-sm">
-            <span className="text-[8px] font-black uppercase tracking-widest text-app-secondary opacity-60 block mb-0.5">{stat.label}</span>
+            <span className="text-[8px] font-black tracking-widest text-app-secondary opacity-60 block mb-0.5">{stat.label}</span>
             <span className={`text-xl font-black ${stat.textColor} tracking-tight`}>{stat.count}</span>
             <div className={`absolute -right-2 -bottom-2 w-10 h-10 bg-white/5 rounded-full blur-lg group-hover:scale-150 transition-transform duration-700`} />
           </div>
@@ -304,7 +304,7 @@ export default function EventsManager() {
         {/* Upcoming Section */}
         <section className="space-y-4">
           <div className="flex items-center gap-3 px-2">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400/80">{t('upcomingSection')}</h2>
+            <h2 className="text-[10px] font-black tracking-[0.2em] text-indigo-400/80">{t('upcomingSection')}</h2>
             <div className="flex-1 h-px bg-indigo-500/10" />
           </div>
           
@@ -337,7 +337,7 @@ export default function EventsManager() {
                         isToday ? 'bg-indigo-600 text-white border-indigo-400/20 shadow-lg shadow-indigo-600/20 group-hover:scale-105' : 
                         'bg-app-bg text-app-secondary border-app-border/40 group-hover:border-indigo-500/20'
                       }`}>
-                        <span className="text-[8px] font-black uppercase tracking-tighter opacity-80">
+                        <span className="text-[8px] font-black tracking-tighter opacity-80">
                           {format(eventDate, 'MMM', { locale })}
                         </span>
                         <span className="text-xl font-black leading-none mt-0.5">{format(eventDate, 'dd')}</span>
@@ -346,7 +346,7 @@ export default function EventsManager() {
                       {/* Info */}
                       <div className="flex-1 min-w-0 space-y-2">
                         <div className="flex items-center flex-wrap gap-2">
-                           <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border transition-all ${
+                           <span className={`px-2 py-0.5 rounded-full text-[8px] font-black tracking-widest border transition-all ${
                              isToday ? 'bg-indigo-500 text-white border-white/20' : 'bg-app-bg text-app-secondary border-app-border'
                            }`}>
                             {event.type === 'preaching' ? t('preaching') : 
@@ -356,7 +356,7 @@ export default function EventsManager() {
                              event.type === 'extra' ? t('others') : event.type}
                           </span>
                           {(event.notify24h || event.notifyDayOf) && (
-                            <div className="flex items-center gap-1 text-[8px] font-black tracking-widest uppercase text-indigo-400">
+                            <div className="flex items-center gap-1 text-[8px] font-black tracking-widest text-indigo-400">
                               <Bell size={10} className="fill-current" />
                               <span>{t('activeAlerts')}</span>
                             </div>
@@ -438,7 +438,7 @@ export default function EventsManager() {
         {filteredEvents.filter(e => (e.date?.toDate?.() || new Date(e.date)) < new Date()).length > 0 && (
           <section className="space-y-4">
              <div className="flex items-center gap-3 px-2">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 opacity-60">{t('completedSection')}</h2>
+              <h2 className="text-[10px] font-black tracking-[0.2em] text-slate-500 opacity-60">{t('completedSection')}</h2>
               <div className="flex-1 h-px bg-white/5" />
             </div>
 
@@ -462,7 +462,7 @@ export default function EventsManager() {
                     >
                       {/* Small Date Badge */}
                       <div className="w-10 h-10 rounded-lg flex flex-col items-center justify-center shrink-0 border border-white/5 bg-white/5 text-app-secondary">
-                        <span className="text-[6px] font-black uppercase tracking-tighter opacity-60">
+                        <span className="text-[6px] font-black tracking-tighter opacity-60">
                           {format(eventDate, 'MMM', { locale })}
                         </span>
                         <span className="text-sm font-black leading-none">{format(eventDate, 'dd')}</span>
@@ -471,7 +471,7 @@ export default function EventsManager() {
                       <div className="flex-1 min-w-0">
                         <h3 className="text-xs font-bold text-app-text truncate line-clamp-1">{event.title}</h3>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className="text-[8px] font-black uppercase text-emerald-500/60 flex items-center gap-1">
+                          <span className="text-[8px] font-black text-emerald-500/60 flex items-center gap-1">
                             <CheckCircle2 size={10} />
                             {t('completed')}
                           </span>

@@ -309,7 +309,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                       ) : (
                         <Plus className="rotate-45" size={14} />
                       )}
-                      <span className="text-[10px] font-bold uppercase">{t('save')}</span>
+                      <span className="text-[11px] font-medium text-white opacity-70">{t('save')}</span>
                     </button>
                     <button 
                       onClick={() => {
@@ -336,12 +336,12 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
               </div>
             )}
           </div>
-          <p className="text-xs text-app-secondary font-medium tracking-wide uppercase transition-colors">{t('prepareMessage')}</p>
+          <p className="text-xs text-app-secondary font-medium tracking-wide transition-colors opacity-70">{t('prepareMessage')}</p>
         </div>
         <button 
           id="btn-new-sermon"
           onClick={() => onEdit(null)}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-[11px] hover:bg-indigo-500 hover:shadow-indigo-500/25 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all shadow-lg shadow-indigo-600/20 self-start border border-white/10 uppercase tracking-widest"
+          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-[11px] hover:bg-indigo-500 hover:shadow-indigo-500/25 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all shadow-lg shadow-indigo-600/20 self-start border border-white/10"
         >
           <Plus size={14} className="stroke-[3]" />
           <span>{t('newMinistration')}</span>
@@ -369,7 +369,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                   <div className="flex-1 text-center md:text-left">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full mb-2 backdrop-blur-md">
                       <Sparkles size={12} className="text-cyan-300" />
-                      <span className="text-[10px] font-black text-cyan-200 uppercase tracking-[0.2em]">{t('congratulations')}</span>
+                      <span className="text-[11px] font-medium text-cyan-200 opacity-70">{t('congratulations')}</span>
                     </div>
                     <h2 className="text-3xl font-black text-white tracking-tight leading-tight">
                       {t('happyBirthday').replace('{name}', profile?.displayName?.split(' ')[0] || auth.currentUser?.displayName?.split(' ')[0] || '')}
@@ -390,7 +390,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                       <Gift size={24} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-amber-500 font-black uppercase tracking-widest mb-0.5">{t('churchMemberBirthday')}</p>
+                      <p className="text-[11px] text-amber-500 font-medium mb-0.5 opacity-70">{t('churchMemberBirthday')}</p>
                       <h3 className="font-bold text-app-text truncate text-lg">{b.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
                         <PartyPopper size={12} className="text-amber-500/60" />
@@ -398,7 +398,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                           {t('happyBirthday').replace('{name}', '')}
                         </span>
                         {b.relationship && (
-                          <span className="px-2 py-0.5 bg-white/5 rounded-full text-[9px] text-amber-400/80 font-bold uppercase tracking-wider border border-white/5">
+                          <span className="px-2 py-0.5 bg-white/5 rounded-full text-[10px] text-amber-400/80 font-medium border border-white/5 opacity-70">
                             {b.relationship}
                           </span>
                         )}
@@ -426,8 +426,8 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <span className="p-1 px-2 pb-0.5 bg-indigo-500 text-white rounded-md text-[8px] font-black tracking-[0.2em] uppercase shadow-sm">{t('daily')}</span>
-                <span className="text-[10px] uppercase tracking-widest font-bold text-indigo-500">{t('verseOfDay')}</span>
+                <span className="p-1 px-2 pb-0.5 bg-indigo-500 text-white rounded-md text-[10px] font-medium shadow-sm">{t('daily')}</span>
+                <span className="text-[11px] font-medium text-indigo-500 opacity-70">{t('verseOfDay')}</span>
               </div>
               <div className="h-px flex-1 bg-indigo-500/10 mx-4" />
             </div>
@@ -449,7 +449,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-500">{t('dailyReflection')}</span>
+                <span className="text-[11px] font-medium text-emerald-500 opacity-70">{t('dailyReflection')}</span>
               </div>
               <div className="h-px flex-1 bg-emerald-500/10 mx-4" />
             </div>
@@ -457,7 +457,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
               <p className="text-lg sm:text-xl font-serif leading-relaxed text-app-text italic">
                 "{reflectionOfDay}"
               </p>
-              <p className="text-[10px] text-emerald-500/60 font-bold uppercase tracking-wider italic mt-4">{t('thinkAboutIt')}</p>
+              <p className="text-[11px] text-emerald-500/60 font-medium italic mt-4 opacity-70">{t('thinkAboutIt')}</p>
             </div>
           </div>
         </motion.div>
@@ -476,7 +476,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
             </div>
             <button 
               onClick={onSeeAgenda}
-              className="text-[10px] font-black uppercase tracking-widest text-app-secondary hover:text-indigo-400 transition-colors bg-app-card px-3 py-1.5 rounded-full border border-app-border hover:border-app-border/40 shadow-sm"
+              className="text-[10px] font-medium text-app-secondary hover:text-indigo-400 transition-colors bg-app-card px-3 py-1.5 rounded-full border border-app-border hover:border-app-border/40 shadow-sm opacity-70"
             >
               {t('seeAgenda')}
             </button>
@@ -507,7 +507,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                   <div className={`w-12 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 transition-all duration-500 ${
                     isToday ? 'bg-indigo-600 shadow-lg shadow-indigo-600/20 text-white' : 'bg-app-card text-app-text border border-app-border group-hover:border-indigo-500/20'
                   }`}>
-                    <span className={`text-[9px] font-black uppercase tracking-tighter mb-0.5 ${isToday ? 'text-white/80' : 'text-indigo-500'}`}>
+                    <span className={`text-[10px] font-medium mb-0.5 opacity-70 ${isToday ? 'text-white/80' : 'text-indigo-500'}`}>
                       {format(itemDate, 'MMM', { locale: getLocale() })}
                     </span>
                     <span className="text-xl font-black leading-none">
@@ -529,15 +529,15 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                       {isToday && (
                         <div className="flex items-center gap-1.5">
                           <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                          <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">{t('now')}</span>
+                          <span className="text-[10px] font-medium text-indigo-400 opacity-70">{t('now')}</span>
                         </div>
                       )}
                     </div>
-                    <h3 className="font-bold text-app-text group-hover:text-indigo-500 transition-colors uppercase text-[12px] tracking-wide truncate">
+                    <h3 className="font-bold text-app-text group-hover:text-indigo-500 transition-colors text-[12px] tracking-wide truncate">
                       {item.title}
                     </h3>
                     {item.userId !== auth.currentUser?.uid && (
-                      <p className="text-[9px] font-bold text-indigo-400/80 mt-0.5 truncate uppercase tracking-tighter">
+                      <p className="text-[9px] font-bold text-indigo-400/80 mt-0.5 truncate tracking-tighter">
                         {t('from')}: {item.userName || 'Organizador'}
                       </p>
                     )}
@@ -546,7 +546,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                         <Clock size={10} className="group-hover:text-indigo-500 transition-colors" />
                         <span>{format(itemDate, 'HH:mm')}h</span>
                         {isAfter(itemDate, new Date()) && (
-                          <span className="text-[8px] font-black text-indigo-400 ml-2 uppercase">
+                          <span className="text-[8px] font-black text-indigo-400 ml-2">
                             {language === 'pt' ? 'Em' : language === 'es' ? 'En' : 'In'} {formatDistanceToNow(itemDate, { locale: getLocale() })}
                           </span>
                         )}
@@ -585,7 +585,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
             </div>
             <button 
               onClick={() => onSeeEvents()}
-              className="text-[10px] font-black uppercase tracking-widest text-app-secondary hover:text-indigo-400 transition-colors bg-app-card px-3 py-1.5 rounded-full border border-app-border hover:border-app-border/40 shadow-sm"
+              className="text-[10px] font-medium text-app-secondary hover:text-indigo-400 transition-colors bg-app-card px-3 py-1.5 rounded-full border border-app-border hover:border-app-border/40 shadow-sm opacity-70"
             >
               {t('seeMore')}
             </button>
@@ -616,7 +616,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                   <div className={`w-12 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 transition-all duration-500 ${
                     isToday ? 'bg-indigo-600 shadow-lg shadow-indigo-600/20 text-white' : 'bg-app-card text-app-text border border-app-border group-hover:border-indigo-500/20'
                   }`}>
-                    <span className={`text-[9px] font-black uppercase tracking-tighter mb-0.5 ${isToday ? 'text-white/80' : 'text-indigo-400'}`}>
+                    <span className={`text-[9px] font-black tracking-tighter mb-0.5 ${isToday ? 'text-white/80' : 'text-indigo-400'}`}>
                       {format(eventDate, 'MMM', { locale: getLocale() })}
                     </span>
                     <span className="text-xl font-black leading-none">
@@ -638,15 +638,15 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                       {isToday && (
                         <div className="flex items-center gap-1.5">
                           <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                          <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">{t('today')}</span>
+                          <span className="text-[10px] font-medium text-indigo-400 opacity-70">{t('today')}</span>
                         </div>
                       )}
                     </div>
-                    <h3 className="font-bold text-app-text group-hover:text-indigo-500 transition-colors uppercase text-[12px] tracking-wide truncate">
+                    <h3 className="font-bold text-app-text group-hover:text-indigo-500 transition-colors text-[12px] tracking-wide truncate">
                       {event.title}
                     </h3>
                     {event.userId !== auth.currentUser?.uid && (
-                      <p className="text-[9px] font-bold text-indigo-400/80 mt-0.5 truncate uppercase tracking-tighter">
+                      <p className="text-[9px] font-bold text-indigo-400/80 mt-0.5 truncate tracking-tighter">
                         {t('from')}: {event.userName || 'Organizador'}
                       </p>
                     )}
@@ -655,7 +655,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                         <Clock size={10} className="group-hover:text-indigo-400 transition-colors" />
                         <span>{format(eventDate, 'HH:mm')}h</span>
                         {isAfter(eventDate, new Date()) && (
-                          <span className="text-[8px] font-black text-indigo-400 ml-2 uppercase">
+                          <span className="text-[8px] font-black text-indigo-400 ml-2">
                             {(language === 'pt' ? 'Em' : language === 'es' ? 'En' : 'In')} {formatDistanceToNow(eventDate, { locale: getLocale() })}
                           </span>
                         )}

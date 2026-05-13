@@ -90,7 +90,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
             </motion.div>
             <div className="flex flex-col leading-tight">
               <span className="font-serif italic text-xl md:text-2xl text-slate-900 tracking-tight">Ministrando</span>
-              <span className="font-bold tracking-[0.4em] text-[8px] md:text-[9px] text-[#C2945E] uppercase mt-0.5">a palavra</span>
+              <span className="font-bold tracking-[0.4em] text-[8px] md:text-[9px] text-[#C2945E] mt-0.5">a palavra</span>
             </div>
           </div>
           <div className="flex items-center gap-4 md:gap-6">
@@ -121,7 +121,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md text-indigo-600 px-4 md:px-5 py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-8 md:mb-12 border border-white shadow-sm">
+          <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md text-indigo-600 px-4 md:px-5 py-2 rounded-full text-[9px] md:text-[10px] font-black tracking-[0.2em] mb-8 md:mb-12 border border-white shadow-sm">
             <Sparkles size={14} className="fill-indigo-600/20" /> Tecnologia inspirada para o seu chamado
           </div>
           
@@ -143,7 +143,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
               href={CHECKOUT_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="group w-full sm:w-auto bg-indigo-600 text-white px-10 md:px-14 py-5 md:py-7 rounded-[2.5rem] font-black uppercase text-xs md:text-sm tracking-widest hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-600/30 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95"
+              className="group w-full sm:w-auto bg-indigo-600 text-white px-10 md:px-14 py-5 md:py-7 rounded-[2.5rem] font-black text-xs md:text-sm tracking-widest hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-600/30 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95"
             >
               Assinar Premium <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </a>
@@ -151,7 +151,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
               type="button"
               disabled={isLoading}
               onClick={(e) => { e.preventDefault(); onLogin(); }}
-              className="w-full sm:w-auto bg-white/80 backdrop-blur-sm text-[#0F172A] border border-slate-100 px-10 md:px-14 py-5 md:py-7 rounded-[2.5rem] font-black uppercase text-xs md:text-sm tracking-widest hover:border-slate-300 transition-all flex items-center justify-center gap-3 hover:shadow-lg active:scale-95 disabled:opacity-50"
+              className="w-full sm:w-auto bg-white/80 backdrop-blur-sm text-[#0F172A] border border-slate-100 px-10 md:px-14 py-5 md:py-7 rounded-[2.5rem] font-black text-xs md:text-sm tracking-widest hover:border-slate-300 transition-all flex items-center justify-center gap-3 hover:shadow-lg active:scale-95 disabled:opacity-50"
             >
               {isLoading ? (
                 <>
@@ -165,11 +165,11 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
           </div>
           
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 opacity-50 grayscale group-hover:grayscale-0 transition-all duration-700">
-             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em] uppercase"><ShieldCheck size={16} className="text-indigo-600" /> Alta Segurança</div>
+             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em]"><ShieldCheck size={16} className="text-indigo-600" /> Alta Segurança</div>
              <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-300" />
-             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em] uppercase"><TrendingUp size={16} className="text-indigo-600" /> IA Teológica</div>
+             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em]"><TrendingUp size={16} className="text-indigo-600" /> IA Teológica</div>
              <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-300" />
-             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em] uppercase"><CheckCircle2 size={16} className="text-indigo-600" /> 7 Dias Garantia</div>
+             <div className="flex items-center gap-2 font-black text-[9px] md:text-[10px] tracking-[0.2em]"><CheckCircle2 size={16} className="text-indigo-600" /> 7 Dias Garantia</div>
           </div>
 
           {/* Scroll Indicator */}
@@ -179,7 +179,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
             transition={{ delay: 1.5, duration: 1 }}
             className="hidden md:flex flex-col items-center gap-3 mt-20"
           >
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Descobrir ferramentas</span>
+            <span className="text-[10px] font-black tracking-[0.4em] text-slate-400">Descobrir ferramentas</span>
             <div className="w-px h-12 bg-gradient-to-b from-indigo-200 to-transparent" />
           </motion.div>
         </motion.div>
@@ -205,12 +205,12 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                 </div>
                 <div className="ml-4 md:ml-8 h-6 md:h-8 bg-white border border-slate-200/50 rounded-lg md:rounded-xl flex items-center px-3 md:px-4 w-full max-w-[280px] md:max-w-96 shadow-sm">
                   <Globe size={10} className="text-slate-300 mr-2" />
-                  <span className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">ministrandoapalavra.com.br/dashboard</span>
+                  <span className="text-[8px] md:text-[10px] font-bold text-slate-400 tracking-widest truncate">ministrandoapalavra.com.br/dashboard</span>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
                   <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-indigo-50 rounded-full border border-indigo-100">
                     <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Live Demo</span>
+                    <span className="text-[10px] font-black text-indigo-600 tracking-widest">Live Demo</span>
                   </div>
                 </div>
              </div>
@@ -338,7 +338,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                                  transition={{ delay: 3 }}
                                  className="pt-6 md:pt-8 space-y-4"
                                >
-                                  <div className="inline-flex gap-2 items-center px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-[9px] font-bold uppercase tracking-wider">
+                                  <div className="inline-flex gap-2 items-center px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-[9px] font-bold tracking-wider">
                                      <Quote size={12} /> Sugestão Contextual
                                   </div>
                                   <div className="p-4 md:p-6 bg-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100 relative group/card">
@@ -372,7 +372,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                                   <div className="flex justify-between items-center text-slate-500 border-b border-white/10 pb-6 mb-6">
                                      <div className="flex items-center gap-3">
                                         <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Púlpito Ativo</span>
+                                        <span className="text-[10px] font-black tracking-widest text-slate-300">Púlpito Ativo</span>
                                      </div>
                                      <div className="font-mono text-indigo-400">45:00</div>
                                   </div>
@@ -400,7 +400,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                 <CheckCircle2 className="w-6 h-6 md:w-8 md:h-8" />
              </div>
              <div>
-                <p className="text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-0.5 md:mb-1">Inteligência Ágil</p>
+                <p className="text-[7px] md:text-[10px] font-black tracking-[0.2em] text-indigo-400 mb-0.5 md:mb-1">Inteligência Ágil</p>
                 <p className="font-bold text-base md:text-2xl text-slate-900 tracking-tight leading-none md:leading-normal">Esboços em Segundos</p>
              </div>
           </div>
@@ -410,7 +410,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                 <Mic2 className="w-6 h-6 md:w-8 md:h-8" />
              </div>
              <div>
-                <p className="text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] text-rose-400 mb-0.5 md:mb-1">Foco no Altar</p>
+                <p className="text-[7px] md:text-[10px] font-black tracking-[0.2em] text-rose-400 mb-0.5 md:mb-1">Foco no Altar</p>
                 <p className="font-bold text-base md:text-2xl text-slate-900 tracking-tight leading-none md:leading-normal">Modo Púlpito</p>
              </div>
           </div>
@@ -433,7 +433,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                viewport={{ once: true }}
                className="flex-1 space-y-10"
              >
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm border border-indigo-100">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-[10px] font-black tracking-[0.2em] shadow-sm border border-indigo-100">
                    <Sparkles size={14} className="text-indigo-500" /> Inteligência Teológica
                 </div>
                 <h2 className="text-5xl md:text-7xl font-serif italic text-slate-900 leading-tight">
@@ -480,7 +480,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                            <Sparkles size={24} />
                         </div>
                         <div>
-                          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Assistente IA</p>
+                          <p className="text-[10px] font-black text-indigo-400 tracking-widest mb-1">Assistente IA</p>
                           <div className="h-4 bg-slate-200 rounded-full w-40" />
                         </div>
                       </div>
@@ -493,7 +493,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                       </div>
                       
                       <div className="mt-10 flex gap-3">
-                        <div className="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20">
+                        <div className="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black tracking-widest shadow-xl shadow-indigo-600/20">
                            Usar Esboço
                         </div>
                         <div className="bg-slate-50 text-slate-400 px-4 py-3 rounded-2xl">
@@ -510,7 +510,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                    >
                      <div className="flex items-center gap-2 mb-4">
                         <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Referência Bíblica</span>
+                        <span className="text-[9px] font-black tracking-widest text-slate-400">Referência Bíblica</span>
                      </div>
                      <p className="text-sm font-serif italic text-slate-600 leading-relaxed">
                         "Lâmpada para os meus pés é tua palavra e luz para os meus caminhos."
@@ -531,7 +531,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                viewport={{ once: true }}
                className="flex-1 space-y-10"
              >
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#F5E6D3]/50 text-[#9A7B4F] rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm border border-[#F5E6D3]">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#F5E6D3]/50 text-[#9A7B4F] rounded-xl text-[10px] font-black tracking-[0.2em] shadow-sm border border-[#F5E6D3]">
                    <Mic2 size={14} /> Modo Púlpito Profissional
                 </div>
                 <h2 className="text-5xl md:text-7xl font-serif italic text-slate-900 leading-tight">
@@ -563,7 +563,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                       <div className="flex justify-between items-center text-slate-500 border-b border-slate-800/50 pb-8 mb-8">
                          <div className="flex items-center gap-3">
                             <div className="w-3 h-3 rounded-full bg-red-600 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Tempo de Pregação</span>
+                            <span className="text-[10px] font-black tracking-widest text-slate-300">Tempo de Pregação</span>
                          </div>
                          <div className="font-mono text-xl text-indigo-400">45:00</div>
                       </div>
@@ -576,7 +576,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                          
                          <div className="p-8 bg-indigo-500/5 border border-indigo-500/20 rounded-[2rem] text-indigo-300 italic text-xl shadow-lg">
                             "Pois onde estiver o vosso tesouro, ai estará também o vosso coração."
-                            <div className="mt-4 text-[12px] font-black uppercase tracking-widest opacity-60">— Mateus 6:21</div>
+                            <div className="mt-4 text-[12px] font-black tracking-widest opacity-60">— Mateus 6:21</div>
                          </div>
                       </div>
                       
@@ -621,7 +621,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex flex-col lg:flex-row items-center gap-20">
              <div className="flex-1 space-y-8">
-                <div className="inline-flex items-center gap-2 text-indigo-600 bg-white px-4 py-2 rounded-full border border-indigo-50 shadow-sm text-[10px] font-black uppercase tracking-widest">
+                <div className="inline-flex items-center gap-2 text-indigo-600 bg-white px-4 py-2 rounded-full border border-indigo-50 shadow-sm text-[10px] font-black tracking-widest">
                   <Zap size={14} className="fill-indigo-600" /> Demonstração Real
                 </div>
                 <h2 className="text-5xl md:text-6xl font-serif italic text-slate-900 leading-tight">
@@ -637,7 +637,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                   ].map((stat, i) => (
                     <div key={i} className="flex justify-between items-center p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
                       <span className="font-bold text-slate-900">{stat.label}</span>
-                      <span className="font-black text-indigo-600 uppercase tracking-widest text-xs">{stat.val}</span>
+                      <span className="font-black text-indigo-600 tracking-widest text-xs">{stat.val}</span>
                     </div>
                   ))}
                 </div>
@@ -752,7 +752,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                            <div className="flex justify-between items-center mb-8 pb-8 border-b border-white/5">
                              <div className="flex items-center gap-3">
                                <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                               <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/60">Modo Púlpito</span>
+                               <span className="text-[10px] md:text-xs font-black tracking-widest text-white/60">Modo Púlpito</span>
                              </div>
                              <div className="font-mono text-indigo-400 text-xl font-bold">45:00</div>
                            </div>
@@ -810,7 +810,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                      <div className="w-12 h-12 md:w-16 md:h-16 bg-indigo-600 text-white rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/40">
                         <Star className="fill-white w-7 h-7 md:w-8 md:h-8" />
                      </div>
-                     <span className="text-indigo-400 font-black uppercase tracking-[0.4em] text-[9px] md:text-[10px]">Acesso Premium Anual</span>
+                     <span className="text-indigo-400 font-black tracking-[0.4em] text-[9px] md:text-[10px]">Acesso Premium Anual</span>
                   </div>
 
                   <div className="flex flex-col md:flex-row items-baseline gap-4 md:gap-8 mb-12 md:mb-16">
@@ -823,7 +823,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                       <span className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">29,90</span>
                       <div className="flex flex-col items-start leading-[1.1] transform translate-y-[-5px] md:translate-y-[-10px]">
                         <span className="text-indigo-400 font-black text-xl md:text-2xl">R$</span>
-                        <span className="text-slate-500 font-bold uppercase text-[10px] md:text-[12px] tracking-widest leading-none mt-1 md:mt-2">/ ano</span>
+                        <span className="text-slate-500 font-bold text-[10px] md:text-[12px] tracking-widest leading-none mt-1 md:mt-2">/ ano</span>
                       </div>
                     </div>
                   </div>
@@ -837,7 +837,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                       href={CHECKOUT_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full bg-indigo-600 text-white py-6 md:py-8 rounded-[2rem] md:rounded-[2.5rem] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-600/40 block text-center text-lg md:text-xl active:scale-[0.98] hover:scale-[1.01]"
+                      className="w-full bg-indigo-600 text-white py-6 md:py-8 rounded-[2rem] md:rounded-[2.5rem] font-black tracking-[0.2em] md:tracking-[0.3em] hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-600/40 block text-center text-lg md:text-xl active:scale-[0.98] hover:scale-[1.01]"
                     >
                       Ativar Premium Agora
                     </a>
@@ -845,7 +845,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                       type="button"
                       disabled={isLoading}
                       onClick={(e) => { e.preventDefault(); onLogin(); }}
-                      className="w-full bg-white/5 hover:bg-white/10 text-white py-5 md:py-6 rounded-[2rem] md:rounded-[2.5rem] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] border border-white/10 transition-all text-xs active:scale-[0.98] cursor-pointer flex items-center justify-center gap-3 disabled:opacity-50"
+                      className="w-full bg-white/5 hover:bg-white/10 text-white py-5 md:py-6 rounded-[2rem] md:rounded-[2.5rem] font-black tracking-[0.1em] md:tracking-[0.2em] border border-white/10 transition-all text-xs active:scale-[0.98] cursor-pointer flex items-center justify-center gap-3 disabled:opacity-50"
                     >
                       {isLoading ? (
                         <>
@@ -899,7 +899,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                     </div>
                     <div>
                        <p className="font-black text-xl md:text-2xl text-slate-900 leading-none">Pr. André Silveira</p>
-                       <p className="text-slate-400 text-[10px] md:text-sm font-bold uppercase tracking-[0.3em] mt-3">Ministério Caminho de Fé</p>
+                       <p className="text-slate-400 text-[10px] md:text-sm font-bold tracking-[0.3em] mt-3">Ministério Caminho de Fé</p>
                     </div>
                  </div>
               </div>
@@ -908,12 +908,12 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                  <div className="bg-white p-10 md:p-12 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl border border-slate-100 text-center space-y-4 hover:-translate-y-2 transition-transform duration-500 overflow-hidden relative group">
                     <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter transition-transform group-hover:scale-110 duration-500">500+</div>
-                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] relative z-10">Pastores Ativos</p>
+                    <p className="text-slate-400 text-[10px] font-black tracking-[0.4em] relative z-10">Pastores Ativos</p>
                  </div>
                  <div className="bg-indigo-600 p-10 md:p-12 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl text-center space-y-4 hover:-translate-y-2 transition-transform duration-500 overflow-hidden relative group">
                     <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="text-5xl md:text-7xl font-black text-indigo-400 tracking-tighter transition-transform group-hover:scale-110 duration-500">98%</div>
-                    <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.4em] relative z-10">Satisfação Geral</p>
+                    <p className="text-white/60 text-[10px] font-black tracking-[0.4em] relative z-10">Satisfação Geral</p>
                  </div>
               </div>
            </div>
@@ -954,10 +954,10 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
              <h3 className="text-4xl md:text-5xl font-serif italic relative z-10">Ainda tem alguma pergunta?</h3>
              <p className="text-xl opacity-80 max-w-xl mx-auto relative z-10">Nossa equipe está pronta para te atender agora mesmo e tirar qualquer dúvida.</p>
              <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
-                <a href="mailto:suporte@ministrandoapalavra.com.br" className="bg-white text-indigo-600 px-12 py-6 rounded-3xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
+                <a href="mailto:suporte@ministrandoapalavra.com.br" className="bg-white text-indigo-600 px-12 py-6 rounded-3xl font-black text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
                    Enviar E-mail <MessageSquare size={20} />
                 </a>
-                <a href="https://wa.me/5531973148166" target="_blank" rel="noreferrer" className="bg-green-500 text-white px-12 py-6 rounded-3xl font-black uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
+                <a href="https://wa.me/5531973148166" target="_blank" rel="noreferrer" className="bg-green-500 text-white px-12 py-6 rounded-3xl font-black text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
                    WhatsApp <MousePointer2 size={20} />
                 </a>
              </div>
@@ -974,18 +974,18 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
             </div>
             <div className="flex flex-col">
               <span className="font-serif italic text-3xl text-slate-900">Ministrando a Palavra</span>
-              <span className="text-[10px] font-black text-[#C2945E] uppercase tracking-[0.5em] mt-2 ml-1 opacity-60">Soli Deo Gloria</span>
+              <span className="text-[10px] font-black text-[#C2945E] tracking-[0.5em] mt-2 ml-1 opacity-60">Soli Deo Gloria</span>
             </div>
           </div>
           
-          <div className="flex flex-wrap justify-center gap-12 text-slate-400 text-[10px] font-black uppercase tracking-[0.4em]">
+          <div className="flex flex-wrap justify-center gap-12 text-slate-400 text-[10px] font-black tracking-[0.4em]">
              <a href="#" className="hover:text-[#C2945E] transition-colors">Privacidade</a>
              <a href="#" className="hover:text-[#C2945E] transition-colors">Termos de Uso</a>
              <a href="mailto:suporte@ministrandoapalavra.com.br" className="hover:text-[#C2945E] transition-colors">Suporte</a>
           </div>
 
           <div className="text-right space-y-3">
-             <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] opacity-60">
+             <p className="text-slate-400 text-[10px] font-black tracking-[0.4em] opacity-60">
                 © 2026 • Design de Excelência
              </p>
              <div className="h-0.5 w-12 bg-slate-200 ml-auto" />
