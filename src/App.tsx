@@ -24,7 +24,9 @@ import {
   ChevronRight,
   ShieldCheck,
   Clock,
-  Crown
+  Crown,
+  Instagram,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -934,6 +936,19 @@ export default function App() {
         </div>
 
         <div className="p-4 mt-auto border-t border-app-border">
+          {/* Social Links */}
+          <div className="px-2 mb-4">
+            <a 
+              href="https://www.instagram.com/ministrandoapalavra.app?igsh=MWE5N2JvcWo0Z25ydg=="
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-app-secondary hover:text-pink-500 hover:bg-pink-500/5 transition-all group"
+            >
+              <Instagram size={18} className="group-hover:scale-110 transition-transform" />
+              <span className="font-bold text-[10px] tracking-widest uppercase">{t('followInstagram')}</span>
+            </a>
+          </div>
+
           {/* Discrete Language Selector */}
           <div className="flex items-center justify-center gap-4 mb-4">
             {(['pt', 'en', 'es'] as Language[]).map((lang) => (

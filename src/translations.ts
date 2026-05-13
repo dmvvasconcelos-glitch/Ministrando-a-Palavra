@@ -483,6 +483,7 @@ export const translations = {
     daysShort: 'd',
     hoursShort: 'h',
     minutesShort: 'm',
+    followInstagram: 'Siga-nos no Instagram',
   },
   en: {
     dashboard: 'Dashboard',
@@ -950,6 +951,7 @@ export const translations = {
     waitingReply: 'Waiting for reply...',
     confirmDeleteMessage: 'Are you sure you want to delete this message?',
     aiOverloaded: 'AI is currently overloaded. Please try again in a few moments.',
+    followInstagram: 'Follow us on Instagram',
   },
   es: {
     dashboard: 'Panel',
@@ -1409,5 +1411,6 @@ export const translations = {
     darkMode: 'Modo Oscuro',
     lightMode: 'Modo Claro',
     aiOverloaded: 'La IA está sobrecargada en este momento. Por favor, inténtelo de nuevo dentro de unos instantes.',
+    followInstagram: 'Síguenos en Instagram',
   },
 };

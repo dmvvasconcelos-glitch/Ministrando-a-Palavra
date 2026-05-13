@@ -19,7 +19,9 @@ import {
   User as UserIcon,
   Trash2,
   Archive,
-  ChevronDown
+  ChevronDown,
+  Instagram,
+  MessageCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -555,15 +557,20 @@ export default function HelpCenter() {
                       href="https://wa.me/5531973148166" 
                       target="_blank" 
                       rel="noreferrer" 
-                      className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-xl text-xs font-bold text-green-500 hover:bg-green-500 hover:text-white transition-all hover:shadow-md"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-[#25D366]/10 border border-[#25D366]/20 rounded-2xl text-xs font-bold text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all hover:shadow-md group"
                     >
-                      WhatsApp
+                      <MessageCircle size={16} className="group-hover:scale-110 transition-transform" />
+                      <span>WhatsApp</span>
                     </a>
-                    {['Instagram'].map(social => (
-                      <button key={social} className="px-4 py-2 bg-app-card border border-app-border rounded-xl text-xs font-bold text-app-secondary hover:text-indigo-500 transition-all hover:shadow-md">
-                        {social}
-                      </button>
-                    ))}
+                    <a 
+                      href="https://www.instagram.com/ministrandoapalavra.app?igsh=MWE5N2JvcWo0Z25ydg=="
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="flex items-center gap-2 px-5 py-2.5 bg-pink-500/5 border border-pink-500/20 rounded-2xl text-xs font-bold text-app-secondary hover:text-pink-500 hover:border-pink-500/30 transition-all group"
+                    >
+                      <Instagram size={16} className="text-pink-500 group-hover:scale-110 transition-transform" />
+                      <span>Instagram</span>
+                    </a>
                   </div>
                 </div>
               </div>

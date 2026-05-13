@@ -220,8 +220,8 @@ export default function SermonEditor({
       setLastAutoSave(new Date());
 
       if (auth.currentUser) {
+        const idToSave = activeId || `sermon_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
         try {
-          const idToSave = activeId || `sermon_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
           const isNew = !activeId;
 
           const updateData: any = {

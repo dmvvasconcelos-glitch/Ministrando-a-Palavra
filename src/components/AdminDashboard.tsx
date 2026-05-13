@@ -986,11 +986,11 @@ export default function AdminDashboard() {
                 <span className="text-[9px] font-black uppercase tracking-widest text-green-500 bg-green-500/5 px-2 py-1 rounded-full">{t('statusActive')}</span>
               </div>
               <div className="relative z-10">
-                <h3 className="text-3xl font-black text-app-text tracking-tighter">{users.filter(u => u.subscriptionStatus === 'active').length}</h3>
+                <h3 className="text-3xl font-black text-app-text tracking-tighter">{users.filter(u => getUserStatus(u) === 'active').length}</h3>
                 <p className="text-[10px] text-app-secondary font-black uppercase tracking-[0.15em] opacity-60">Assinantes</p>
                 <div className="mt-3 flex items-center gap-1.5 text-[9px] font-bold text-green-500">
                   <Sparkles size={10} />
-                  <span>{Math.round((users.filter(u => u.subscriptionStatus === 'active').length / (users.length || 1)) * 100)}% de conversão</span>
+                  <span>{Math.round((users.filter(u => getUserStatus(u) === 'active').length / (users.length || 1)) * 100)}% de conversão</span>
                 </div>
               </div>
             </motion.div>
@@ -1007,7 +1007,7 @@ export default function AdminDashboard() {
                 <span className="text-[9px] font-black uppercase tracking-widest text-amber-500 bg-amber-500/5 px-2 py-1 rounded-full">Trial</span>
               </div>
               <div className="relative z-10">
-                <h3 className="text-3xl font-black text-app-text tracking-tighter">{users.filter(u => (u.subscriptionStatus || 'trial') === 'trial').length}</h3>
+                <h3 className="text-3xl font-black text-app-text tracking-tighter">{users.filter(u => getUserStatus(u) === 'trial').length}</h3>
                 <p className="text-[10px] text-app-secondary font-black uppercase tracking-[0.15em] opacity-60">Em Teste</p>
                 <div className="mt-3 flex items-center gap-1.5 text-[9px] font-bold text-amber-600">
                   <span>Vencimento em {trialDaysConfig} dias</span>
@@ -1027,11 +1027,11 @@ export default function AdminDashboard() {
                 <span className="text-[9px] font-black uppercase tracking-widest text-red-500 bg-red-500/5 px-2 py-1 rounded-full">{t('statusExpired')}</span>
               </div>
               <div className="relative z-10">
-                <h3 className="text-3xl font-black text-app-text tracking-tighter">{users.filter(u => u.subscriptionStatus === 'expired').length}</h3>
+                <h3 className="text-3xl font-black text-app-text tracking-tighter">{users.filter(u => getUserStatus(u) === 'expired').length}</h3>
                 <p className="text-[10px] text-app-secondary font-black uppercase tracking-[0.15em] opacity-60">Inativos</p>
                 <div className="mt-3 flex items-center gap-1.5">
                   <div className="w-full h-1 bg-red-500/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-red-500 opacity-20" style={{ width: `${(users.filter(u => u.subscriptionStatus === 'expired').length / (users.length || 1)) * 100}%` }} />
+                    <div className="h-full bg-red-500 opacity-20" style={{ width: `${(users.filter(u => getUserStatus(u) === 'expired').length / (users.length || 1)) * 100}%` }} />
                   </div>
                 </div>
               </div>

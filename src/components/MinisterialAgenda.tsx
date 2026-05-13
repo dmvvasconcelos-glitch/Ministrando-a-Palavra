@@ -17,7 +17,8 @@ import {
   Home,
   Globe,
   Activity,
-  RefreshCw
+  RefreshCw,
+  MessageCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format, formatDistanceToNow, isAfter } from 'date-fns';
@@ -294,6 +295,16 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
             <Plus size={14} />
             <span>{t('schedulePreachingBtn')}</span>
           </button>
+          
+          <a 
+            href="https://wa.me/5531973148166" 
+            target="_blank" 
+            rel="noreferrer" 
+            className="flex items-center gap-2 bg-[#25D366]/10 text-[#25D366] px-4 py-2 rounded-xl font-bold text-[9px] tracking-widest hover:bg-[#25D366] hover:text-white active:scale-95 transition-all border border-[#25D366]/20 group"
+          >
+            <MessageCircle size={14} className="group-hover:scale-110 transition-transform" />
+            <span>WhatsApp</span>
+          </a>
         </div>
       </div>
 
