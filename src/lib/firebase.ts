@@ -86,7 +86,9 @@ export function handleFirestoreError(error: any, operationType: OperationType, p
       })) || []
     },
   };
-  console.error('Firestore Error Detail: ', JSON.stringify(errorInfo, null, 2));
+  const errorString = JSON.stringify(errorInfo, null, 2);
+  console.error('Firestore Error Detail: ', errorString);
+  throw new Error(errorString);
 }
 
 async function testConnection() {

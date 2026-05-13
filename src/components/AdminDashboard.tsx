@@ -90,7 +90,7 @@ export default function AdminDashboard() {
     setIsUpgrading(true);
     try {
       const emailLower = manualUpgradeEmail.trim().toLowerCase();
-      // Search for user
+      // Search for user by email to avoid duplicates
       const q = query(collection(db, 'users'), where('email', '==', emailLower), limit(1));
       const snap = await getDocs(q);
       
@@ -110,21 +110,24 @@ export default function AdminDashboard() {
 
       if (!snap.empty) {
         await updateDoc(doc(db, 'users', snap.docs[0].id), updates);
-        alert(`Usuário ${emailLower} atualizado com sucesso!`);
+        alert(`Sucesso! O usuário ${emailLower} foi promovido para PREMIUM.`);
       } else {
-        // Create placeholder
-        const placeholderId = emailLower.replace(/[^a-z0-9]/g, '_') + '_manual';
+        // Create a predictive placeholder that the app will merge on first login
+        const placeholderId = `manual_${emailLower.replace(/[^a-z0-9]/g, '_')}`;
         await setDoc(doc(db, 'users', placeholderId), {
+          uid: placeholderId,
           email: emailLower,
+          displayName: emailLower.split('@')[0],
           ...updates,
           createdAt: now
         });
-        alert(`Nenhum usuário logado encontrado com esse e-mail. Criamos um registro Premium preventivo para ${emailLower}.`);
+        alert(`O usuário ${emailLower} ainda não possui conta, mas já liberamos o acesso Premium preventivamente! Quando ele logar pela primeira vez com este e-mail, já terá acesso total.`);
       }
       setManualUpgradeEmail('');
     } catch (err) {
       console.error('Manual upgrade error:', err);
-      alert('Erro ao atualizar usuário. Verifique os logs do console.');
+      handleFirestoreError(err, OperationType.UPDATE, 'users/manual-upgrade');
+      alert('Erro ao liberar acesso premium. Verifique os logs do console para mais detalhes.');
     } finally {
       setIsUpgrading(false);
     }
@@ -213,8 +216,8 @@ export default function AdminDashboard() {
 
       const csvRows = users.map(user => {
         const status = user.role === 'admin' ? 'Administrador' : (user.isPremium ? 'PAGO' : (getUserStatus(user) === 'active' ? 'Ativo' : (getUserStatus(user) === 'expired' ? 'Expirado' : 'Teste')));
-        const expiresAt = user.role === 'admin' ? 'Infinito' : (user.subscriptionExpiresAt ? format(user.subscriptionExpiresAt.toDate(), 'dd/MM/yyyy') : (user.trialExpiresAt ? format(user.trialExpiresAt.toDate(), 'dd/MM/yyyy') : '-'));
-        const lastLogin = user.lastLogin ? format(user.lastLogin.toDate(), 'dd/MM/yyyy HH:mm') : '-';
+        const expiresAt = user.role === 'admin' ? 'Infinito' : (user.subscriptionExpiresAt || user.trialExpiresAt ? format(safeToDate(user.subscriptionExpiresAt || user.trialExpiresAt), 'dd/MM/yyyy') : '-');
+        const lastLogin = user.lastLogin ? format(safeToDate(user.lastLogin), 'dd/MM/yyyy HH:mm') : '-';
         
         return [
           `"${user.displayName || user.fullName || ''}"`,
@@ -271,7 +274,7 @@ export default function AdminDashboard() {
 
     const unsubUsers = onSnapshot(qUsers, (snapshot) => {
       console.log('AdminDashboard: Users snapshot received, size:', snapshot.size);
-      const uList = snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as UserProfile));
+      const uList = snapshot.docs.map(doc => ({ ...doc.data({ serverTimestamps: 'estimate' }), uid: doc.id } as UserProfile));
       setUsers(uList);
     }, (error) => {
       console.error('AdminDashboard: Users snapshot error:', error);
@@ -365,6 +368,15 @@ export default function AdminDashboard() {
     return new Date(dateStr);
   };
 
+  const safeToDate = (field: any) => {
+    if (!field) return new Date();
+    if (field.toDate) return field.toDate();
+    if (field instanceof Date) return field;
+    if (typeof field === 'number') return new Date(field);
+    if (typeof field === 'string') return new Date(field);
+    return new Date();
+  };
+
   const getTimeRemaining = (user: UserProfile) => {
     if (user.role === 'admin') return '∞';
     // If it's a fixed admin by email like dmv.vasconcelos@gmail.com, show 'Infinito'
@@ -373,7 +385,7 @@ export default function AdminDashboard() {
     const expiryRef = user.subscriptionExpiresAt || user.trialExpiresAt;
     if (!expiryRef) return '-';
     try {
-      const date = expiryRef.toDate ? expiryRef.toDate() : new Date(expiryRef);
+      const date = safeToDate(expiryRef);
       const now = new Date();
       const diff = date.getTime() - now.getTime();
       
@@ -473,26 +485,38 @@ export default function AdminDashboard() {
   const handleAddUser = async () => {
     if (!newUserEmail.trim()) return;
     try {
-      const userId = newUserEmail.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      const userRef = doc(db, 'users', userId);
-      const now = new Date();
+      const emailLower = newUserEmail.trim().toLowerCase();
+      
+      // Check if user already exists
+      const q = query(collection(db, 'users'), where('email', '==', emailLower), limit(1));
+      const snap = await getDocs(q);
+      
+      if (!snap.empty) {
+        alert('Este e-mail já está cadastrado no sistema.');
+        return;
+      }
+
+      const placeholderId = `manual_${emailLower.replace(/[^a-z0-9]/g, '_')}`;
+      const userRef = doc(db, 'users', placeholderId);
+      const now = serverTimestamp();
       const expiresAt = new Date();
       
       if (newUserPlan === 'trial') {
-        expiresAt.setDate(now.getDate() + trialDaysConfig);
+        expiresAt.setDate(new Date().getDate() + trialDaysConfig);
       } else {
-        expiresAt.setFullYear(now.getFullYear() + 1);
+        expiresAt.setFullYear(new Date().getFullYear() + 1);
       }
 
       const saveContent: any = {
-        email: newUserEmail,
-        displayName: newUserEmail.split('@')[0],
+        uid: placeholderId,
+        email: emailLower,
+        displayName: emailLower.split('@')[0],
         subscriptionStatus: newUserPlan,
         subscriptionExpiresAt: expiresAt,
         role: newUserPlan === 'active' ? 'premium' : 'user',
         isPremium: newUserPlan === 'active',
-        updatedAt: serverTimestamp(),
-        createdAt: serverTimestamp()
+        updatedAt: now,
+        createdAt: now
       };
 
       if (newUserPlan === 'trial') {
@@ -502,13 +526,14 @@ export default function AdminDashboard() {
         saveContent.paidExpiresAt = expiresAt;
       }
 
-      await setDoc(userRef, saveContent, { merge: true });
-
+      await setDoc(userRef, saveContent);
+      alert('Usuário adicionado com sucesso!');
       setShowAddUserModal(false);
       setNewUserEmail('');
     } catch (err) {
       console.error('Error adding user:', err);
       handleFirestoreError(err, OperationType.WRITE, 'users');
+      alert('Ocorreu um erro ao adicionar o usuário.');
     }
   };
 
@@ -659,7 +684,7 @@ export default function AdminDashboard() {
         user.email || '',
         user.role === 'admin' ? 'Administrador' : (user.subscriptionStatus || 'trial'),
         user.role === 'admin' ? 'Ativo' : (user.isPremium ? 'PAGO' : (getUserStatus(user) === 'active' ? 'Ativo' : (getUserStatus(user) === 'expired' ? 'Expirado' : 'Teste'))),
-        user.role === 'admin' ? 'Infinito' : (user.subscriptionExpiresAt ? format(user.subscriptionExpiresAt.toDate(), 'dd/MM/yyyy') : (user.trialExpiresAt ? format(user.trialExpiresAt.toDate(), 'dd/MM/yyyy') : '-')),
+        user.role === 'admin' ? 'Infinito' : (user.subscriptionExpiresAt || user.trialExpiresAt ? format(safeToDate(user.subscriptionExpiresAt || user.trialExpiresAt), 'dd/MM/yyyy') : '-'),
         user.birthDate || '',
         user.newBirthDate || '',
         user.denomination || '',
@@ -669,8 +694,8 @@ export default function AdminDashboard() {
         user.locationInfo?.ip || '',
         user.deviceInfo?.os || '',
         user.deviceInfo?.browser || '',
-        user.updatedAt ? format(user.updatedAt.toDate(), 'dd/MM/yyyy HH:mm') : '',
-        user.createdAt ? format(user.createdAt.toDate(), 'dd/MM/yyyy HH:mm') : ''
+        user.updatedAt ? format(safeToDate(user.updatedAt), 'dd/MM/yyyy HH:mm') : '',
+        user.createdAt ? format(safeToDate(user.createdAt), 'dd/MM/yyyy HH:mm') : ''
       ]);
 
       const csvContent = [
@@ -1274,7 +1299,7 @@ export default function AdminDashboard() {
                         <td className="px-6 py-4">
                           <div className="flex flex-col gap-0.5">
                             <span className="text-xs font-bold text-app-text whitespace-nowrap">
-                              {user.role === 'admin' ? 'Infinito' : user.subscriptionExpiresAt ? format(user.subscriptionExpiresAt.toDate(), 'dd/MM/yyyy', { locale }) : (user.trialExpiresAt ? format(user.trialExpiresAt.toDate(), 'dd/MM/yyyy', { locale }) : '-')}
+                              {user.role === 'admin' ? 'Infinito' : (user.subscriptionExpiresAt || user.trialExpiresAt ? format(safeToDate(user.subscriptionExpiresAt || user.trialExpiresAt), 'dd/MM/yyyy', { locale }) : '-')}
                             </span>
                             {user.role !== 'admin' && !user.isPremium && (user.subscriptionStatus || 'trial') === 'trial' && (
                               <span className="text-[9px] font-black uppercase text-amber-600/70">
@@ -1285,7 +1310,7 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-xs font-medium text-app-secondary whitespace-nowrap">
-                            {user.updatedAt ? formatDistanceToNow(user.updatedAt.toDate(), { addSuffix: true, locale }) : '-'}
+                            {user.updatedAt ? formatDistanceToNow(safeToDate(user.updatedAt), { addSuffix: true, locale }) : '-'}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right last:rounded-r-[24px] w-[220px]">
@@ -1383,7 +1408,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className={`
                         shrink-0 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-tighter
-                        getUserStatus(user) === 'active' || user.role === 'admin'
+                        ${getUserStatus(user) === 'active' || user.role === 'admin'
                           ? 'bg-green-500/10 text-green-500' 
                           : getUserStatus(user) === 'expired'
                           ? 'bg-red-500/10 text-red-500'
@@ -1410,13 +1435,13 @@ export default function AdminDashboard() {
                           {user.locationInfo?.city ? `${user.locationInfo.city}, ${user.locationInfo.state || ''} (${user.locationInfo.ip || ''})` : 'Desconhecido'}
                         </p>
                       </div>
-                      <div>
-                        <p className="font-black uppercase tracking-widest text-app-secondary opacity-60 mb-1">Expiração</p>
-                        <div className="flex flex-col gap-1">
-                          <p className="font-bold text-app-text truncate">
-                            {user.role === 'admin' ? 'Infinito' : user.subscriptionExpiresAt ? format(user.subscriptionExpiresAt.toDate(), 'dd/MM/yyyy') : (user.trialExpiresAt ? format(user.trialExpiresAt.toDate(), 'dd/MM/yyyy') : '-')}
-                          </p>
-                          {user.role !== 'admin' && !user.isPremium && (user.subscriptionStatus || 'trial') === 'trial' && (
+                        <div>
+                          <p className="font-black uppercase tracking-widest text-app-secondary opacity-60 mb-1">Expiração</p>
+                          <div className="flex flex-col gap-1">
+                            <p className="font-bold text-app-text truncate">
+                              {user.role === 'admin' ? 'Infinito' : (user.subscriptionExpiresAt || user.trialExpiresAt ? format(safeToDate(user.subscriptionExpiresAt || user.trialExpiresAt), 'dd/MM/yyyy') : '-')}
+                            </p>
+                            {user.role !== 'admin' && !user.isPremium && (user.subscriptionStatus || 'trial') === 'trial' && (
                             <p className="text-[10px] font-black text-amber-600 bg-amber-500/5 px-2 py-0.5 rounded-md w-fit">
                               Restam: {getTimeRemaining(user)}
                             </p>
@@ -1431,7 +1456,7 @@ export default function AdminDashboard() {
                       <div>
                         <p className="font-black uppercase tracking-widest text-app-secondary opacity-60 mb-1">Atividade</p>
                         <p className="font-bold text-app-text truncate">
-                          {user.updatedAt ? formatDistanceToNow(user.updatedAt.toDate(), { addSuffix: true, locale }) : '-'}
+                          {user.updatedAt ? formatDistanceToNow(safeToDate(user.updatedAt), { addSuffix: true, locale }) : '-'}
                         </p>
                       </div>
                     </div>
@@ -1597,7 +1622,7 @@ export default function AdminDashboard() {
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-app-secondary font-medium mt-0.5">
                             <span className="flex items-center gap-1"><Mail size={12} className="opacity-40" /> {msg.userEmail}</span>
                             <span className="opacity-40">•</span>
-                            <span className="flex items-center gap-1"><Clock size={12} className="opacity-40" /> {msg.createdAt ? formatDistanceToNow(msg.createdAt.toDate(), { addSuffix: true, locale }) : '...'}</span>
+                            <span className="flex items-center gap-1"><Clock size={12} className="opacity-40" /> {msg.createdAt ? formatDistanceToNow(safeToDate(msg.createdAt), { addSuffix: true, locale }) : '...'}</span>
                           </div>
                         </div>
                       </div>
@@ -1656,7 +1681,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex items-center gap-2 text-[9px] text-app-secondary/60 font-bold ml-6 uppercase tracking-widest">
                           <Calendar size={10} />
-                          Respondida {msg.repliedAt ? format(msg.repliedAt.toDate(), 'PPP HH:mm', { locale }) : '...'}
+                          Respondida {msg.repliedAt ? format(safeToDate(msg.repliedAt), 'PPP HH:mm', { locale }) : '...'}
                         </div>
                       </motion.div>
                     )}
@@ -2031,7 +2056,7 @@ export default function AdminDashboard() {
                      <div className="space-y-4">
                        <div className="flex items-center justify-between text-xs">
                          <span className="font-bold text-app-secondary flex items-center gap-2"><Clock size={12} /> Último Login</span>
-                         <span className="font-mono text-app-text">{selectedUser.lastLogin ? format(selectedUser.lastLogin.toDate(), 'PPP HH:mm', { locale }) : '-'}</span>
+                         <span className="font-mono text-app-text">{selectedUser.lastLogin ? format(safeToDate(selectedUser.lastLogin), 'PPP HH:mm', { locale }) : '-'}</span>
                        </div>
                        <div className="flex items-center justify-between text-xs">
                          <span className="font-bold text-app-secondary flex items-center gap-2"><Calendar size={12} /> Expira em</span>
@@ -2039,8 +2064,8 @@ export default function AdminDashboard() {
                            {selectedUser.role === 'admin' 
                              ? 'Infinito' 
                              : (selectedUser.subscriptionExpiresAt 
-                               ? format(selectedUser.subscriptionExpiresAt.toDate(), 'PPP', { locale }) 
-                               : (selectedUser.trialExpiresAt ? format(selectedUser.trialExpiresAt.toDate(), 'PPP', { locale }) : '-'))}
+                               ? format(safeToDate(selectedUser.subscriptionExpiresAt), 'PPP', { locale }) 
+                               : (selectedUser.trialExpiresAt ? format(safeToDate(selectedUser.trialExpiresAt), 'PPP', { locale }) : '-'))}
                          </span>
                        </div>
                      </div>
@@ -2217,7 +2242,7 @@ export default function AdminDashboard() {
                     <div key={log.id} className="p-4 bg-app-bg/50 border border-app-border rounded-2xl space-y-2">
                        <div className="flex justify-between items-center text-indigo-500 font-bold border-b border-app-border/20 pb-2">
                           <span>Event: {log.payload?.event || 'N/A'} - Status: {log.payload?.status || log.payload?.venda_status || 'N/A'}</span>
-                          <span>{log.receivedAt ? format(log.receivedAt.toDate(), 'dd/MM HH:mm:ss', { locale: language === 'pt' ? ptBR : enUS }) : '...'}</span>
+                          <span>{log.receivedAt ? format(safeToDate(log.receivedAt), 'dd/MM HH:mm:ss', { locale: language === 'pt' ? ptBR : enUS }) : '...'}</span>
                        </div>
                        <pre className="overflow-x-auto whitespace-pre-wrap text-app-secondary">
                           {JSON.stringify(log.payload, null, 2)}

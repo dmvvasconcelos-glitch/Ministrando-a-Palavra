@@ -103,7 +103,7 @@ export default function SermonEditor({
         }
       }
     } catch (err) {
-      console.error(err);
+      handleFirestoreError(err, OperationType.GET, `sermons/${id}`);
     } finally {
       setLoading(false);
     }
@@ -263,6 +263,7 @@ export default function SermonEditor({
           }
         } catch (err) {
           console.error("Auto-save error:", err);
+          handleFirestoreError(err, OperationType.WRITE, `sermons/${idToSave}/auto-save`);
         }
       }
     }, 2000); 
@@ -323,7 +324,7 @@ export default function SermonEditor({
       localStorage.removeItem(draftKey);
       onSaved();
     } catch (err) {
-      console.error(err);
+      handleFirestoreError(err, OperationType.WRITE, `sermons/${activeId || 'new'}`);
     } finally {
       setSaving(false);
     }

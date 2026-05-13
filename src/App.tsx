@@ -14,6 +14,7 @@ import {
   Moon,
   Book,
   BookOpen,
+  BookMarked,
   Copy,
   Check,
   HelpCircle,
@@ -37,7 +38,7 @@ import {
   signOut,
   User
 } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDoc, serverTimestamp, query, collection, where, orderBy, updateDoc, limit, getDocs } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, deleteDoc, serverTimestamp, query, collection, where, orderBy, updateDoc, limit, getDocs } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from './lib/firebase';
 import BibleReader from './components/BibleReader';
 import SermonEditor from './components/SermonEditor';
@@ -315,15 +316,20 @@ export default function App() {
             };
 
             if (!placeholderSnap.empty) {
-              const placeholderData = placeholderSnap.docs[0].data();
+              const placeholderDoc = placeholderSnap.docs[0];
+              const placeholderData = placeholderDoc.data();
               console.log('App: Found placeholder, merging:', placeholderData);
               // Merge placeholder data but keep current UID
               initialData = { ...initialData, ...placeholderData, uid: u.uid };
               
               // If the placeholder had a different ID, we should delete it to avoid duplicates
-              if (placeholderSnap.docs[0].id !== u.uid) {
-                console.log('App: Marking placeholder for deletion:', placeholderSnap.docs[0].id);
-                // In a real app we might delete it, here we just merge
+              if (placeholderDoc.id !== u.uid) {
+                console.log('App: Deleting placeholder:', placeholderDoc.id);
+                try {
+                  await deleteDoc(doc(db, 'users', placeholderDoc.id));
+                } catch (delErr) {
+                  console.warn("Could not delete placeholder doc:", delErr);
+                }
               }
             }
 
@@ -605,10 +611,10 @@ export default function App() {
     };
 
     const unsubEvents = onSnapshot(qEvents, (s) => processSnapshot(s, 'event'), (error) => {
-      console.warn("Agenda listener failed, retrying on next cycle", error);
+      handleFirestoreError(error, OperationType.GET, 'agenda');
     });
     const unsubPreachings = onSnapshot(qPreachings, (s) => processSnapshot(s, 'preaching'), (error) => {
-      console.warn("Ministerial listener failed, retrying on next cycle", error);
+      handleFirestoreError(error, OperationType.GET, 'ministerial_agenda');
     });
 
     return () => {
@@ -785,7 +791,7 @@ export default function App() {
           </motion.div>
           <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
             <span className="font-serif italic text-xl text-app-text px-1 drop-shadow-sm">Ministrando</span>
-            <span className="font-bold tracking-[0.3em] text-[10px] text-indigo-500 mt-0.5 uppercase">a palavra</span>
+            <span className="font-black tracking-[0.3em] text-[12px] text-indigo-500 mt-0.5 uppercase">A PALAVRA</span>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -827,7 +833,7 @@ export default function App() {
           </motion.div>
           <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
             <span className="font-serif italic text-xl text-app-text px-1 tracking-tight">Ministrando</span>
-            <span className="font-bold tracking-[0.3em] text-[12px] text-indigo-500 mt-0.5 uppercase">a palavra</span>
+            <span className="font-black tracking-[0.3em] text-[14px] text-indigo-500 mt-0.5 uppercase">A PALAVRA</span>
           </div>
         </div>
         <div className="p-8 hidden md:flex items-center justify-between gap-2 mb-10 border-b border-app-border/10 px-6">
@@ -841,7 +847,7 @@ export default function App() {
             {!isSidebarCollapsed && (
               <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
                 <span className="text-xl font-serif italic text-app-text px-1 tracking-tight">Ministrando</span>
-                <span className="text-[12px] font-black tracking-[0.2em] text-indigo-500 mt-0.5 uppercase">a palavra</span>
+                <span className="text-[14px] font-black tracking-[0.2em] text-indigo-500 mt-0.5 uppercase">A PALAVRA</span>
               </div>
             )}
           </div>
@@ -879,7 +885,12 @@ export default function App() {
                   ${theme === 'light' && activeTab !== tab.id ? 'border-b border-transparent hover:border-slate-200' : ''}
                 `}
               >
-                <tab.icon size={18} className={activeTab === tab.id ? 'text-indigo-500' : ''} />
+                <motion.div 
+                  whileHover={{ scale: 1.2, rotate: 10 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                >
+                  <tab.icon size={18} className={activeTab === tab.id ? 'text-indigo-500' : ''} />
+                </motion.div>
                 <span className="font-bold text-[11.5px] tracking-[0.05em]">{tab.label}</span>
                 {tab.badge !== undefined && tab.badge > 0 && (
                   <span className="absolute right-4 w-4 h-4 bg-red-500 text-white text-[8px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-app-card transition-all">

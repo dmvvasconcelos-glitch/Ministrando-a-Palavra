@@ -4,7 +4,7 @@ import { generateSermonOutline, refineSermonOutline, suggestThemes, chatWithAI, 
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../contexts/LanguageContext';
-import { db, auth } from '../lib/firebase';
+import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, query, orderBy, limit, onSnapshot, doc, getDoc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
 
@@ -116,6 +116,8 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
         ...doc.data()
       })) as StoredChat[];
       setPastChats(chats);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, `users/${auth.currentUser?.uid}/chats`);
     });
 
     return () => unsubscribe();
@@ -134,6 +136,8 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
         ...doc.data()
       })) as StoredOutline[];
       setPastOutlines(outlines);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, `users/${auth.currentUser?.uid}/ai_outlines`);
     });
 
     return () => unsubscribe();

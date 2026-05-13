@@ -90,7 +90,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
             </motion.div>
             <div className="flex flex-col leading-tight">
               <span className="font-serif italic text-lg md:text-xl text-slate-900 tracking-tight">Ministrando</span>
-              <span className="font-bold tracking-[0.2em] text-[10px] md:text-[12px] text-[#C2945E] mt-0.5 uppercase">a palavra</span>
+              <span className="font-black tracking-[0.2em] text-[12px] md:text-[14px] text-[#C2945E] mt-0.5 uppercase">A PALAVRA</span>
             </div>
           </div>
           <div className="flex items-center gap-4 md:gap-6">
