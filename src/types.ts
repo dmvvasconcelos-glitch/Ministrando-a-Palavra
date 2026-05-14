@@ -53,6 +53,7 @@ export interface UserProfile {
   isBlocked?: boolean;
   createdAt?: any;
   updatedAt: any;
+  lastActiveAt?: any;
   fcmToken?: string;
   notificationsEnabled?: boolean;
   defaultNotify24h?: boolean;

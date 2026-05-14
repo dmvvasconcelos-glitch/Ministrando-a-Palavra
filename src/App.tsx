@@ -89,6 +89,17 @@ export default function App() {
   const isUserAdmin = profile?.role === 'admin' || user?.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com';
 
   useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMenuOpen]);
+
+  useEffect(() => {
     if (user) {
       console.log('App: User Status Check:', {
         email: user.email,
@@ -99,18 +110,30 @@ export default function App() {
     }
   }, [user, profile, activeTab, isUserAdmin]);
 
+  const getExpiryDate = (ref: any) => {
+    if (!ref) return null;
+    return ref.toDate ? ref.toDate() : new Date(ref);
+  };
+
+  const now = new Date();
+
   // Auto-expire trials locally only.
   const isTrialExpired = !isUserAdmin && 
     !profile?.isPremium &&
     profile?.subscriptionStatus === 'trial' && 
     profile?.trialExpiresAt && 
-    (profile.trialExpiresAt.toDate ? profile.trialExpiresAt.toDate() : new Date(profile.trialExpiresAt)) < new Date();
+    getExpiryDate(profile.trialExpiresAt)! < now;
   
   const isActualExpired = !isUserAdmin && 
     !profile?.isPremium &&
     profile?.subscriptionStatus === 'expired';
+
+  const isPremiumExpired = !isUserAdmin &&
+    profile?.isPremium &&
+    (profile?.subscriptionExpiresAt || profile?.paidExpiresAt) &&
+    getExpiryDate(profile.subscriptionExpiresAt || profile.paidExpiresAt)! < now;
     
-  const isSubscriptionBlocked = isTrialExpired || isActualExpired;
+  const isSubscriptionBlocked = isTrialExpired || isActualExpired || isPremiumExpired;
   const isManuallyBlocked = profile?.isBlocked === true;
   const isBlocked = isSubscriptionBlocked || isManuallyBlocked;
 
@@ -635,6 +658,27 @@ export default function App() {
     setActiveTab('preach');
   };
 
+  useEffect(() => {
+    if (!user) return;
+
+    // Pulse immediately on mount if user is present
+    const pulse = async () => {
+      try {
+        await setDoc(doc(db, 'users', user.uid), { 
+          lastActiveAt: serverTimestamp(),
+          updatedAt: serverTimestamp() 
+        }, { merge: true });
+      } catch (e) {
+        console.warn("Heartbeat failed:", e);
+      }
+    };
+    
+    pulse();
+
+    const interval = setInterval(pulse, 5 * 60 * 1000); // Every 5 minutes
+    return () => clearInterval(interval);
+  }, [user]);
+
   if (isAppLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-[var(--bg-color)]">
@@ -821,24 +865,29 @@ export default function App() {
 
       {/* Sidebar */}
       <nav className={`
-        fixed inset-y-0 left-0 z-[100] w-72 md:w-64 frosted-glass m-4 rounded-[2.5rem] transform transition-all duration-500 ease-out md:relative md:translate-x-0 md:flex md:flex-col md:m-6 overflow-hidden
+        fixed inset-y-0 left-0 z-[100] w-72 md:w-64 frosted-glass m-4 rounded-[2.5rem] transform transition-all duration-500 ease-out flex flex-col md:relative md:translate-x-0 md:m-6 overflow-hidden
         ${isMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-[120%] md:translate-x-0'}
         ${isSidebarCollapsed ? 'md:w-0 md:m-0 md:opacity-0 md:pointer-events-none' : 'md:w-64 md:opacity-100'}
       `}>
         {/* Mobile Header Inside Sidebar context */}
-        <div className="md:hidden flex items-center gap-3 p-8 border-b border-app-border mb-6 px-6">
-          <motion.div 
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            className="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20"
-          >
-            <BookOpen className="text-white" size={20} />
-          </motion.div>
-          <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
-            <span className="font-serif italic text-xl text-app-text px-1 tracking-tight">Ministrando</span>
-            <span className="font-black tracking-[0.3em] text-[14px] text-indigo-500 mt-0.5 uppercase">A PALAVRA</span>
+        <div className="md:hidden flex items-center justify-between p-8 border-b border-app-border/10 mb-6 px-6 shrink-0">
+          <div className="flex items-center gap-3">
+            <motion.div 
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              className="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20"
+            >
+              <BookOpen className="text-white" size={20} />
+            </motion.div>
+            <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
+              <span className="font-serif italic text-xl text-app-text px-1 tracking-tight">Ministrando</span>
+              <span className="font-black tracking-[0.3em] text-[14px] text-indigo-500 mt-0.5 uppercase">A PALAVRA</span>
+            </div>
           </div>
+          <button onClick={() => setIsMenuOpen(false)} className="p-2 text-app-secondary">
+            <X size={20} />
+          </button>
         </div>
-        <div className="p-8 hidden md:flex items-center justify-between gap-2 mb-10 border-b border-app-border/10 px-6">
+        <div className="p-8 hidden md:flex items-center justify-between gap-2 mb-10 border-b border-app-border/10 px-6 shrink-0">
           <div className="flex items-center gap-2 overflow-hidden">
             <motion.div 
             whileHover={{ scale: 1.1, rotate: 5 }}
@@ -871,7 +920,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar flex flex-col">
+        <div className="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar flex flex-col min-h-0">
           <div className="space-y-1">
             {tabs.map((tab) => (
               <button
@@ -910,7 +959,7 @@ export default function App() {
           </div>
 
           {(profile?.role === 'admin' || isUserAdmin) && (
-            <div className="pt-4 mt-auto border-t border-app-border/20 pb-2">
+            <div className="pt-4 mt-6 border-t border-app-border/20 pb-2">
               <button
                 id="nav-admin"
                 onClick={() => {
@@ -935,71 +984,65 @@ export default function App() {
           )}
         </div>
 
-        <div className="p-4 mt-auto border-t border-app-border">
+        <div className="p-4 mt-auto border-t border-app-border shrink-0 bg-app-card/20 backdrop-blur-md">
           {/* Social Links */}
-          <div className="px-2 mb-4">
+          <div className="px-1 mb-4 flex flex-col gap-1">
             <a 
               href="https://www.instagram.com/ministrandoapalavra.app?igsh=MWE5N2JvcWo0Z25ydg=="
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-app-secondary hover:text-pink-500 hover:bg-pink-500/5 transition-all group"
+              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-app-secondary hover:text-pink-500 hover:bg-pink-500/5 transition-all group"
             >
-              <Instagram size={18} className="group-hover:scale-110 transition-transform" />
-              <span className="font-bold text-[10px] tracking-widest uppercase">{t('followInstagram')}</span>
+              <div className="flex items-center gap-3">
+                <Instagram size={18} className="group-hover:scale-110 transition-transform" />
+                <span className="font-bold text-[10px] tracking-widest uppercase">{t('followInstagram')}</span>
+              </div>
+              <div className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
             </a>
           </div>
 
           {/* Discrete Language Selector */}
-          <div className="flex items-center justify-center gap-4 mb-4">
-            {(['pt', 'en', 'es'] as Language[]).map((lang) => (
-              <button
-                key={lang}
-                onClick={() => setLanguage(lang)}
-                className={`text-[9px] font-black tracking-[0.2em] transition-all p-1 ${language === lang ? 'text-indigo-500 underline underline-offset-4' : 'text-slate-600 hover:text-slate-400'}`}
-              >
-                {lang.toUpperCase()}
-              </button>
-            ))}
+          <div className="flex items-center justify-between px-4 mb-5">
+            <span className="text-[8px] font-black tracking-widest uppercase text-app-secondary opacity-40">Idioma</span>
+            <div className="flex items-center gap-3">
+              {(['pt', 'en', 'es'] as Language[]).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setLanguage(lang)}
+                  className={`text-[9px] font-black tracking-widest transition-all ${language === lang ? 'text-indigo-500' : 'text-slate-600 hover:text-slate-400'}`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </div>
 
           <button 
             onClick={() => currentSermonId && handlePreach(currentSermonId)}
-            className={`w-full mb-4 py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all ${currentSermonId ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-app-card text-app-secondary border border-app-border cursor-not-allowed'}`}
+            className={`w-full mb-4 py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all ${currentSermonId ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-app-card text-app-secondary border border-app-border cursor-not-allowed opacity-50'}`}
           >
             <Play size={16} fill={currentSermonId ? "currentColor" : "none"} />
-            <span className="font-bold text-[9px] tracking-widest">{t('pulpitMode')}</span>
+            <span className="font-bold text-[9px] tracking-widest uppercase italic">{t('pulpitMode')}</span>
           </button>
 
           <div 
             onClick={() => setActiveTab('profile')}
-            className={`flex items-center gap-3 p-4 rounded-2xl border border-app-border cursor-pointer transition-all ${activeTab === 'profile' ? 'bg-indigo-500/10 border-indigo-500/20 shadow-sm' : 'bg-app-card hover:bg-app-card/60 hover:shadow-md'}`}
+            className={`flex items-center gap-3 p-3 rounded-2xl border border-app-border cursor-pointer transition-all ${activeTab === 'profile' ? 'bg-indigo-500/10 border-indigo-500/20 shadow-sm' : 'bg-app-card/50 hover:bg-app-card hover:shadow-md'}`}
           >
-            <img 
-              src={profile?.photoURL || user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.displayName || user.displayName}`} 
-              className="w-10 h-10 rounded-full border border-app-border object-cover" 
-              alt="User" 
-            />
-            <div className="flex-1 overflow-hidden">
-              <p className="text-xs font-bold truncate text-app-text">{profile?.displayName || user.displayName}</p>
-              <div className="flex items-center gap-1 group/email">
-                <p className="text-[10px] text-app-secondary truncate">{user.email}</p>
-                <button 
-                  onClick={handleCopyEmail}
-                  className="p-1 hover:bg-app-card rounded-md text-app-secondary hover:text-app-accent transition-all opacity-0 group-hover/email:opacity-100"
-                  title={t('copyEmailTitle')}
-                >
-                  {copiedEmail ? <Check size={10} className="text-green-500" /> : <Copy size={10} />}
-                </button>
-              </div>
-              <button id="btn-logout" onClick={(e) => { e.stopPropagation(); signOut(auth); }} className="text-[10px] font-bold text-app-secondary hover:text-app-accent transition-colors mt-1">{t('logout')}</button>
+            <div className="relative shrink-0">
+              <img 
+                src={profile?.photoURL || user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.displayName || user.displayName}`} 
+                className="w-10 h-10 rounded-full border border-app-border object-cover" 
+                alt="User" 
+              />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-app-card rounded-full shadow-sm" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-black truncate text-app-text tracking-tight uppercase">{profile?.displayName || user.displayName}</p>
+              <p className="text-[9px] text-app-secondary truncate font-medium">{user.email}</p>
             </div>
           </div>
         </div>
-
-        {/* Close Button Mobile */}
-        <button id="btn-close-mobile" className="md:hidden absolute top-4 right-4 p-2 text-app-secondary" onClick={() => setIsMenuOpen(false)}>
-          <X size={24} />
-        </button>
       </nav>
 
       {/* Main Content */}

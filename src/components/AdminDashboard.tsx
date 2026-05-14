@@ -408,6 +408,20 @@ export default function AdminDashboard() {
     return user.trialDuration || 3;
   };
 
+  const isUserOnline = (user: UserProfile) => {
+    const lastActive = user.lastActiveAt || user.updatedAt || user.lastLogin;
+    if (!lastActive) return false;
+    
+    try {
+      const activeDate = lastActive.toDate ? lastActive.toDate() : new Date(lastActive);
+      const now = new Date();
+      // Consider online if active in the last 8 minutes (heartbeat is 5min)
+      return (now.getTime() - activeDate.getTime()) < 8 * 60 * 1000;
+    } catch (e) {
+      return false;
+    }
+  };
+
   const handleUpdateRole = async (uid: string, role: 'admin' | 'user') => {
     if (!uid) {
       alert('ID do usuário não encontrado.');
@@ -722,20 +736,48 @@ export default function AdminDashboard() {
   };
 
   const getUserStatus = (user: UserProfile) => {
-    if (user.role === 'admin' || user.isPremium) return 'active';
+    if (user.role === 'admin') return 'active';
+    const now = new Date();
+    
+    // If user is premium, check if it's already expired
+    if (user.isPremium) {
+      const expiryRef = user.subscriptionExpiresAt || user.paidExpiresAt;
+      if (expiryRef) {
+        const expiryDate = expiryRef.toDate ? expiryRef.toDate() : new Date(expiryRef);
+        if (now > expiryDate) return 'expired';
+      }
+      return 'active';
+    }
+
     const status = user.subscriptionStatus || 'trial';
+    
+    // Explicit expired status
+    if (status === 'expired') return 'expired';
+    
     if (status === 'trial') {
       const expiryRef = user.trialExpiresAt;
       if (expiryRef) {
         const expiryDate = expiryRef.toDate ? expiryRef.toDate() : new Date(expiryRef);
-        if (new Date() > expiryDate) return 'expired';
+        if (now > expiryDate) return 'expired';
       } else {
         // Fallback for very old users
         const created = user.createdAt?.toDate ? user.createdAt.toDate() : (user.createdAt ? new Date(user.createdAt) : new Date());
         const expiry = new Date(created.getTime() + 3 * 24 * 60 * 60 * 1000);
-        if (new Date() > expiry) return 'expired';
+        if (now > expiry) return 'expired';
       }
+      return 'trial';
     }
+
+    // Double check active statuses that might be expired
+    if (status === 'active') {
+      const expiryRef = user.subscriptionExpiresAt || user.paidExpiresAt;
+      if (expiryRef) {
+        const expiryDate = expiryRef.toDate ? expiryRef.toDate() : new Date(expiryRef);
+        if (now > expiryDate) return 'expired';
+      }
+      return 'active';
+    }
+
     return status;
   };
 
@@ -876,7 +918,7 @@ export default function AdminDashboard() {
 
               <button 
                 onClick={() => setShowIntegrationInfo(false)}
-                className="w-full mt-8 bg-app-text text-app-card h-16 rounded-[20px] font-black uppercase text-xs tracking-[0.2em] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/10"
+                className="w-full mt-8 bg-indigo-600 text-white h-16 rounded-[20px] font-black uppercase text-xs tracking-[0.2em] hover:bg-indigo-500 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-indigo-600/20"
               >
                 Entendi, Concluir
               </button>
@@ -1262,13 +1304,18 @@ export default function AdminDashboard() {
                       >
                         <td className="px-6 py-4 first:rounded-l-[24px]">
                           <div className="flex items-center gap-4">
-                            <div className={`
-                              w-11 h-11 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-md transition-transform group-hover:scale-105
-                              ${user.role === 'admin' 
-                                ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/20' 
-                                : 'bg-app-bg border border-app-border/40'}
-                            `}>
-                              {user.role === 'admin' ? <Crown size={18} /> : (user.displayName || user.fullName || 'U').charAt(0).toUpperCase()}
+                            <div className="relative shrink-0">
+                              <div className={`
+                                w-11 h-11 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-md transition-transform group-hover:scale-105
+                                ${user.role === 'admin' 
+                                  ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/20' 
+                                  : 'bg-app-bg border border-app-border/40'}
+                              `}>
+                                {user.role === 'admin' ? <Crown size={18} /> : (user.displayName || user.fullName || 'U').charAt(0).toUpperCase()}
+                              </div>
+                              {isUserOnline(user) && (
+                                <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-app-bg rounded-full shadow-sm animate-pulse" />
+                              )}
                             </div>
                             <div className="flex flex-col min-w-0">
                               <div className="flex items-center gap-2">
@@ -1393,10 +1440,12 @@ export default function AdminDashboard() {
                             className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border border-app-border shadow-sm object-cover"
                             alt="User"
                           />
-                          {user.role === 'admin' && (
+                          {user.role === 'admin' ? (
                             <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-indigo-500 rounded-full border-2 border-app-bg flex items-center justify-center">
                               <ShieldCheck size={8} className="sm:w-2.5 sm:h-2.5 text-white" />
                             </div>
+                          ) : isUserOnline(user) && (
+                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-app-bg rounded-full shadow-sm animate-pulse" />
                           )}
                         </div>
                         <div className="min-w-0">

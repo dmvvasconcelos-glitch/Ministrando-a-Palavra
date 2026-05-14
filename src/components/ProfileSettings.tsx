@@ -721,13 +721,15 @@ export default function ProfileSettings() {
             <div className="space-y-1 sm:text-right">
               <p className="text-[10px] text-app-secondary uppercase font-black tracking-[0.2em]">Expiração</p>
               <p className="text-sm font-bold text-app-text">
-                {profile.subscriptionExpiresAt?.toDate 
-                  ? format(profile.subscriptionExpiresAt.toDate(), 'PPP p', { locale: (language === 'pt' ? ptBR : language === 'es' ? es : enUS) })
-                  : (profile.trialExpiresAt?.toDate 
-                    ? format(profile.trialExpiresAt.toDate(), 'PPP p', { locale: (language === 'pt' ? ptBR : language === 'es' ? es : enUS) })
-                    : (profile.paidExpiresAt?.toDate
-                      ? format(profile.paidExpiresAt.toDate(), 'PPP p', { locale: (language === 'pt' ? ptBR : language === 'es' ? es : enUS) })
-                      : 'Expirada'))}
+                {profile.role === 'admin' 
+                  ? (language === 'pt' ? 'Nunca expira' : language === 'es' ? 'Nunca expira' : 'Never expires')
+                  : profile.subscriptionExpiresAt?.toDate 
+                    ? format(profile.subscriptionExpiresAt.toDate(), 'PPP p', { locale: (language === 'pt' ? ptBR : language === 'es' ? es : enUS) })
+                    : (profile.trialExpiresAt?.toDate 
+                      ? format(profile.trialExpiresAt.toDate(), 'PPP p', { locale: (language === 'pt' ? ptBR : language === 'es' ? es : enUS) })
+                      : (profile.paidExpiresAt?.toDate
+                        ? format(profile.paidExpiresAt.toDate(), 'PPP p', { locale: (language === 'pt' ? ptBR : language === 'es' ? es : enUS) })
+                        : 'Expirada'))}
               </p>
             </div>
           </div>
