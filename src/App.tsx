@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { 
   PlusCircle, 
   Sparkles, 
@@ -8,25 +8,18 @@ import {
   Menu, 
   X,
   Play,
-  History,
   LayoutDashboard,
   Sun,
   Moon,
   Book,
   BookOpen,
-  BookMarked,
-  Copy,
-  Check,
   HelpCircle,
   PanelLeftClose,
   PanelLeftOpen,
-  ChevronLeft,
-  ChevronRight,
   ShieldCheck,
   Clock,
   Crown,
-  Instagram,
-  ExternalLink
+  Instagram
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -40,23 +33,34 @@ import {
   signOut,
   User
 } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDoc, deleteDoc, serverTimestamp, query, collection, where, orderBy, updateDoc, limit, getDocs } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, deleteDoc, serverTimestamp, query, collection, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from './lib/firebase';
-import BibleReader from './components/BibleReader';
-import SermonEditor from './components/SermonEditor';
-import AIAssistant from './components/AIAssistant';
-import PreachingMode from './components/PreachingMode';
-import Dashboard from './components/Dashboard';
-import EventsManager from './components/EventsManager';
-import MinisterialAgenda from './components/MinisterialAgenda';
-import SermonsList from './components/SermonsList';
-import ProfileSettings from './components/ProfileSettings';
-import HelpCenter from './components/HelpCenter';
-import AdminDashboard from './components/AdminDashboard';
-import SalesLandingPage from './components/SalesLandingPage';
 import { UserProfile } from './types';
+import { format } from 'date-fns';
+import { generateDailyInspiration } from './services/gemini';
 import { useLanguage } from './contexts/LanguageContext';
 import { Language } from './translations';
+
+// Lazy load components for better performance
+const BibleReader = lazy(() => import('./components/BibleReader'));
+const SermonEditor = lazy(() => import('./components/SermonEditor'));
+const AIAssistant = lazy(() => import('./components/AIAssistant'));
+const PreachingMode = lazy(() => import('./components/PreachingMode'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const EventsManager = lazy(() => import('./components/EventsManager'));
+const MinisterialAgenda = lazy(() => import('./components/MinisterialAgenda'));
+const SermonsList = lazy(() => import('./components/SermonsList'));
+const ProfileSettings = lazy(() => import('./components/ProfileSettings'));
+const HelpCenter = lazy(() => import('./components/HelpCenter'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const SalesLandingPage = lazy(() => import('./components/SalesLandingPage'));
+
+const LoadingFallback = () => (
+  <div className="flex flex-col items-center justify-center p-20 space-y-4">
+    <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+    <span className="text-xs font-bold text-app-secondary uppercase tracking-[0.2em] animate-pulse">Carregando...</span>
+  </div>
+);
 
 type Tab = 'dashboard' | 'bible' | 'editor' | 'ai' | 'preach' | 'events' | 'agenda' | 'ministrations' | 'history' | 'profile' | 'help' | 'admin';
 type Theme = 'dark' | 'light';
@@ -79,11 +83,14 @@ export default function App() {
   const [adminNewMsgCount, setAdminNewMsgCount] = useState(0);
   const [userNewMsgCount, setUserNewMsgCount] = useState(0);
   const [trialTimeLeft, setTrialTimeLeft] = useState<string>("");
+  const [minLoadingComplete, setMinLoadingComplete] = useState(false);
+  const [dailyInspiration, setDailyInspiration] = useState<{verse: {ref: string, text: string}, reflection: string} | null>(null);
+  const [isBibleDrawerOpen, setIsBibleDrawerOpen] = useState(false);
 
   const trialDurationDays = 3;
 
-  // Final loading state: wait for both redirect processing AND auth state observation
-  const isAppLoading = loading || !isAuthInitialized || !isRedirectProcessed;
+  // Final loading state: wait for both redirect processing AND auth state observation AND minimum splash time
+  const isAppLoading = loading || !isAuthInitialized || !isRedirectProcessed || !minLoadingComplete;
 
   // Final check for admin status - hardcoded or via profile role
   const isUserAdmin = profile?.role === 'admin' || user?.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com';
@@ -194,6 +201,10 @@ export default function App() {
 
   // Handle redirect result and set persistence once
   useEffect(() => {
+    const splashTimer = setTimeout(() => {
+      setMinLoadingComplete(true);
+    }, 7000); // 7 seconds of "Grace and Peace" for smooth prep as requested
+
     const initAuth = async () => {
       try {
         console.log('Initializing auth persistence...');
@@ -218,6 +229,8 @@ export default function App() {
       }
     };
     initAuth();
+
+    return () => clearTimeout(splashTimer);
   }, []);
 
   useEffect(() => {
@@ -227,6 +240,10 @@ export default function App() {
       console.log('Auth observer triggered:', u ? `User: ${u.email}` : 'No active session');
       setUser(u);
       
+      // Immediately unblock the app if we have an auth state (success or null)
+      setIsAuthInitialized(true);
+      setLoading(false);
+
       // If we just logged in, force navigation out of landing ASAP
       if (u && (sessionStorage.getItem('just_logged_in') === 'true' || localStorage.getItem('just_logged_in') === 'true')) {
         setActiveTab('dashboard');
@@ -235,219 +252,44 @@ export default function App() {
       }
 
       if (u) {
+        // Pre-load daily inspiration as soon as we have a user
+        const loadDailyInspiration = async () => {
+          const todayKey = format(new Date(), 'yyyy-MM-dd');
+          const docPath = `users/${u.uid}/daily_inspirations/${todayKey}_${language}`;
+          const inspirationRef = doc(db, docPath);
+
+          try {
+            const inspirationSnap = await getDoc(inspirationRef);
+
+            if (inspirationSnap.exists()) {
+              const data = inspirationSnap.data();
+              setDailyInspiration({
+                verse: { ref: data.verseRef, text: data.verseText },
+                reflection: data.reflection
+              });
+            } else {
+              // Generate new one
+              const newInspiration = await generateDailyInspiration(language);
+              const saveData = {
+                verseRef: newInspiration.verse.ref || '',
+                verseText: newInspiration.verse.text || '',
+                reflection: newInspiration.reflection || '',
+                date: todayKey
+              };
+              await setDoc(inspirationRef, saveData);
+              setDailyInspiration(newInspiration);
+            }
+          } catch (err) {
+            console.error("Error pre-loading daily inspiration:", err);
+          }
+        };
+        loadDailyInspiration();
+
         // Reset logging in state if we found a user
         setIsLoggingIn(false);
         
-        // Ensure user document exists in 'users' collection for searching/sharing
+        // Subscribe to profile changes immediately
         const userRef = doc(db, 'users', u.uid);
-        
-        try {
-          const userSnap = await getDoc(userRef);
-          
-          // Collect device info
-          const ua = navigator.userAgent;
-          const platform = navigator.platform;
-          let browser = "Unknown";
-          if (ua.includes("Firefox")) browser = "Firefox";
-          else if (ua.includes("Chrome")) browser = "Chrome";
-          else if (ua.includes("Safari")) browser = "Safari";
-          else if (ua.includes("Edge")) browser = "Edge";
-
-          const deviceInfo = {
-            model: platform,
-            os: platform,
-            browser: browser,
-            platform: ua
-          };
-
-          // Fetch location info
-          let locationInfo: any = {};
-          try {
-            // Initial attempt via IP (fast fallback)
-            const locRes = await fetch('https://ipapi.co/json/').then(r => r.json());
-            if (locRes && !locRes.error) {
-              locationInfo = {
-                neighborhood: '',
-                city: locRes.city || '',
-                state: locRes.region || '',
-                country: locRes.country_name || '',
-                ip: locRes.ip || ''
-              };
-            }
-          } catch (locErr) {
-            console.warn("Could not fetch IP location info:", locErr);
-          }
-
-          // Try high-accuracy browser geolocation
-          try {
-            if ("geolocation" in navigator) {
-              const pos: GeolocationPosition = await new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, {
-                  enableHighAccuracy: true,
-                  timeout: 8000,
-                  maximumAge: 0
-                });
-              });
-
-              if (pos) {
-                const { latitude, longitude } = pos.coords;
-                locationInfo.latitude = latitude;
-                locationInfo.longitude = longitude;
-
-                // Try to get address info from coordinates (Reverse Geocoding)
-                try {
-                  const revRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`, {
-                    headers: { 'Accept-Language': 'pt-BR' }
-                  }).then(r => r.json());
-
-                  if (revRes && revRes.address) {
-                    const addr = revRes.address;
-                    locationInfo.neighborhood = addr.suburb || addr.neighbourhood || addr.village || addr.road || '';
-                    locationInfo.city = addr.city || addr.town || addr.municipality || locationInfo.city;
-                    locationInfo.state = addr.state || locationInfo.state;
-                  }
-                } catch (revErr) {
-                  console.warn("Reverse geocoding failed:", revErr);
-                }
-              }
-            }
-          } catch (geoErr) {
-            console.warn("Hardware geolocation failed or denied:", geoErr);
-          }
-
-          if (!userSnap.exists()) {
-            const now = new Date();
-            const trialExpiresAt = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days trial
-
-            // Check for placeholder by email (if exists but has different ID)
-            const qPlaceholder = query(collection(db, 'users'), where('email', '==', u.email?.toLowerCase()), limit(1));
-            const placeholderSnap = await getDocs(qPlaceholder);
-            
-            let initialData: any = {
-              uid: u.uid,
-              email: u.email?.toLowerCase() || '',
-              displayName: u.displayName || 'Ministro',
-              photoURL: u.photoURL || '',
-              role: u.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com' ? 'admin' : 'user',
-              subscriptionStatus: 'trial',
-              trialExpiresAt: trialExpiresAt,
-              trialDuration: 3,
-              subscriptionExpiresAt: trialExpiresAt,
-              deviceInfo: deviceInfo,
-              locationInfo: locationInfo,
-              lastLogin: serverTimestamp(),
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            };
-
-            if (!placeholderSnap.empty) {
-              const placeholderDoc = placeholderSnap.docs[0];
-              const placeholderData = placeholderDoc.data();
-              console.log('App: Found placeholder, merging:', placeholderData);
-              // Merge placeholder data but keep current UID
-              initialData = { ...initialData, ...placeholderData, uid: u.uid };
-              
-              // If the placeholder had a different ID, we should delete it to avoid duplicates
-              if (placeholderDoc.id !== u.uid) {
-                console.log('App: Deleting placeholder:', placeholderDoc.id);
-                try {
-                  await deleteDoc(doc(db, 'users', placeholderDoc.id));
-                } catch (delErr) {
-                  console.warn("Could not delete placeholder doc:", delErr);
-                }
-              }
-            }
-
-            await setDoc(userRef, initialData);
-          } else {
-            const data = userSnap.data();
-            const updateObj: any = {
-              email: u.email?.toLowerCase() || '',
-              role: u.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com' ? 'admin' : (data?.role || 'user'),
-              lastLogin: serverTimestamp(),
-              deviceInfo: deviceInfo,
-              locationInfo: locationInfo,
-              updatedAt: serverTimestamp()
-            };
-
-            // Migration: Set trialExpiresAt for existing trial users missing it
-            if (data?.subscriptionStatus === 'trial' && u.email?.toLowerCase() !== 'dmv.vasconcelos@gmail.com') {
-              if (!data.trialExpiresAt) {
-                const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
-                const expectedTrialExpiry = new Date(createdAt.getTime() + 3 * 24 * 60 * 60 * 1000);
-                updateObj.trialExpiresAt = expectedTrialExpiry;
-                updateObj.subscriptionExpiresAt = expectedTrialExpiry;
-                updateObj.trialDuration = 3;
-              }
-            } else if (u.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com') {
-              // Ensure admin is active/admin
-              if (data?.role !== 'admin') updateObj.role = 'admin';
-              if (data?.subscriptionStatus !== 'active') updateObj.subscriptionStatus = 'active';
-              if (data?.isPremium !== true) updateObj.isPremium = true;
-            }
-            
-            // Secure consistency checks
-            if ((data?.subscriptionStatus === 'active' || data?.role === 'premium') && data?.isPremium !== true) {
-              updateObj.isPremium = true;
-              updateObj.subscriptionStatus = 'active'; 
-            }
-
-            // Check for premium by email if current doc is still trial
-            if (data?.subscriptionStatus === 'trial' && !data?.isPremium) {
-               try {
-                 const qPremium = query(collection(db, 'users'), where('email', '==', u.email?.toLowerCase()), where('isPremium', '==', true), limit(1));
-                 const premiumSnap = await getDocs(qPremium);
-                 if (!premiumSnap.empty) {
-                    const premData = premiumSnap.docs[0].data();
-                    console.log('App: Found premium account by email, upgrading current session');
-                    updateObj.isPremium = true;
-                    updateObj.role = 'premium';
-                    updateObj.subscriptionStatus = 'active';
-                    updateObj.paidAt = premData.paidAt || serverTimestamp();
-                 }
-               } catch (e) {
-                 console.warn("Email premium search error:", e);
-               }
-            }
-
-            if (data?.isPremium === true && !data?.subscriptionStatus) {
-              updateObj.subscriptionStatus = 'active';
-            }
-            
-            // Fix subscriptionExpiresAt if missing but status is trial
-            if (data?.subscriptionStatus === 'trial' && !data.subscriptionExpiresAt && data.trialExpiresAt) {
-              updateObj.subscriptionExpiresAt = data.trialExpiresAt;
-            }
-
-            // Only update if we have meaningful changes
-            // Standard user can update everything EXCEPT role and subscriptionStatus
-            const restrictedFields = ['role', 'subscriptionStatus'];
-            const isSelfAdmin = u.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com';
-            
-            const keysToSync = Object.keys(updateObj).filter(key => {
-              if (isSelfAdmin) return true;
-              
-              // If we are promoting to premium because we found a valid payment/placeholder,
-              // we MUST allow role and subscriptionStatus to be updated.
-              if (updateObj.isPremium === true && restrictedFields.includes(key)) return true;
-              
-              if (restrictedFields.includes(key)) return false;
-              // Only update if value is different
-              return updateObj[key] !== data?.[key];
-            });
-
-            if (keysToSync.length > 0) {
-              const syncObj: any = {};
-              keysToSync.forEach(k => syncObj[k] = updateObj[k]);
-              console.log('App: Syncing user profile:', syncObj);
-              await setDoc(userRef, syncObj, { merge: true });
-            }
-          }
-        } catch (err) {
-          console.error('Profile sync error:', err);
-        }
-
-        // Subscribe to profile changes
         unsubscribeProfile = onSnapshot(userRef, (docSnap) => {
           if (docSnap.exists()) {
             setProfile(docSnap.data() as UserProfile);
@@ -456,10 +298,8 @@ export default function App() {
       } else {
         setProfile(null);
         if (unsubscribeProfile) unsubscribeProfile();
+        setIsLoggingIn(false);
       }
-      setIsAuthInitialized(true);
-      setLoading(false);
-      setIsLoggingIn(false);
     });
 
     return () => {
@@ -473,9 +313,6 @@ export default function App() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', String(isSidebarCollapsed));
-  }, [isSidebarCollapsed]);
 
   const handleLogin = async () => {
     if (isLoggingIn) return;
@@ -550,6 +387,195 @@ export default function App() {
       unsubUser();
     };
   }, [user, profile?.role]);
+
+  // Background User Profile Sync & Enrichment
+  useEffect(() => {
+    if (!user || isAppLoading) return;
+
+    const syncProfile = async () => {
+      console.log('App: Starting background profile sync/enrichment...');
+      const userRef = doc(db, 'users', user.uid);
+      
+      try {
+        const userSnap = await getDoc(userRef);
+        
+        // Collect basic device info (instant)
+        const ua = navigator.userAgent;
+        const platform = navigator.platform;
+        let browser = "Unknown";
+        if (ua.includes("Firefox")) browser = "Firefox";
+        else if (ua.includes("Chrome")) browser = "Chrome";
+        else if (ua.includes("Safari")) browser = "Safari";
+        else if (ua.includes("Edge")) browser = "Edge";
+
+        const deviceInfo = {
+          model: platform,
+          os: platform,
+          browser: browser,
+          platform: ua
+        };
+
+        // Fetch location info in background
+        const fetchEnrichment = async () => {
+          let locationInfo: any = {};
+          try {
+            // IP Location - parallel or sequential but doesn't block syncProfile
+            const locRes = await fetch('https://ipapi.co/json/').then(r => r.json()).catch(() => ({}));
+            if (locRes && !locRes.error) {
+              locationInfo = {
+                city: locRes.city || '',
+                state: locRes.region || '',
+                country: locRes.country_name || '',
+                ip: locRes.ip || ''
+              };
+            }
+          } catch (e) {}
+
+          // Geolocation - lower timeout (3s) for background
+          try {
+            if ("geolocation" in navigator) {
+              const pos: GeolocationPosition = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                  enableHighAccuracy: false, // Less accurate is faster
+                  timeout: 3000,
+                  maximumAge: 300000 // 5 min cache
+                });
+              });
+
+              if (pos) {
+                locationInfo.latitude = pos.coords.latitude;
+                locationInfo.longitude = pos.coords.longitude;
+                
+                // Reverse geocoding
+                try {
+                  const revRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=10`, {
+                    headers: { 'Accept-Language': 'pt-BR' }
+                  }).then(r => r.json());
+                  if (revRes?.address) {
+                    locationInfo.city = revRes.address.city || revRes.address.town || locationInfo.city;
+                    locationInfo.state = revRes.address.state || locationInfo.state;
+                  }
+                } catch (e) {}
+              }
+            }
+          } catch (e) {}
+
+          if (Object.keys(locationInfo).length > 0) {
+            await setDoc(userRef, { locationInfo, updatedAt: serverTimestamp() }, { merge: true });
+          }
+        };
+
+        // Start location enrichment without awaiting it here
+        fetchEnrichment();
+
+        // Pre-load daily inspiration during splash screen
+        const prefetchDaily = async () => {
+          const todayKey = format(new Date(), 'yyyy-MM-dd');
+          const docPath = `users/${user.uid}/daily_inspirations/${todayKey}_${language}`;
+          const inspirationRef = doc(db, docPath);
+          
+          try {
+            const inspirationSnap = await getDoc(inspirationRef);
+            if (!inspirationSnap.exists()) {
+              console.log('App: Pre-generating daily inspiration...');
+              const newInspiration = await generateDailyInspiration(language);
+              await setDoc(inspirationRef, {
+                verseRef: newInspiration.verse.ref || '',
+                verseText: newInspiration.verse.text || '',
+                reflection: newInspiration.reflection || '',
+                date: todayKey
+              });
+            }
+          } catch (e) {
+            console.warn('App: Background daily pre-load failed:', e);
+          }
+        };
+        prefetchDaily();
+
+        if (!userSnap.exists()) {
+          const now = new Date();
+          const trialExpiresAt = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+          const qPlaceholder = query(collection(db, 'users'), where('email', '==', user.email?.toLowerCase()), limit(1));
+          const placeholderSnap = await getDocs(qPlaceholder);
+          
+          let initialData: any = {
+            uid: user.uid,
+            email: user.email?.toLowerCase() || '',
+            displayName: user.displayName || 'Ministro',
+            photoURL: user.photoURL || '',
+            role: user.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com' ? 'admin' : 'user',
+            subscriptionStatus: 'trial',
+            trialExpiresAt: trialExpiresAt,
+            trialDuration: 3,
+            subscriptionExpiresAt: trialExpiresAt,
+            deviceInfo: deviceInfo,
+            lastLogin: serverTimestamp(),
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          };
+
+          if (!placeholderSnap.empty) {
+            const placeholderDoc = placeholderSnap.docs[0];
+            initialData = { ...initialData, ...placeholderDoc.data(), uid: user.uid };
+            if (placeholderDoc.id !== user.uid) {
+              await deleteDoc(doc(db, 'users', placeholderDoc.id)).catch(() => {});
+            }
+          }
+          await setDoc(userRef, initialData);
+        } else {
+          const data = userSnap.data();
+          const updateObj: any = {
+            email: user.email?.toLowerCase() || '',
+            role: user.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com' ? 'admin' : (data?.role || 'user'),
+            lastLogin: serverTimestamp(),
+            deviceInfo: deviceInfo,
+            updatedAt: serverTimestamp()
+          };
+
+          if (user.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com') {
+            if (data?.role !== 'admin') updateObj.role = 'admin';
+            if (data?.subscriptionStatus !== 'active') updateObj.subscriptionStatus = 'active';
+            if (data?.isPremium !== true) updateObj.isPremium = true;
+          } else if (data?.subscriptionStatus === 'trial' && !data.trialExpiresAt) {
+            const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+            const expiry = new Date(createdAt.getTime() + 3 * 24 * 60 * 60 * 1000);
+            updateObj.trialExpiresAt = expiry;
+            updateObj.subscriptionExpiresAt = expiry;
+            updateObj.trialDuration = 3;
+          }
+
+          if ((data?.subscriptionStatus === 'active' || data?.role === 'premium') && !data?.isPremium) {
+            updateObj.isPremium = true;
+            updateObj.subscriptionStatus = 'active';
+          }
+
+          // Check for premium by email in background
+          if (data?.subscriptionStatus === 'trial' && !data?.isPremium) {
+            const qPremium = query(collection(db, 'users'), where('email', '==', user.email?.toLowerCase()), where('isPremium', '==', true), limit(1));
+            const premiumSnap = await getDocs(qPremium);
+            if (!premiumSnap.empty) {
+              const premData = premiumSnap.docs[0].data();
+              updateObj.isPremium = true;
+              updateObj.subscriptionStatus = 'active';
+              updateObj.role = 'premium';
+              updateObj.paidAt = premData.paidAt || serverTimestamp();
+            }
+          }
+
+          if (data?.isPremium === true && !data?.subscriptionStatus) {
+            updateObj.subscriptionStatus = 'active';
+          }
+
+          await setDoc(userRef, updateObj, { merge: true });
+        }
+      } catch (err) {
+        console.error('Background sync failed:', err);
+      }
+    };
+
+    syncProfile();
+  }, [user, isAppLoading]);
 
   // Keyboard Shortcuts
   useEffect(() => {
@@ -683,12 +709,32 @@ export default function App() {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-[var(--bg-color)]">
         <motion.div 
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="text-indigo-500 flex flex-col items-center gap-4"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+          className="text-indigo-500 flex flex-col items-center gap-6"
         >
-          <BookOpen size={48} />
-          <p className="font-serif italic text-lg text-slate-500">{t('graceAndPeace')}</p>
+          <div className="relative">
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+              className="absolute -inset-4 border-2 border-dashed border-indigo-500/20 rounded-full"
+            />
+            <motion.div
+              animate={{ scale: [1, 1.25, 1], opacity: [0.8, 1, 0.8] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+            >
+              <BookOpen size={64} className="relative z-10" />
+            </motion.div>
+          </div>
+          <div className="text-center space-y-2">
+            <p className="font-serif italic text-xl text-app-text tracking-wide">{t('graceAndPeace')}</p>
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 4.5, ease: "linear" }}
+              className="h-0.5 bg-indigo-500/40 rounded-full w-24 mx-auto"
+            />
+          </div>
         </motion.div>
       </div>
     );
@@ -1095,38 +1141,94 @@ export default function App() {
             initial={{ opacity: 0, y: 10, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.99 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className="p-4 sm:p-6 md:p-10 max-w-6xl mx-auto"
           >
-            {activeTab === 'dashboard' && <Dashboard profile={profile} onEdit={handleSermonEdit} onPreach={handlePreach} onSeeAll={() => setActiveTab('ministrations')} onSeeAgenda={() => setActiveTab('agenda')} onSeeEvents={() => setActiveTab('events')} onEditProfile={() => setActiveTab('profile')} />}
-            {activeTab === 'ministrations' && <SermonsList onEdit={handleSermonEdit} onPreach={handlePreach} onNew={() => handleSermonEdit(null)} />}
-            {activeTab === 'bible' && <BibleReader profile={profile} />}
-            {activeTab === 'editor' && (
-              <SermonEditor 
-                profile={profile}
-                sermonId={currentSermonId} 
-                pendingOutline={pendingOutline}
-                onClearPendingOutline={() => setPendingOutline(null)}
-                onSaved={() => {
-                  setCurrentSermonId(null);
-                  setActiveTab('ministrations');
-                }} 
-                onIdChange={(id) => setCurrentSermonId(id)}
-              />
-            )}
-            {activeTab === 'ai' && <AIAssistant profile={profile} onApplyOutline={(outline) => {
-              setPendingOutline(outline);
-              setCurrentSermonId(null); // Ensure we start a new study for the outline
-              setActiveTab('editor');
-            }} />}
-            {activeTab === 'events' && <EventsManager />}
-            {activeTab === 'agenda' && <MinisterialAgenda onPreach={handlePreach} />}
-            {activeTab === 'profile' && <ProfileSettings />}
-            {activeTab === 'help' && <HelpCenter />}
-            {activeTab === 'admin' && isUserAdmin && <AdminDashboard />}
-            {activeTab === 'preach' && currentSermonId && <PreachingMode sermonId={currentSermonId} onClose={() => setActiveTab('dashboard')} />}
-            {activeTab === 'history' && <div>{t('historyOfMessages')}</div>}
+            <Suspense fallback={<LoadingFallback />}>
+              {activeTab === 'dashboard' && <Dashboard 
+                profile={profile} 
+                preloadedInspiration={dailyInspiration}
+                onEdit={handleSermonEdit} 
+                onPreach={handlePreach} 
+                onSeeAll={() => setActiveTab('ministrations')} 
+                onSeeAgenda={() => setActiveTab('agenda')} 
+                onSeeEvents={() => setActiveTab('events')} 
+                onEditProfile={() => setActiveTab('profile')} 
+              />}
+              {activeTab === 'ministrations' && <SermonsList onEdit={handleSermonEdit} onPreach={handlePreach} onNew={() => handleSermonEdit(null)} />}
+              {activeTab === 'bible' && <BibleReader profile={profile} />}
+              {activeTab === 'editor' && (
+                <SermonEditor 
+                  profile={profile}
+                  sermonId={currentSermonId} 
+                  pendingOutline={pendingOutline}
+                  onClearPendingOutline={() => setPendingOutline(null)}
+                  onSaved={() => {
+                    setCurrentSermonId(null);
+                    setActiveTab('ministrations');
+                  }} 
+                  onIdChange={(id) => setCurrentSermonId(id)}
+                />
+              )}
+              {activeTab === 'ai' && <AIAssistant profile={profile} onApplyOutline={(outline) => {
+                setPendingOutline(outline);
+                setCurrentSermonId(null); 
+                setActiveTab('editor');
+              }} />}
+              {activeTab === 'events' && <EventsManager />}
+              {activeTab === 'agenda' && <MinisterialAgenda onPreach={handlePreach} />}
+              {activeTab === 'profile' && <ProfileSettings />}
+              {activeTab === 'help' && <HelpCenter />}
+              {activeTab === 'admin' && isUserAdmin && <AdminDashboard />}
+              {activeTab === 'preach' && currentSermonId && <PreachingMode sermonId={currentSermonId} onClose={() => setActiveTab('dashboard')} />}
+              {activeTab === 'history' && <div>{t('historyOfMessages')}</div>}
+            </Suspense>
           </motion.div>
+        </AnimatePresence>
+
+        {/* Floating Bible Drawer Overlay */}
+        <AnimatePresence>
+          {isBibleDrawerOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsBibleDrawerOpen(false)}
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] md:z-[200]"
+              />
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed inset-y-0 right-0 w-full max-w-xl bg-app-bg z-[160] md:z-[210] shadow-2xl border-l border-app-border flex flex-col"
+              >
+                <div className="flex items-center justify-between p-6 border-b border-app-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                      <BookOpen size={20} />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-black tracking-tight text-app-text">{t('bible')}</h2>
+                      <p className="text-[10px] font-bold text-app-secondary uppercase tracking-widest opacity-60">Consultar as Escrituras</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setIsBibleDrawerOpen(false)}
+                    className="p-2 hover:bg-app-card rounded-xl text-app-secondary transition-colors"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
+                  <Suspense fallback={<LoadingFallback />}>
+                    <BibleReader profile={profile} />
+                  </Suspense>
+                </div>
+              </motion.div>
+            </>
+          )}
         </AnimatePresence>
       </main>
     </div>

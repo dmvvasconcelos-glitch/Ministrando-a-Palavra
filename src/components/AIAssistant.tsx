@@ -647,8 +647,11 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
         <div className="inline-flex p-3 bg-app-accent/10 rounded-2xl text-app-accent border border-app-accent/20">
           <Sparkles size={32} />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight text-app-text transition-colors">{t('aiAssistantHeader')}</h1>
-        <p className="text-app-secondary font-medium leading-relaxed">
+        <div className="flex items-center gap-3">
+          <div className="w-1.5 h-5 bg-app-accent rounded-full opacity-60" />
+          <h1 className="text-xl font-bold tracking-tight text-app-text transition-colors">{t('aiAssistantHeader')}</h1>
+        </div>
+        <p className="text-xs text-app-secondary font-medium tracking-wide transition-colors opacity-70">
           {mode === 'sermon' ? t('aiAssistantSub') : (t('aiAssistantGeneralSub') || 'Converse com a IA para tirar dúvidas, estudar temas ou buscar inspiração teológica.')}
         </p>
 

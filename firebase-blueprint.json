@@ -77,6 +77,18 @@
         "sermonId": { "type": "string" },
         "guestId": { "type": "string" },
         "guestName": { "type": "string" },
+        "guestIds": { "type": "array", "items": { "type": "string" } },
+        "guests": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "uid": { "type": "string" },
+              "displayName": { "type": "string" },
+              "email": { "type": "string" }
+            }
+          }
+        },
         "userName": { "type": "string" },
         "userEmail": { "type": "string" }
       },

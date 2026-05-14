@@ -635,11 +635,11 @@ export default function SermonEditor({
           </button>
           <div className="space-y-0.5 sm:space-y-1 overflow-hidden relative pl-4">
             <div className="absolute left-0 top-1 bottom-1 w-1 bg-indigo-500 rounded-full opacity-60" />
-            <h2 className="text-lg sm:text-xl font-black tracking-tight text-app-text truncate">
+            <h2 className="text-xl font-bold tracking-tight text-app-text truncate">
               {activeId ? t('editSermon') : t('newMinistration')}
             </h2>
             <div className="flex items-center gap-3">
-              <p className="text-app-secondary text-[10px] sm:text-xs font-bold italic opacity-70">{t('oficinaDaPalavra')}</p>
+              <p className="text-xs text-app-secondary font-medium tracking-wide opacity-70">{t('oficinaDaPalavra')}</p>
             </div>
           </div>
         </div>

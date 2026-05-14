@@ -58,7 +58,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
   // Guest state
   const [guestSearch, setGuestSearch] = useState('');
   const [foundUsers, setFoundUsers] = useState<UserProfile[]>([]);
-  const [selectedGuest, setSelectedGuest] = useState<UserProfile | null>(null);
+  const [selectedGuests, setSelectedGuests] = useState<UserProfile[]>([]);
   const [isSearchingGuests, setIsSearchingGuests] = useState(false);
 
   useEffect(() => {
@@ -90,7 +90,8 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
       collection(db, 'ministerial_agenda'),
       or(
         where('userId', '==', auth.currentUser.uid),
-        where('guestId', '==', auth.currentUser.uid)
+        where('guestIds', 'array-contains', auth.currentUser.uid),
+        where('guestId', '==', auth.currentUser.uid) // Keep for backward compatibility
       ),
       orderBy('date', 'asc')
     );
@@ -172,6 +173,13 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
     try {
       const eventDate = new Date(`${date}T${time}`);
       
+      const guestIds = selectedGuests.map(g => g.uid);
+      const guestData = selectedGuests.map(g => ({
+        uid: g.uid,
+        displayName: g.displayName,
+        email: g.email || ''
+      }));
+
       const itemData = {
         userId: auth.currentUser.uid,
         userName: auth.currentUser.displayName || userNameTranslated,
@@ -186,8 +194,11 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
         notify24h,
         notifyDayOf,
         sermonId: sermonId || '',
-        guestId: selectedGuest?.uid || '',
-        guestName: selectedGuest?.displayName || '',
+        guestIds,
+        guests: guestData,
+        // Keep for backward compatibility
+        guestId: guestIds[0] || '',
+        guestName: guestData[0]?.displayName || '',
         updatedAt: serverTimestamp()
       };
 
@@ -221,14 +232,21 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
     setSermonId(item.sermonId || '');
     setType(item.type || 'preaching');
     
-    if (item.guestId) {
-      setSelectedGuest({
+    if (item.guests && item.guests.length > 0) {
+      setSelectedGuests(item.guests.map(g => ({
+        uid: g.uid,
+        displayName: g.displayName,
+        email: g.email,
+        updatedAt: null
+      })));
+    } else if (item.guestId) {
+      setSelectedGuests([{
         uid: item.guestId,
         displayName: item.guestName || 'Convidado',
         updatedAt: null
-      });
+      }]);
     } else {
-      setSelectedGuest(null);
+      setSelectedGuests([]);
     }
 
     setEditingItemId(item.id);
@@ -247,7 +265,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
     setNotifyDayOf(true);
     setSermonId('');
     setType('preaching');
-    setSelectedGuest(null);
+    setSelectedGuests([]);
     setGuestSearch('');
   };
 
@@ -272,11 +290,11 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-app-border/40">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-app-text flex items-center gap-2 md:normal-case">
-            <div className="w-1.5 h-6 bg-app-accent rounded-full opacity-60" />
+          <h1 className="text-xl font-bold tracking-tight text-app-text flex items-center gap-2 md:normal-case">
+            <div className="w-1.5 h-5 bg-app-accent rounded-full opacity-60" />
             {t('ministerialAgendaHeader')}
           </h1>
-          <p className="text-app-secondary font-medium text-sm mt-1 opacity-70">{t('ministerialAgendaSub')}</p>
+          <p className="text-xs text-app-secondary font-medium tracking-wide opacity-70 mt-0.5">{t('ministerialAgendaSub')}</p>
         </div>
 
         <div className="flex items-center gap-2 self-start md:self-center">
@@ -312,7 +330,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
             return diff >= 0 && diff <= 7;
           }).length, color: 'sky-400', textColor: 'text-sky-400' },
           { label: t('statDrafted'), count: items.filter(e => (e.date?.toDate?.() || new Date(e.date)) > new Date()).length, color: 'amber-400', textColor: 'text-amber-400' },
-          { label: t('statInvitations'), count: items.filter(e => e.guestId === auth.currentUser?.uid && e.userId !== e.guestId).length, color: 'indigo-400', textColor: 'text-indigo-400' }
+          { label: t('statInvitations'), count: items.filter(e => (e.guestIds?.includes(auth.currentUser?.uid || '') || e.guestId === auth.currentUser?.uid) && e.userId !== auth.currentUser?.uid).length, color: 'indigo-400', textColor: 'text-indigo-400' }
         ].map(stat => (
           <div key={stat.label} className="bg-app-card/30 border border-app-border/40 rounded-xl p-3.5 relative overflow-hidden group hover:border-indigo-500/20 transition-all cursor-default shadow-sm">
             <span className="text-[8px] font-black tracking-widest text-app-secondary opacity-60 block mb-0.5">{stat.label}</span>
@@ -672,46 +690,65 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                 )}
  
                 {/* Info de Convite */}
-                {(viewingItem.guestId || (viewingItem.userId !== auth.currentUser?.uid)) && (
+                {(viewingItem.guestIds?.length || viewingItem.guestId || (viewingItem.userId !== auth.currentUser?.uid)) && (
                   <div className="p-5 bg-indigo-500/5 rounded-2xl border border-indigo-500/10 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                          <UserIcon size={20} />
-                        </div>
-                        <div>
+                    <div className="space-y-4">
+                      {viewingItem.userId === auth.currentUser?.uid ? (
+                        <div className="space-y-3">
                           <p className="text-[8px] font-black tracking-[0.2em] text-indigo-400/60 mb-0.5">
-                            {viewingItem.userId === auth.currentUser?.uid ? t('invitedPerson') : t('organizerSentBy')}
+                            {t('guestsBadge')}
                           </p>
-                          <p className="text-sm font-black text-indigo-300">
-                            {viewingItem.userId === auth.currentUser?.uid 
-                              ? (viewingItem.guestName || t('guestBadge')) 
-                              : (viewingItem.userName || t('organizer'))}
-                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {(viewingItem.guests || (viewingItem.guestId ? [{ uid: viewingItem.guestId, displayName: viewingItem.guestName }] : [])).map((guest: any) => (
+                              <div key={guest.uid} className="flex items-center justify-between p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/10">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                                    {guest.displayName?.[0] || 'G'}
+                                  </div>
+                                  <span className="text-xs font-bold text-indigo-200 truncate">{guest.displayName}</span>
+                                </div>
+                                <button 
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (confirm(t('confirmRemoveGuest'))) {
+                                      try {
+                                        const newGuests = (viewingItem.guests || []).filter((g: any) => g.uid !== guest.uid);
+                                        const newGuestIds = (viewingItem.guestIds || []).filter((id: string) => id !== guest.uid);
+                                        await updateDoc(doc(db, 'ministerial_agenda', viewingItem.id), {
+                                          guests: newGuests,
+                                          guestIds: newGuestIds,
+                                          guestId: newGuestIds[0] || null,
+                                          guestName: newGuests[0]?.displayName || null,
+                                          updatedAt: serverTimestamp()
+                                        });
+                                        setViewingItem(null);
+                                      } catch (e) {
+                                        handleFirestoreError(e, OperationType.UPDATE, 'ministerial_agenda');
+                                      }
+                                    }
+                                  }}
+                                  className="p-1 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-colors"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                      
-                      {viewingItem.userId === auth.currentUser?.uid && viewingItem.guestId && (
-                        <button 
-                          onClick={async () => {
-                            if (confirm(t('confirmRemoveGuest'))) {
-                              try {
-                                await updateDoc(doc(db, 'ministerial_agenda', viewingItem.id), {
-                                  guestId: null,
-                                  guestName: null,
-                                  guestEmail: null,
-                                  updatedAt: serverTimestamp()
-                                });
-                                setViewingItem(null);
-                              } catch (e) {
-                                handleFirestoreError(e, OperationType.UPDATE, 'ministerial_agenda');
-                              }
-                            }
-                          }}
-                          className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-xl text-[9px] font-black tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-indigo-600/20"
-                        >
-                          {t('removeGuest')}
-                        </button>
+                      ) : (
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                            <UserIcon size={20} />
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-black tracking-[0.2em] text-indigo-400/60 mb-0.5">
+                              {t('organizerSentBy')}
+                            </p>
+                            <p className="text-sm font-black text-indigo-300">
+                              {viewingItem.userName || t('organizer')}
+                            </p>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -964,26 +1001,31 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
 
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-black tracking-[0.2em] text-indigo-400 ml-1">{t('invitePartner')}</label>
-                    {selectedGuest ? (
-                      <div className="flex items-center justify-between p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-xs ring-2 ring-indigo-500/20">
-                            {selectedGuest.displayName[0]}
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-app-text">{selectedGuest.displayName}</p>
-                            <p className="text-[9px] text-app-secondary">{selectedGuest.email}</p>
-                          </div>
+                    <div className="space-y-3">
+                      {selectedGuests.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {selectedGuests.map(guest => (
+                            <div key={guest.uid} className="flex items-center justify-between p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-[10px] shrink-0">
+                                  {guest.displayName[0]}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-bold text-app-text truncate">{guest.displayName}</p>
+                                </div>
+                              </div>
+                              <button 
+                                type="button"
+                                onClick={() => setSelectedGuests(prev => prev.filter(g => g.uid !== guest.uid))}
+                                className="p-1 hover:bg-rose-500/20 text-rose-400 rounded-lg"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                        <button 
-                          type="button"
-                          onClick={() => setSelectedGuest(null)}
-                          className="p-1.5 hover:bg-white/5 rounded-full text-app-secondary"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ) : (
+                      )}
+                      
                       <div className="relative group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-400 transition-colors" size={16} />
                         <input 
@@ -997,14 +1039,16 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                             <span className="w-4 h-4 border-2 border-app-accent border-t-transparent rounded-full animate-spin block"></span>
                           </div>
                         )}
-                        {foundUsers.length > 0 && !selectedGuest && (
+                        {foundUsers.length > 0 && (
                           <div className="absolute top-full left-0 right-0 mt-2 bg-[#1e293b] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[100]">
-                            {foundUsers.map(u => (
+                            {foundUsers
+                              .filter(u => !selectedGuests.find(sg => sg.uid === u.uid))
+                              .map(u => (
                               <button
                                 key={u.uid}
                                 type="button"
                                 onClick={() => {
-                                  setSelectedGuest(u);
+                                  setSelectedGuests(prev => [...prev, u]);
                                   setGuestSearch('');
                                   setFoundUsers([]);
                                 }}
@@ -1022,7 +1066,7 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
                           </div>
                         )}
                       </div>
-                    )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 p-4 bg-app-accent/5 rounded-[32px] border border-app-accent/10">

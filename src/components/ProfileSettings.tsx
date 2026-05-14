@@ -40,6 +40,7 @@ import { requestNotificationPermission } from '../services/notificationService';
 
 export default function ProfileSettings() {
   const { t, language } = useLanguage();
+  const isActuallyAdmin = auth.currentUser?.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com';
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<Partial<UserProfile>>({
@@ -422,16 +423,21 @@ export default function ProfileSettings() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 border-b border-app-border/60">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-app-text">{t('profileSettings')}</h1>
-          <p className="text-app-secondary font-serif italic text-lg leading-snug">
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-5 bg-app-accent rounded-full opacity-60" />
+            <h1 className="text-xl font-bold tracking-tight text-app-text">
+              {t('profileSettings')}
+            </h1>
+          </div>
+          <p className="text-xs text-app-secondary font-medium tracking-wide transition-colors opacity-70">
             {t('profileSub')}
           </p>
         </div>
         <button 
           onClick={() => signOut(auth)}
-          className="flex items-center gap-2 text-red-400 hover:text-red-500 font-bold uppercase text-[10px] tracking-widest px-4 py-2 hover:bg-red-500/10 rounded-xl transition-all"
+          className="flex items-center gap-2 self-start md:self-center text-red-400 hover:text-red-500 font-bold uppercase text-[10px] tracking-widest px-4 py-2 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 rounded-xl transition-all"
         >
           <LogOut size={16} />
           {t('logout')}
@@ -706,13 +712,13 @@ export default function ProfileSettings() {
               <div className="flex items-center gap-2">
                 <span className={`
                   px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter
-                  ${profile.role === 'admin' || profile.subscriptionStatus === 'active' 
+                  ${isActuallyAdmin || profile.subscriptionStatus === 'active' 
                     ? 'bg-green-500/10 text-green-500' 
                     : profile.subscriptionStatus === 'trial' 
                     ? 'bg-amber-500/10 text-amber-500' 
                     : 'bg-red-500/10 text-red-500'}
                 `}>
-                  {profile.role === 'admin' ? 'ADMINISTRADOR' : (profile.subscriptionStatus === 'active' ? 'Premium (1 Ano)' : profile.subscriptionStatus === 'trial' ? `Acesso Trial (${profile.createdAt && profile.trialExpiresAt ? Math.ceil(((profile.trialExpiresAt.toDate ? profile.trialExpiresAt.toDate() : new Date(profile.trialExpiresAt)).getTime() - (profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt)).getTime()) / (1000 * 60 * 60 * 24)) : 3} dias)` : 'Expirada')}
+                  {isActuallyAdmin ? 'ADMINISTRADOR' : (profile.subscriptionStatus === 'active' ? 'Premium (1 Ano)' : profile.subscriptionStatus === 'trial' ? `Acesso Trial (${profile.createdAt && profile.trialExpiresAt ? Math.ceil(((profile.trialExpiresAt.toDate ? profile.trialExpiresAt.toDate() : new Date(profile.trialExpiresAt)).getTime() - (profile.createdAt.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt)).getTime()) / (1000 * 60 * 60 * 24)) : 3} dias)` : 'Expirada')}
                 </span>
                 {profile.subscriptionStatus === 'active' && <Sparkles size={14} className="text-amber-500" />}
               </div>
@@ -721,7 +727,7 @@ export default function ProfileSettings() {
             <div className="space-y-1 sm:text-right">
               <p className="text-[10px] text-app-secondary uppercase font-black tracking-[0.2em]">Expiração</p>
               <p className="text-sm font-bold text-app-text">
-                {profile.role === 'admin' 
+                {isActuallyAdmin 
                   ? (language === 'pt' ? 'Nunca expira' : language === 'es' ? 'Nunca expira' : 'Never expires')
                   : profile.subscriptionExpiresAt?.toDate 
                     ? format(profile.subscriptionExpiresAt.toDate(), 'PPP p', { locale: (language === 'pt' ? ptBR : language === 'es' ? es : enUS) })

@@ -50,6 +50,7 @@ type AdminTab = 'users' | 'messages';
 export default function AdminDashboard() {
   console.log('AdminDashboard: Mounting...');
   const { t, language } = useLanguage();
+  const isActuallyAdmin = (u: any) => u.role === 'admin' || u.email?.toLowerCase() === 'dmv.vasconcelos@gmail.com';
   const [activeTab, setActiveTab] = useState<AdminTab>('users');
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -415,8 +416,8 @@ export default function AdminDashboard() {
     try {
       const activeDate = lastActive.toDate ? lastActive.toDate() : new Date(lastActive);
       const now = new Date();
-      // Consider online if active in the last 8 minutes (heartbeat is 5min)
-      return (now.getTime() - activeDate.getTime()) < 8 * 60 * 1000;
+      // Consider online if active in the last 6 minutes (heartbeat is 5min)
+      return (now.getTime() - activeDate.getTime()) < 6 * 60 * 1000;
     } catch (e) {
       return false;
     }
@@ -736,7 +737,7 @@ export default function AdminDashboard() {
   };
 
   const getUserStatus = (user: UserProfile) => {
-    if (user.role === 'admin') return 'active';
+    if (isActuallyAdmin(user)) return 'active';
     const now = new Date();
     
     // If user is premium, check if it's already expired
@@ -964,20 +965,22 @@ export default function AdminDashboard() {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 border-b border-app-border/60">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-app-text flex items-center gap-3">
-            <ShieldCheck className="text-indigo-500" size={32} />
-            {t('adminDashboard')}
-          </h1>
-          <p className="text-app-secondary font-serif italic text-lg opacity-80">
-            {activeTab === 'users' ? t('manageUsersDesc') : t('contactMessages')}
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-5 bg-app-accent rounded-full opacity-60" />
+            <h1 className="text-xl font-bold tracking-tight text-app-text">
+              {t('adminDashboard')}
+            </h1>
+          </div>
+          <p className="text-xs text-app-secondary font-medium tracking-wide transition-colors opacity-70 mt-1">
+            {activeTab === 'users' ? (language === 'pt' ? 'GESTOR DE MEMBROS E ASSINANTES' : t('manageUsersDesc')) : (language === 'pt' ? 'CENTRAL DE ATENDIMENTO' : t('contactMessages'))}
           </p>
         </div>
         
         <button 
           onClick={() => setShowIntegrationInfo(true)}
-          className="flex items-center gap-3 px-6 py-4 bg-app-card border border-app-border text-app-text rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:border-indigo-500/50 transition-all shadow-sm group"
+          className="flex items-center gap-3 px-6 py-3 bg-app-card border border-app-border text-app-text rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:border-indigo-500/50 transition-all shadow-sm group"
         >
           <Settings size={16} className="text-indigo-500 group-hover:rotate-90 transition-transform duration-500" />
           Configurar Webhook
@@ -1028,11 +1031,11 @@ export default function AdminDashboard() {
                 <span className="text-[9px] font-black uppercase tracking-widest text-green-500 bg-green-500/5 px-2 py-1 rounded-full">{t('statusActive')}</span>
               </div>
               <div className="relative z-10">
-                <h3 className="text-3xl font-black text-app-text tracking-tighter">{users.filter(u => getUserStatus(u) === 'active').length}</h3>
-                <p className="text-[10px] text-app-secondary font-black uppercase tracking-[0.15em] opacity-60">Assinantes</p>
+                <h3 className="text-3xl font-black text-app-text tracking-tighter">{users.filter(u => u.isPremium && !isActuallyAdmin(u)).length}</h3>
+                <p className="text-[10px] text-app-secondary font-black uppercase tracking-[0.15em] opacity-60">Assinantes Pagos</p>
                 <div className="mt-3 flex items-center gap-1.5 text-[9px] font-bold text-green-500">
                   <Sparkles size={10} />
-                  <span>{Math.round((users.filter(u => getUserStatus(u) === 'active').length / (users.length || 1)) * 100)}% de conversão</span>
+                  <span>{Math.round((users.filter(u => u.isPremium && !isActuallyAdmin(u)).length / (users.filter(u => !isActuallyAdmin(u)).length || 1)) * 100)}% de conversão</span>
                 </div>
               </div>
             </motion.div>
@@ -1091,15 +1094,11 @@ export default function AdminDashboard() {
                 <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-600/5 px-2 py-1 rounded-full">Atividade</span>
               </div>
               <div className="relative z-10">
-                <h3 className="text-3xl font-black text-app-text tracking-tighter">{users.filter(u => {
-                  if (!u.updatedAt) return false;
-                  const date = u.updatedAt.toDate ? u.updatedAt.toDate() : new Date(u.updatedAt);
-                  return (new Date().getTime() - date.getTime()) < 24 * 60 * 60 * 1000;
-                }).length}</h3>
-                <p className="text-[10px] text-app-secondary font-black uppercase tracking-[0.15em] opacity-60">{t('activeNow')}</p>
+                <h3 className="text-3xl font-black text-app-text tracking-tighter">{users.filter(u => isUserOnline(u)).length}</h3>
+                <p className="text-[10px] text-app-secondary font-black uppercase tracking-[0.15em] opacity-60">Ativos Agora</p>
                 <div className="mt-3 flex items-center gap-1.5 text-[9px] font-bold text-indigo-500 animate-pulse">
-                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
-                  <span>Sincronizado</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                  <span>On-line no momento</span>
                 </div>
               </div>
             </motion.div>
@@ -2207,17 +2206,17 @@ export default function AdminDashboard() {
 
       {/* Admin Quick Actions Footer */}
       <div className="sticky bottom-0 z-[50] mt-auto -mx-8 -mb-8">
-        <div className="bg-app-card/80 backdrop-blur-xl border-t border-app-border p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
-          <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-6">
-            <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
-              <div className="relative group w-full sm:w-80">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="w-4 h-4 text-app-secondary group-focus-within:text-indigo-500 transition-colors" />
+        <div className="bg-app-card/90 backdrop-blur-xl border-t border-app-border py-2 px-3.5 shadow-[0_-5px_20px_rgba(0,0,0,0.15)]">
+          <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+              <div className="relative group w-full sm:w-72">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Mail className="w-3.5 h-3.5 text-app-secondary group-focus-within:text-indigo-500 transition-colors" />
                 </div>
                 <input
                   type="email"
                   placeholder="Liberar Premium por E-mail"
-                  className="w-full pl-11 pr-4 py-3.5 bg-app-bg/50 border border-app-border rounded-2xl text-sm text-app-text placeholder:text-app-secondary/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner"
+                  className="w-full pl-10 pr-4 py-2 bg-app-bg/50 border border-app-border rounded-xl text-sm text-app-text placeholder:text-app-secondary/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all shadow-inner font-medium"
                   value={manualUpgradeEmail}
                   onChange={(e) => setManualUpgradeEmail(e.target.value)}
                 />
@@ -2225,27 +2224,27 @@ export default function AdminDashboard() {
               <button
                 onClick={handleManualUpgrade}
                 disabled={isUpgrading}
-                className="w-full sm:w-auto h-12 px-10 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20 active:scale-95"
+                className="w-full sm:w-auto h-9 px-8 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-xl transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-indigo-600/15 active:scale-95"
               >
-                <Unlock className="w-4 h-4" />
+                <Unlock className="w-3.5 h-3.5" />
                 {isUpgrading ? 'Liberando...' : 'Liberar Premium'}
               </button>
             </div>
 
-            <div className="flex items-center gap-4 w-full lg:w-auto">
+            <div className="flex items-center gap-3 w-full lg:w-auto">
                <button
                   onClick={() => setShowLogs(!showLogs)}
-                  className={`flex-1 lg:flex-none h-12 flex items-center justify-center gap-3 px-12 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border
-                    ${showLogs ? 'bg-amber-600 border-amber-500 text-white shadow-xl shadow-amber-600/20' : 'bg-app-bg border-app-border text-app-secondary hover:text-app-text hover:border-indigo-500/30'}
+                  className={`flex-1 lg:flex-none h-9 flex items-center justify-center gap-2.5 px-8 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border
+                    ${showLogs ? 'bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-600/15' : 'bg-app-bg border-app-border text-app-secondary hover:text-app-text hover:border-indigo-500/30'}
                   `}
                >
-                  <History className="w-4 h-4" />
-                  {showLogs ? 'Ocultar Logs de Vendas' : 'Ver Logs de Vendas'}
+                  <History className="w-3.5 h-3.5" />
+                  {showLogs ? 'Ocultar Logs' : 'Ver Logs'}
                </button>
                
-               <div className="hidden sm:flex items-center gap-2 px-6 py-3 bg-app-bg/50 border border-app-border rounded-2xl">
-                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                 <span className="text-[10px] font-black text-app-secondary uppercase tracking-[0.2em]">Painel de Controle Ativo</span>
+               <div className="hidden sm:flex items-center gap-2 px-5 py-2 bg-app-bg/50 border border-app-border rounded-xl">
+                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                 <span className="text-[9px] font-black text-app-secondary uppercase tracking-[0.15em]">SISTEMA ON-LINE</span>
                </div>
             </div>
           </div>

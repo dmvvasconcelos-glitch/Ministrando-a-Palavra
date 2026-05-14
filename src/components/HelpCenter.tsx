@@ -256,13 +256,17 @@ export default function HelpCenter() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 shadow-xl shadow-indigo-500/10">
-          <HelpCircle size={28} />
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 border-b border-app-border/60">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-app-text">{t('helpCenter')}</h1>
-          <p className="text-app-secondary font-medium transition-colors">{t('howCanWeHelp') || 'Como podemos te ajudar hoje?'}</p>
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-5 bg-app-accent rounded-full opacity-60" />
+            <h1 className="text-xl font-bold tracking-tight text-app-text">
+              {t('helpCenter')}
+            </h1>
+          </div>
+          <p className="text-xs text-app-secondary font-medium tracking-wide transition-colors opacity-70">
+            {t('howCanWeHelp') || 'Como podemos te ajudar hoje?'}
+          </p>
         </div>
       </div>
 

@@ -311,6 +311,21 @@ export default function BibleReader({ profile }: BibleReaderProps) {
 
   return (
     <div className="space-y-6">
+      {/* Bible Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 border-b border-app-border/60">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-5 bg-app-accent rounded-full opacity-60" />
+            <h1 className="text-xl font-bold tracking-tight text-app-text">
+              {t('bible')}
+            </h1>
+          </div>
+          <p className="text-xs text-app-secondary font-medium tracking-wide transition-colors opacity-70">
+            {language === 'pt' ? 'CONSULTAR AS ESCRITURAS' : language === 'es' ? 'CONSULTAR LAS ESCRITURAS' : 'CONSULT THE SCRIPTURES'}
+          </p>
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         {/* Search Bar with Suggestions */}
         <form 

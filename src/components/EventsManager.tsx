@@ -69,7 +69,7 @@ export default function EventsManager() {
   // Guest state
   const [guestSearch, setGuestSearch] = useState('');
   const [foundUsers, setFoundUsers] = useState<UserProfile[]>([]);
-  const [selectedGuest, setSelectedGuest] = useState<UserProfile | null>(null);
+  const [selectedGuests, setSelectedGuests] = useState<UserProfile[]>([]);
   const [isSearchingGuests, setIsSearchingGuests] = useState(false);
 
   const [refreshKey, setRefreshKey] = useState(0);
@@ -81,6 +81,7 @@ export default function EventsManager() {
       collection(db, 'agenda'),
       or(
         where('userId', '==', auth.currentUser.uid),
+        where('guestIds', 'array-contains', auth.currentUser.uid),
         where('guestId', '==', auth.currentUser.uid)
       ),
       orderBy('date', 'asc')
@@ -141,6 +142,13 @@ export default function EventsManager() {
     try {
       const eventDate = new Date(`${date}T${time}`);
       
+      const guestIds = selectedGuests.map(g => g.uid);
+      const guestData = selectedGuests.map(g => ({
+        uid: g.uid,
+        displayName: g.displayName,
+        email: g.email || ''
+      }));
+
       const eventData = {
         userId: auth.currentUser.uid,
         userName: auth.currentUser.displayName || userNameTranslated,
@@ -153,8 +161,11 @@ export default function EventsManager() {
         type,
         notify24h,
         notifyDayOf,
-        guestId: selectedGuest?.uid || '',
-        guestName: selectedGuest?.displayName || '',
+        guestIds,
+        guests: guestData,
+        // Keep for backward compatibility
+        guestId: guestIds[0] || '',
+        guestName: guestData[0]?.displayName || '',
         updatedAt: serverTimestamp()
       };
 
@@ -187,14 +198,21 @@ export default function EventsManager() {
     setNotify24h(event.notify24h || false);
     setNotifyDayOf(event.notifyDayOf || false);
     
-    if (event.guestId) {
-      setSelectedGuest({
+    if (event.guests && event.guests.length > 0) {
+      setSelectedGuests(event.guests.map(g => ({
+        uid: g.uid,
+        displayName: g.displayName,
+        email: g.email,
+        updatedAt: null
+      })));
+    } else if (event.guestId) {
+      setSelectedGuests([{
         uid: event.guestId,
         displayName: event.guestName || 'Convidado',
         updatedAt: null
-      });
+      }]);
     } else {
-      setSelectedGuest(null);
+      setSelectedGuests([]);
     }
 
     setEditingEventId(event.id);
@@ -212,7 +230,7 @@ export default function EventsManager() {
     setType('culto');
     setNotify24h(true);
     setNotifyDayOf(true);
-    setSelectedGuest(null);
+    setSelectedGuests([]);
     setGuestSearch('');
   };
 
@@ -237,11 +255,11 @@ export default function EventsManager() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-app-border/40">
         <div>
-          <h1 className="text-xl font-black tracking-tight text-app-text flex items-center gap-2 md:normal-case">
+          <h1 className="text-xl font-bold tracking-tight text-app-text flex items-center gap-2 md:normal-case">
             <div className="w-1.5 h-5 bg-app-accent rounded-full opacity-60" />
             {t('myEventsHeader')}
           </h1>
-          <p className="text-app-secondary font-medium text-xs mt-0.5 opacity-70">{t('myEventsSub')}</p>
+          <p className="text-xs text-app-secondary font-medium tracking-wide opacity-70 mt-0.5">{t('myEventsSub')}</p>
         </div>
 
         <div className="flex items-center gap-2 self-start md:self-center">
@@ -277,7 +295,7 @@ export default function EventsManager() {
             return diff >= 0 && diff <= 7;
           }).length, color: 'sky-400', textColor: 'text-sky-400' },
           { label: t('statPending'), count: events.filter(e => (e.date?.toDate?.() || new Date(e.date)) > new Date()).length, color: 'amber-400', textColor: 'text-amber-400' },
-          { label: t('statInvitations'), count: events.filter(e => e.guestId === auth.currentUser?.uid && e.userId !== e.guestId).length, color: 'indigo-400', textColor: 'text-indigo-400' }
+          { label: t('statInvitations'), count: events.filter(e => (e.guestIds?.includes(auth.currentUser?.uid || '') || e.guestId === auth.currentUser?.uid) && e.userId !== auth.currentUser?.uid).length, color: 'indigo-400', textColor: 'text-indigo-400' }
         ].map(stat => (
           <div key={stat.label} className="bg-app-card/30 border border-app-border/40 rounded-xl p-3.5 relative overflow-hidden group hover:border-indigo-500/20 transition-all cursor-default shadow-sm">
             <span className="text-[8px] font-black tracking-widest text-app-secondary opacity-60 block mb-0.5">{stat.label}</span>
@@ -587,51 +605,70 @@ export default function EventsManager() {
                 )}
 
                 {/* Info de Convite */}
-                {(viewingEvent.guestId || (viewingEvent.userId !== auth.currentUser?.uid)) && (
+                {(viewingEvent.guestIds?.length || viewingEvent.guestId || (viewingEvent.userId !== auth.currentUser?.uid)) && (
                   <div className="p-6 bg-indigo-500/5 rounded-[32px] border border-indigo-500/10 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                          <UserIcon size={24} />
-                        </div>
-                        <div>
+                    <div className="space-y-4">
+                      {viewingEvent.userId === auth.currentUser?.uid ? (
+                        <div className="space-y-3">
                           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400/60 mb-1">
-                            {viewingEvent.userId === auth.currentUser?.uid ? t('invitedPerson') : t('organizerSentBy')}
+                            {t('guestsBadge')}
                           </p>
-                          <p className="text-base font-black text-indigo-300">
-                            {viewingEvent.userId === auth.currentUser?.uid 
-                              ? (viewingEvent.guestName || t('guestBadge')) 
-                              : (viewingEvent.userName || t('organizer'))}
-                          </p>
-                          {viewingEvent.userId !== auth.currentUser?.uid && viewingEvent.userEmail && (
-                            <p className="text-[10px] font-medium text-indigo-400/80 mt-1 lowercase">
-                              {viewingEvent.userEmail}
-                            </p>
-                          )}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {(viewingEvent.guests || (viewingEvent.guestId ? [{ uid: viewingEvent.guestId, displayName: viewingEvent.guestName }] : [])).map((guest: any) => (
+                              <div key={guest.uid} className="flex items-center justify-between p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/10">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                                    {guest.displayName?.[0] || 'G'}
+                                  </div>
+                                  <span className="text-xs font-bold text-indigo-300 truncate">{guest.displayName}</span>
+                                </div>
+                                <button 
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (confirm(t('confirmRemoveGuestEvent'))) {
+                                      try {
+                                        const newGuests = (viewingEvent.guests || []).filter((g: any) => g.uid !== guest.uid);
+                                        const newGuestIds = (viewingEvent.guestIds || []).filter((id: string) => id !== guest.uid);
+                                        await updateDoc(doc(db, 'agenda', viewingEvent.id), {
+                                          guests: newGuests,
+                                          guestIds: newGuestIds,
+                                          guestId: newGuestIds[0] || null,
+                                          guestName: newGuests[0]?.displayName || null,
+                                          updatedAt: serverTimestamp()
+                                        });
+                                        setViewingEvent(null);
+                                      } catch (e) {
+                                        handleFirestoreError(e, OperationType.UPDATE, 'agenda');
+                                      }
+                                    }
+                                  }}
+                                  className="p-1.5 hover:bg-rose-500/20 text-rose-400 rounded-xl transition-colors"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                      
-                      {viewingEvent.userId === auth.currentUser?.uid && viewingEvent.guestId && (
-                        <button 
-                          onClick={async () => {
-                            if (confirm(t('confirmRemoveGuestEvent'))) {
-                              try {
-                                await updateDoc(doc(db, 'agenda', viewingEvent.id), {
-                                  guestId: null,
-                                  guestName: null,
-                                  guestEmail: null,
-                                  updatedAt: serverTimestamp()
-                                });
-                                setViewingEvent(null);
-                              } catch (e) {
-                                handleFirestoreError(e, OperationType.UPDATE, 'agenda');
-                              }
-                            }
-                          }}
-                          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-indigo-500/20"
-                        >
-                          {t('removeGuest')}
-                        </button>
+                      ) : (
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                            <UserIcon size={24} />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400/60 mb-1">
+                              {t('organizerSentBy')}
+                            </p>
+                            <p className="text-base font-black text-indigo-300">
+                               {viewingEvent.userName || t('organizer')}
+                            </p>
+                            {viewingEvent.userEmail && (
+                              <p className="text-[10px] font-medium text-indigo-400/80 mt-1 lowercase">
+                                {viewingEvent.userEmail}
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -840,67 +877,75 @@ export default function EventsManager() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">Convidar Obreiro / Parceiro</label>
-                    {selectedGuest ? (
-                      <div className="flex items-center justify-between p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-xs ring-2 ring-indigo-500/20">
-                            {selectedGuest.displayName[0]}
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-app-text">{selectedGuest.displayName}</p>
-                            <p className="text-[9px] text-slate-500">{selectedGuest.email}</p>
-                          </div>
-                        </div>
-                        <button 
-                          type="button"
-                          onClick={() => setSelectedGuest(null)}
-                          className="p-1.5 hover:bg-white/5 rounded-full text-slate-400"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ) : (
-                        <div className="relative group">
-                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-400 transition-colors" size={16} />
-                          <input 
-                            value={guestSearch}
-                            onChange={(e) => setGuestSearch(e.target.value)}
-                            placeholder={t('searchEmailPlaceholder')}
-                            className="w-full bg-white/5 border border-white/5 rounded-xl py-3.5 pl-10 pr-4 text-app-text text-xs focus:outline-none focus:border-indigo-500/30 focus:bg-white/10 transition-all"
-                          />
-                          {isSearchingGuests && (
-                            <div className="absolute right-5 top-1/2 -translate-y-1/2">
-                              <span className="w-4 h-4 border-2 border-app-accent border-t-transparent rounded-full animate-spin block"></span>
+                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 ml-1">{t('invitePartner')}</label>
+                    <div className="space-y-3">
+                      {selectedGuests.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {selectedGuests.map(guest => (
+                            <div key={guest.uid} className="flex items-center justify-between p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-[10px] shrink-0">
+                                  {guest.displayName[0]}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-bold text-app-text truncate">{guest.displayName}</p>
+                                </div>
+                              </div>
+                              <button 
+                                type="button"
+                                onClick={() => setSelectedGuests(prev => prev.filter(g => g.uid !== guest.uid))}
+                                className="p-1 hover:bg-rose-500/20 text-rose-400 rounded-lg"
+                              >
+                                <X size={12} />
+                              </button>
                             </div>
-                          )}
-                          {foundUsers.length > 0 && !selectedGuest && (
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-[#1e293b] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[100]">
-                              {foundUsers.map(u => (
-                                <button
-                                  key={u.uid}
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedGuest(u);
-                                    setGuestSearch('');
-                                    setFoundUsers([]);
-                                  }}
-                                  className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-all text-left border-b border-white/5 last:border-0"
-                                >
-                                  <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                                    {u.displayName[0]}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="text-sm font-bold text-app-text truncate">{u.displayName}</p>
-                                    <p className="text-[10px] text-slate-500 truncate">{u.email}</p>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                          ))}
                         </div>
                       )}
+
+                      <div className="relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-400 transition-colors" size={16} />
+                        <input 
+                          value={guestSearch}
+                          onChange={(e) => setGuestSearch(e.target.value)}
+                          placeholder={t('searchEmailPlaceholder')}
+                          className="w-full bg-white/5 border border-white/5 rounded-xl py-3.5 pl-10 pr-4 text-app-text text-xs focus:outline-none focus:border-indigo-500/30 focus:bg-white/10 transition-all font-bold"
+                        />
+                        {isSearchingGuests && (
+                          <div className="absolute right-5 top-1/2 -translate-y-1/2">
+                            <span className="w-4 h-4 border-2 border-app-accent border-t-transparent rounded-full animate-spin block"></span>
+                          </div>
+                        )}
+                        {foundUsers.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-[#1e293b] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[100]">
+                            {foundUsers
+                              .filter(u => !selectedGuests.find(sg => sg.uid === u.uid))
+                              .map(u => (
+                              <button
+                                key={u.uid}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedGuests(prev => [...prev, u]);
+                                  setGuestSearch('');
+                                  setFoundUsers([]);
+                                }}
+                                className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-all text-left border-b border-white/5 last:border-0"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                                  {u.displayName[0]}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold text-app-text truncate">{u.displayName}</p>
+                                  <p className="text-[10px] text-slate-500 truncate">{u.email}</p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
+                  </div>
+
                     <div className="grid grid-cols-2 gap-3 p-3 bg-indigo-500/5 rounded-2xl border border-indigo-500/10">
                     <button
                       type="button"

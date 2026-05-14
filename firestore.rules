@@ -72,17 +72,19 @@ service cloud.firestore {
     function isValidAgenda(data) {
       return (data.get('userId', '') is string)
           && (data.get('userName', '') is string && data.get('userName', '').size() <= 500)
-          && (data.get('userEmail', '') is string && data.get('userEmail', '').size() <= 500)
+          && (data.get('userEmail', '') is string && data.get('userEmail', '').size() <= 600)
           && (data.get('title', '') is string && data.get('title', '').size() <= 500)
           && (data.get('type', 'culto') is string && data.get('type', 'culto').size() <= 100)
-          && (data.get('location', '') is string && data.get('location', '').size() <= 600)
+          && (data.get('location', '') is string && data.get('location', '').size() <= 800)
           && (data.get('address', '') is string && data.get('address', '').size() <= 2000)
-          && (data.get('description', '') is string && data.get('description', '').size() <= 2000)
+          && (data.get('description', '') is string && data.get('description', '').size() <= 3000)
           && (data.get('notify24h', true) is bool)
           && (data.get('notifyDayOf', true) is bool)
           && (data.get('sermonId', '') is string)
           && (data.get('guestId', '') is string)
-          && (data.get('guestName', '') is string);
+          && (data.get('guestName', '') is string)
+          && (data.get('guestIds', []) is list)
+          && (data.get('guests', []) is list);
     }
 
     function isValidUser(data) {
@@ -270,8 +272,8 @@ service cloud.firestore {
     }
 
     match /agenda/{agendaId} {
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.get('guestId', null) == request.auth.uid);
-      allow get: if isSignedIn() && (existing().userId == request.auth.uid || existing().get('guestId', null) == request.auth.uid);
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.get('guestId', null) == request.auth.uid || (request.auth.uid in resource.data.get('guestIds', [])));
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || existing().get('guestId', null) == request.auth.uid || (request.auth.uid in existing().get('guestIds', [])));
       allow create: if isSignedIn() && isValidAgenda(incoming()) 
                     && (incoming().userId == request.auth.uid)
                     && (incoming().createdAt == request.time)
@@ -285,8 +287,8 @@ service cloud.firestore {
     }
 
     match /ministerial_agenda/{agendaId} {
-      allow get: if isSignedIn() && (existing().userId == request.auth.uid || existing().get('guestId', null) == request.auth.uid || isAdmin());
-      allow list: if (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.get('guestId', null) == request.auth.uid || isAdmin()))
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || existing().get('guestId', null) == request.auth.uid || (request.auth.uid in existing().get('guestIds', [])) || isAdmin());
+      allow list: if (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.get('guestId', null) == request.auth.uid || (request.auth.uid in resource.data.get('guestIds', [])) || isAdmin()))
                   || (resource.data.get('notified24h', true) == false || resource.data.get('notifiedDayOf', true) == false); // Allow background task queries
       allow create: if isSignedIn() && isValidAgenda(incoming()) 
                     && (incoming().userId == request.auth.uid)

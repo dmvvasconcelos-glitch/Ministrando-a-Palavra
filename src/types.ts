@@ -86,8 +86,10 @@ export interface AgendaItem {
   source?: 'event' | 'preaching';
   isPreaching?: boolean;
   sermonId?: string;
-  guestId?: string;
-  guestName?: string;
+  guestId?: string; // Keep for backward compatibility
+  guestName?: string; // Keep for backward compatibility
+  guestIds?: string[];
+  guests?: { uid: string; displayName: string; email?: string }[];
   userName?: string;
   userEmail?: string;
 }

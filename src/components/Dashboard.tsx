@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, memo, useCallback } from 'react';
 import { collection, query, where, orderBy, limit, onSnapshot, getDocs, or, and, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Sermon, AgendaItem, UserProfile, Birthday } from '../types';
-import { Plus, BookOpen, Clock, Calendar as CalIcon, MapPin, ChevronRight, Play, Edit2, Edit3, Heart, FileText, Sparkles, Mic2, Cake, Gift, PartyPopper } from 'lucide-react';
+import { Plus, BookOpen, Clock, Calendar as CalIcon, MapPin, ChevronRight, Edit3, Heart, Mic2, Cake, Gift, PartyPopper, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DAILY_VERSES, DAILY_REFLECTIONS } from '../constants/dailyInspirations';
 import { format, formatDistanceToNow, isAfter } from 'date-fns';
@@ -13,6 +13,7 @@ import { generateDailyInspiration } from '../services/gemini';
 
 interface DashboardProps {
   profile: UserProfile | null;
+  preloadedInspiration?: {verse: {ref: string, text: string}, reflection: string} | null;
   onEdit: (id: string | null) => void;
   onPreach: (id: string) => void;
   onSeeAll: () => void;
@@ -21,7 +22,94 @@ interface DashboardProps {
   onEditProfile: () => void;
 }
 
-export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAgenda, onSeeEvents, onEditProfile }: DashboardProps) {
+// Memoized Agenda Item Card
+const AgendaItemCard = memo(({ 
+  item, 
+  today, 
+  getLocale, 
+  t, 
+  onAction 
+}: { 
+  item: AgendaItem, 
+  today: Date, 
+  getLocale: () => any, 
+  t: (key: any) => string, 
+  onAction: () => void 
+}) => {
+  const itemDate = item.date?.toDate ? item.date.toDate() : new Date(item.date);
+  const isToday = format(itemDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+
+  return (
+    <motion.div 
+      whileHover={{ x: 6, backgroundColor: 'var(--glass-bg)' }}
+      className={`card-spirit p-4 transition-all flex items-center gap-4 hover:shadow-xl relative overflow-hidden group cursor-pointer ${
+        isToday ? 'border-indigo-500/30 bg-indigo-500/5 shadow-lg shadow-indigo-500/5' : 'border-app-border'
+      }`}
+      onClick={onAction}
+    >
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 transform scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-500" />
+      
+      <div className={`w-12 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 transition-all duration-500 ${
+        isToday ? 'bg-indigo-600 shadow-lg shadow-indigo-600/20 text-white' : 'bg-app-card text-app-text border border-app-border group-hover:border-indigo-500/20'
+      }`}>
+        <span className={`text-[10px] font-medium mb-0.5 opacity-70 ${isToday ? 'text-white/80' : 'text-indigo-500'}`}>
+          {format(itemDate, 'MMM', { locale: getLocale() })}
+        </span>
+        <span className="text-xl font-black leading-none">
+          {format(itemDate, 'dd')}
+        </span>
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
+            isToday ? 'bg-indigo-500/20 text-indigo-400' : 'bg-app-card text-app-secondary border border-app-border'
+          }`}>
+            {item.type === 'preaching' ? t('preaching') : 
+              item.type === 'culto' ? t('cult') :
+              item.type === 'celula' ? t('cell') :
+              item.type === 'congresso' ? t('congress') : 
+              item.type === 'extra' ? t('others') : item.type}
+          </span>
+          {isToday && (
+            <div className="flex items-center gap-1.5">
+              <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="text-[10px] font-medium text-indigo-400 opacity-70">{t('now')}</span>
+            </div>
+          )}
+        </div>
+        <h3 className="font-bold text-app-text group-hover:text-indigo-500 transition-colors text-[12px] tracking-wide truncate">
+          {item.title}
+        </h3>
+        {item.userId !== auth.currentUser?.uid && (
+          <p className="text-[9px] font-bold text-indigo-400/80 mt-0.5 truncate tracking-tighter">
+            {t('from')}: {item.userName || 'Organizador'}
+          </p>
+        )}
+        <div className="flex items-center gap-3 mt-1.5 text-app-secondary">
+          <div className="flex items-center gap-1 text-[9px] font-bold">
+            <Clock size={10} className="group-hover:text-indigo-500 transition-colors" />
+            <span>{format(itemDate, 'HH:mm')}h</span>
+            {isAfter(itemDate, new Date()) && (
+              <span className="text-[8px] font-black text-indigo-400 ml-2">
+                {formatDistanceToNow(itemDate, { locale: getLocale() })}
+              </span>
+            )}
+          </div>
+          {item.location && (
+            <div className="flex items-center gap-1 text-[9px] font-bold">
+              <MapPin size={10} className="text-indigo-400/40 group-hover:text-indigo-500 transition-colors" />
+              <span className="truncate max-w-[120px]">{item.location}</span>
+            </div>
+          )}
+        </div>
+      </div>
+      <ChevronRight size={16} className="text-app-secondary opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+    </motion.div>
+  );
+});
+
+export default function Dashboard({ profile, preloadedInspiration, onEdit, onPreach, onSeeAll, onSeeAgenda, onSeeEvents, onEditProfile }: DashboardProps) {
   const { t, language } = useLanguage();
   const [ministerialAgenda, setMinisterialAgenda] = useState<AgendaItem[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<AgendaItem[]>([]);
@@ -32,11 +120,29 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
   const [reflectionOfDay, setReflectionOfDay] = useState('');
   const [todayBirthdays, setTodayBirthdays] = useState<Birthday[]>([]);
   const [isUserBirthday, setIsUserBirthday] = useState(false);
+  const [isLoadingInspiration, setIsLoadingInspiration] = useState(true);
+
+  const getLocale = useCallback(() => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'es': return es;
+      default: return ptBR;
+    }
+  }, [language]);
 
   useEffect(() => {
     async function loadDailyInspiration() {
       if (!auth.currentUser) return;
 
+      // If we have preloaded data, use it!
+      if (preloadedInspiration) {
+        setVerseOfDay(preloadedInspiration.verse);
+        setReflectionOfDay(preloadedInspiration.reflection);
+        setIsLoadingInspiration(false);
+        return;
+      }
+
+      setIsLoadingInspiration(true);
       const todayKey = format(new Date(), 'yyyy-MM-dd');
       const docPath = `users/${auth.currentUser.uid}/daily_inspirations/${todayKey}_${language}`;
       const inspirationRef = doc(db, docPath);
@@ -100,6 +206,8 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
         
         setVerseOfDay(verses[verseIndex]);
         setReflectionOfDay(reflections[reflectionIndex]);
+      } finally {
+        setIsLoadingInspiration(false);
       }
     }
 
@@ -107,9 +215,9 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
 
     // Check user birthday
     if (profile?.birthDate) {
-      const today = format(new Date(), 'MM-dd');
+      const todayString = format(new Date(), 'MM-dd');
       const userBday = profile.birthDate.substring(5); // Assuming YYYY-MM-DD
-      if (today === userBday) {
+      if (todayString === userBday) {
         setIsUserBirthday(true);
       }
     }
@@ -121,8 +229,8 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
       const snapshot = await getDocs(birthdaysRef);
       const allBirthdays = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Birthday));
       
-      const today = format(new Date(), 'MM-dd');
-      const celebratingToday = allBirthdays.filter(b => b.date.substring(5) === today);
+      const todayString = format(new Date(), 'MM-dd');
+      const celebratingToday = allBirthdays.filter(b => b.date.substring(5) === todayString);
       setTodayBirthdays(celebratingToday);
     }
     checkBirthdays();
@@ -139,7 +247,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
     }, msUntilMidnight);
 
     return () => clearTimeout(timer);
-  }, [language, auth.currentUser]);
+  }, [language, auth.currentUser, preloadedInspiration, profile?.birthDate]);
 
   useEffect(() => {
     if (profile?.displayName || auth.currentUser?.displayName) {
@@ -203,6 +311,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
       and(
         or(
           where('userId', '==', auth.currentUser.uid),
+          where('guestIds', 'array-contains', auth.currentUser.uid),
           where('guestId', '==', auth.currentUser.uid)
         ),
         where('date', '>=', startOfToday)
@@ -216,6 +325,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
       and(
         or(
           where('userId', '==', auth.currentUser.uid),
+          where('guestIds', 'array-contains', auth.currentUser.uid),
           where('guestId', '==', auth.currentUser.uid)
         ),
         where('date', '>=', startOfToday)
@@ -242,15 +352,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
       unsubMinisterial();
       unsubEvents();
     };
-  }, [auth.currentUser, today.toDateString()]); // Re-run if day changes
-
-  const getLocale = () => {
-    switch (language) {
-      case 'en': return enUS;
-      case 'es': return es;
-      default: return ptBR;
-    }
-  };
+  }, [auth.currentUser, today.toDateString()]);
 
   const formatSermonDate = (date: any) => {
     if (!date) return '';
@@ -415,52 +517,61 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
       {/* Daily Inspiration Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 relative">
         <div className="hidden lg:block absolute left-1/2 top-4 bottom-4 w-px bg-app-border/40" />
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-indigo-500/10 to-blue-500/10 card-spirit p-6 sm:p-8 relative overflow-hidden group shadow-md border-indigo-500/20"
-        >
-          <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6">
-            <BookOpen size={180} className="text-indigo-600" />
-          </div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="p-1 px-2 pb-0.5 bg-indigo-500 text-white rounded-md text-[10px] font-medium shadow-sm">{t('daily')}</span>
-                <span className="text-[11px] font-medium text-indigo-500 opacity-70">{t('verseOfDay')}</span>
+        {isLoadingInspiration ? (
+          <>
+            <div className="bg-app-card/30 animate-pulse h-48 rounded-3xl border border-app-border/40" />
+            <div className="bg-app-card/30 animate-pulse h-48 rounded-3xl border border-app-border/40" />
+          </>
+        ) : (
+          <>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-br from-indigo-500/10 to-blue-500/10 card-spirit p-6 sm:p-8 relative overflow-hidden group shadow-md border-indigo-500/20"
+            >
+              <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6">
+                <BookOpen size={180} className="text-indigo-600" />
               </div>
-              <div className="h-px flex-1 bg-indigo-500/10 mx-4" />
-            </div>
-            <p className="text-lg sm:text-xl font-serif leading-relaxed mb-4 text-app-text italic">"{verseOfDay.text}"</p>
-            <p className="text-app-secondary text-sm font-medium">— {verseOfDay.ref} ({language === 'pt' ? 'NVI' : language === 'es' ? 'RVR' : 'NIV'})</p>
-          </div>
-        </motion.div>
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1 px-2 pb-0.5 bg-indigo-500 text-white rounded-md text-[10px] font-medium shadow-sm">{t('daily')}</span>
+                    <span className="text-[11px] font-medium text-indigo-500 opacity-70">{t('verseOfDay')}</span>
+                  </div>
+                  <div className="h-px flex-1 bg-indigo-500/10 mx-4" />
+                </div>
+                <p className="text-lg sm:text-xl font-serif leading-relaxed mb-4 text-app-text italic">"{verseOfDay.text}"</p>
+                <p className="text-app-secondary text-sm font-medium">— {verseOfDay.ref} ({language === 'pt' ? 'NVI' : language === 'es' ? 'RVR' : 'NIV'})</p>
+              </div>
+            </motion.div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-emerald-500/5 to-teal-500/5 card-spirit p-6 sm:p-8 relative overflow-hidden group shadow-md border-emerald-500/20"
-        >
-          <div className="absolute -right-4 -bottom-4 opacity-10 pointer-events-none transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-6">
-            <Heart size={120} className="text-emerald-500" />
-          </div>
-          <div className="relative z-10 flex flex-col h-full">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                <span className="text-[11px] font-medium text-emerald-500 opacity-70">{t('dailyReflection')}</span>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-gradient-to-br from-emerald-500/5 to-teal-500/5 card-spirit p-6 sm:p-8 relative overflow-hidden group shadow-md border-emerald-500/20"
+            >
+              <div className="absolute -right-4 -bottom-4 opacity-10 pointer-events-none transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-6">
+                <Heart size={120} className="text-emerald-500" />
               </div>
-              <div className="h-px flex-1 bg-emerald-500/10 mx-4" />
-            </div>
-            <div className="flex-1 mt-auto">
-              <p className="text-lg sm:text-xl font-serif leading-relaxed text-app-text italic">
-                "{reflectionOfDay}"
-              </p>
-              <p className="text-[11px] text-emerald-500/60 font-medium italic mt-4 opacity-70">{t('thinkAboutIt')}</p>
-            </div>
-          </div>
-        </motion.div>
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                    <span className="text-[11px] font-medium text-emerald-500 opacity-70">{t('dailyReflection')}</span>
+                  </div>
+                  <div className="h-px flex-1 bg-emerald-500/10 mx-4" />
+                </div>
+                <div className="flex-1 mt-auto">
+                  <p className="text-lg sm:text-xl font-serif leading-relaxed text-app-text italic">
+                    "{reflectionOfDay}"
+                  </p>
+                  <p className="text-[11px] text-emerald-500/60 font-medium italic mt-4 opacity-70">{t('thinkAboutIt')}</p>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 pt-4">
@@ -481,88 +592,23 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
               {t('seeAgenda')}
             </button>
           </div>
-          
-          <div className="space-y-3 relative">
+                   <div className="space-y-3 relative">
             {ministerialAgenda.filter(item => {
               const itemDate = item.date?.toDate ? item.date.toDate() : new Date(item.date);
               return itemDate >= today;
             }).length > 0 ? ministerialAgenda.filter(item => {
               const itemDate = item.date?.toDate ? item.date.toDate() : new Date(item.date);
               return itemDate >= today;
-            }).map((item) => {
-              const itemDate = item.date?.toDate ? item.date.toDate() : new Date(item.date);
-              const isToday = format(itemDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
-
-              return (
-                <motion.div 
-                  key={item.id}
-                  whileHover={{ x: 6, backgroundColor: 'var(--glass-bg)' }}
-                  className={`card-spirit p-4 transition-all flex items-center gap-4 hover:shadow-xl relative overflow-hidden group cursor-pointer ${
-                    isToday ? 'border-indigo-500/30 bg-indigo-500/5 shadow-lg shadow-indigo-500/5' : 'border-app-border'
-                  }`}
-                  onClick={onSeeAgenda}
-                >
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 transform scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-500" />
-                  
-                  <div className={`w-12 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 transition-all duration-500 ${
-                    isToday ? 'bg-indigo-600 shadow-lg shadow-indigo-600/20 text-white' : 'bg-app-card text-app-text border border-app-border group-hover:border-indigo-500/20'
-                  }`}>
-                    <span className={`text-[10px] font-medium mb-0.5 opacity-70 ${isToday ? 'text-white/80' : 'text-indigo-500'}`}>
-                      {format(itemDate, 'MMM', { locale: getLocale() })}
-                    </span>
-                    <span className="text-xl font-black leading-none">
-                      {format(itemDate, 'dd')}
-                    </span>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                        isToday ? 'bg-indigo-500/20 text-indigo-400' : 'bg-app-card text-app-secondary border border-app-border'
-                      }`}>
-                        {item.type === 'preaching' ? t('preaching') : 
-                         item.type === 'culto' ? t('cult') :
-                         item.type === 'celula' ? t('cell') :
-                         item.type === 'congresso' ? t('congress') : 
-                         item.type === 'extra' ? t('others') : t('agenda')}
-                      </span>
-                      {isToday && (
-                        <div className="flex items-center gap-1.5">
-                          <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                          <span className="text-[10px] font-medium text-indigo-400 opacity-70">{t('now')}</span>
-                        </div>
-                      )}
-                    </div>
-                    <h3 className="font-bold text-app-text group-hover:text-indigo-500 transition-colors text-[12px] tracking-wide truncate">
-                      {item.title}
-                    </h3>
-                    {item.userId !== auth.currentUser?.uid && (
-                      <p className="text-[9px] font-bold text-indigo-400/80 mt-0.5 truncate tracking-tighter">
-                        {t('from')}: {item.userName || 'Organizador'}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 mt-1.5 text-app-secondary">
-                      <div className="flex items-center gap-1 text-[9px] font-bold">
-                        <Clock size={10} className="group-hover:text-indigo-500 transition-colors" />
-                        <span>{format(itemDate, 'HH:mm')}h</span>
-                        {isAfter(itemDate, new Date()) && (
-                          <span className="text-[8px] font-black text-indigo-400 ml-2">
-                            {language === 'pt' ? 'Em' : language === 'es' ? 'En' : 'In'} {formatDistanceToNow(itemDate, { locale: getLocale() })}
-                          </span>
-                        )}
-                      </div>
-                      {item.location && (
-                        <div className="flex items-center gap-1 text-[9px] font-bold">
-                          <MapPin size={10} className="text-indigo-400/40 group-hover:text-indigo-500 transition-colors" />
-                          <span className="truncate max-w-[120px]">{item.location}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <ChevronRight size={16} className="text-app-secondary opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                </motion.div>
-              );
-            }) : (
+            }).map((item) => (
+              <AgendaItemCard 
+                key={item.id} 
+                item={item} 
+                today={today} 
+                getLocale={getLocale} 
+                t={t} 
+                onAction={onSeeAgenda} 
+              />
+            )) : (
               <div className="p-12 text-center bg-app-card/30 rounded-[32px] border border-dashed border-app-border">
                 <div className="w-14 h-14 bg-app-card rounded-full flex items-center justify-center mx-auto mb-4 border border-app-border">
                   <CalIcon size={24} className="text-app-secondary" />
@@ -581,7 +627,7 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
                 <CalIcon size={14} />
                 {t('upcomingEvents')}
               </h2>
-              <p className="text-[10px] text-slate-500 font-medium ml-6 mt-1">{language === 'pt' ? 'Sua programação de atividades' : language === 'es' ? 'Tu programación de actividades' : 'Your activity schedule'}</p>
+              <p className="text-[10px] text-slate-500 font-medium ml-6 mt-1">{language === 'pt' ? 'Sua programação de atividades' : language === 'es' ? 'Tu programação de atividades' : 'Your activity schedule'}</p>
             </div>
             <button 
               onClick={() => onSeeEvents()}
@@ -598,80 +644,16 @@ export default function Dashboard({ profile, onEdit, onPreach, onSeeAll, onSeeAg
             }).length > 0 ? upcomingEvents.filter(event => {
               const eventDate = event.date?.toDate ? event.date.toDate() : new Date(event.date);
               return eventDate >= today;
-            }).map((event) => {
-              const eventDate = event.date?.toDate ? event.date.toDate() : new Date(event.date);
-              const isToday = format(eventDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
-              
-              return (
-                <motion.div 
-                  key={event.id}
-                  whileHover={{ x: 6, backgroundColor: 'var(--glass-bg)' }}
-                  className={`card-spirit p-4 transition-all flex items-center gap-4 hover:shadow-xl relative overflow-hidden group cursor-pointer ${
-                    isToday ? 'border-indigo-500/30 bg-indigo-500/5 shadow-lg shadow-indigo-500/5' : 'border-app-border'
-                  }`}
-                  onClick={() => onSeeEvents()}
-                >
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 transform scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-500" />
-                  
-                  <div className={`w-12 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 transition-all duration-500 ${
-                    isToday ? 'bg-indigo-600 shadow-lg shadow-indigo-600/20 text-white' : 'bg-app-card text-app-text border border-app-border group-hover:border-indigo-500/20'
-                  }`}>
-                    <span className={`text-[9px] font-black tracking-tighter mb-0.5 ${isToday ? 'text-white/80' : 'text-indigo-400'}`}>
-                      {format(eventDate, 'MMM', { locale: getLocale() })}
-                    </span>
-                    <span className="text-xl font-black leading-none">
-                      {format(eventDate, 'dd')}
-                    </span>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                        isToday ? 'bg-indigo-500/20 text-indigo-400' : 'bg-app-card text-app-secondary border border-app-border'
-                      }`}>
-                        {event.type === 'preaching' ? t('preaching') : 
-                         event.type === 'culto' ? t('cult') :
-                         event.type === 'celula' ? t('cell') :
-                         event.type === 'congresso' ? t('congress') : 
-                         event.type === 'extra' ? t('others') : event.type}
-                      </span>
-                      {isToday && (
-                        <div className="flex items-center gap-1.5">
-                          <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                          <span className="text-[10px] font-medium text-indigo-400 opacity-70">{t('today')}</span>
-                        </div>
-                      )}
-                    </div>
-                    <h3 className="font-bold text-app-text group-hover:text-indigo-500 transition-colors text-[12px] tracking-wide truncate">
-                      {event.title}
-                    </h3>
-                    {event.userId !== auth.currentUser?.uid && (
-                      <p className="text-[9px] font-bold text-indigo-400/80 mt-0.5 truncate tracking-tighter">
-                        {t('from')}: {event.userName || 'Organizador'}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 mt-1.5 text-app-secondary">
-                      <div className="flex items-center gap-1 text-[9px] font-bold">
-                        <Clock size={10} className="group-hover:text-indigo-400 transition-colors" />
-                        <span>{format(eventDate, 'HH:mm')}h</span>
-                        {isAfter(eventDate, new Date()) && (
-                          <span className="text-[8px] font-black text-indigo-400 ml-2">
-                            {(language === 'pt' ? 'Em' : language === 'es' ? 'En' : 'In')} {formatDistanceToNow(eventDate, { locale: getLocale() })}
-                          </span>
-                        )}
-                      </div>
-                      {event.location && (
-                        <div className="flex items-center gap-1 text-[9px] font-bold">
-                          <MapPin size={10} className="text-indigo-400/40 group-hover:text-indigo-400 transition-colors" />
-                          <span className="truncate max-w-[120px]">{event.location}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <ChevronRight size={16} className="text-app-secondary opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                </motion.div>
-              );
-            }) : (
+            }).map((event) => (
+              <AgendaItemCard 
+                key={event.id} 
+                item={event} 
+                today={today} 
+                getLocale={getLocale} 
+                t={t} 
+                onAction={onSeeEvents} 
+              />
+            )) : (
               <div className="p-12 text-center bg-app-card/30 rounded-[32px] border border-dashed border-app-border">
                 <div className="w-14 h-14 bg-app-card rounded-full flex items-center justify-center mx-auto mb-4 border border-app-border">
                   <CalIcon size={24} className="text-app-secondary" />
