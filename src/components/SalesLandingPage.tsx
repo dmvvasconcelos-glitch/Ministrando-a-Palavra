@@ -115,7 +115,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
       </nav>
 
       {/* Hero Section - Optimized for all screens */}
-      <header className="relative z-10 pt-32 md:pt-48 pb-20 md:pb-32 px-6 max-w-7xl mx-auto text-center">
+      <header className="relative z-10 pt-32 md:pt-44 pb-20 md:pb-32 px-6 max-w-7xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -126,7 +126,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
           </div>
           
           <div className="relative mb-8 md:mb-10 text-center">
-            <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-[7.5rem] font-serif italic text-slate-900 leading-[1.05] mb-8 md:mb-12 tracking-tight max-w-6xl mx-auto relative z-10">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif italic text-slate-900 leading-[1.05] mb-8 md:mb-12 tracking-tight max-w-5xl mx-auto relative z-10">
               Sua pregação merece a melhor <span className="text-indigo-600 not-italic font-sans font-black tracking-tighter inline-block relative">
                 ferramenta
                 <svg className="absolute -bottom-2 left-0 w-full h-3 text-indigo-500/10 -z-10" viewBox="0 0 100 12" preserveAspectRatio="none"><path d="M0,10 C30,0 70,0 100,10" stroke="currentColor" strokeWidth="8" fill="none" /></svg>
@@ -134,7 +134,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
             </h1>
           </div>
           
-          <p className="text-lg md:text-2xl text-slate-500 max-w-3xl mx-auto mb-12 md:mb-20 font-medium leading-relaxed px-4">
+          <p className="text-lg md:text-xl text-slate-500 max-w-3xl mx-auto mb-10 md:mb-16 font-medium leading-relaxed px-4">
             A ferramenta definitiva para pastores e ministros. Crie esboços profundos com IA, organize sua agenda e pregue com a excelência que a Palavra exige.
           </p>
           
@@ -420,7 +420,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
       </header>
 
       {/* Platform Preview: Deep Dive */}
-      <section className="py-40 px-6 bg-white relative overflow-hidden">
+      <section className="py-32 md:py-40 px-6 bg-white relative overflow-hidden">
         {/* Background Gradients */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
         
@@ -436,26 +436,26 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-[10px] font-black tracking-[0.2em] shadow-sm border border-indigo-100">
                    <Sparkles size={14} className="text-indigo-500" /> Inteligência Teológica
                 </div>
-                <h2 className="text-5xl md:text-7xl font-serif italic text-slate-900 leading-tight">
+                <h2 className="text-4xl md:text-5xl font-serif italic text-slate-900 leading-tight">
                   Sua ferramenta para a <span className="text-indigo-600 font-sans font-black not-italic block md:inline">Palavra</span>
                 </h2>
-                <p className="text-xl text-slate-600 leading-relaxed max-w-xl">
+                <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
                   Não é apenas uma ferramenta, é um parceiro que aprende com o seu estilo ao longo do tempo, ajudando você a encontrar as melhores palavras, referências e insights para abençoar a sua igreja.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
-                   <div className="space-y-4">
-                      <div className="w-12 h-12 bg-white rounded-2xl shadow-lg border border-slate-50 flex items-center justify-center text-slate-900">
-                         <Layers size={24} />
+                   <div className="space-y-3">
+                      <div className="w-10 h-10 bg-white rounded-2xl shadow-lg border border-slate-50 flex items-center justify-center text-slate-900">
+                         <Layers size={20} />
                       </div>
-                      <h4 className="font-bold text-slate-900">Múltiplas Versões</h4>
-                      <p className="text-slate-500 text-sm">Compare traduções em tempo real enquanto escreve seu sermão.</p>
+                      <h4 className="font-bold text-slate-900 text-sm">Múltiplas Versões</h4>
+                      <p className="text-slate-500 text-xs">Compare traduções em tempo real enquanto escreve seu sermão.</p>
                    </div>
-                   <div className="space-y-4">
-                      <div className="w-12 h-12 bg-white rounded-2xl shadow-lg border border-slate-50 flex items-center justify-center text-indigo-600">
-                         <Zap size={24} />
+                   <div className="space-y-3">
+                      <div className="w-10 h-10 bg-white rounded-2xl shadow-lg border border-slate-50 flex items-center justify-center text-indigo-600">
+                         <Zap size={20} />
                       </div>
-                      <h4 className="font-bold text-slate-900">Velocidade Divina</h4>
-                      <p className="text-slate-500 text-sm">Esboços estruturados que levariam horas, agora em segundos.</p>
+                      <h4 className="font-bold text-slate-900 text-sm">Velocidade Divina</h4>
+                      <p className="text-slate-500 text-xs">Esboços estruturados que levariam horas, agora em segundos.</p>
                    </div>
                 </div>
              </motion.div>
@@ -534,17 +534,17 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#F5E6D3]/50 text-[#9A7B4F] rounded-xl text-[10px] font-black tracking-[0.2em] shadow-sm border border-[#F5E6D3]">
                    <Mic2 size={14} /> Modo Púlpito Profissional
                 </div>
-                <h2 className="text-5xl md:text-7xl font-serif italic text-slate-900 leading-tight">
+                <h2 className="text-4xl md:text-5xl font-serif italic text-slate-900 leading-tight">
                   Toda atenção na <span className="text-[#9A7B4F] font-sans font-black not-italic block md:inline">entrega da mensagem</span>
                 </h2>
-                <p className="text-xl text-slate-600 leading-relaxed max-w-xl">
+                <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
                   Diga adeus à complicação tecnológica na hora de pregar. Uma interface feita para que nada tire o seu foco do altar.
                 </p>
-                <div className="space-y-6 pt-4">
+                <div className="space-y-5 pt-4">
                    {['Controle de tempo integrado', 'Ajuste dinâmico de leitura', 'Modo foco total (sem distrações)', 'Acesso imediato às notas'].map(item => (
-                     <div key={item} className="flex items-center gap-4 text-[#1E293B] font-bold">
-                        <div className="w-6 h-6 bg-[#F5E6D3]/40 text-[#9A7B4F] rounded-lg flex items-center justify-center shadow-sm">
-                           <CheckCircle2 size={14} />
+                     <div key={item} className="flex items-center gap-3 text-[#1E293B] font-bold text-sm">
+                        <div className="w-5 h-5 bg-[#F5E6D3]/40 text-[#9A7B4F] rounded-lg flex items-center justify-center shadow-sm">
+                           <CheckCircle2 size={12} />
                         </div>
                         {item}
                      </div>
@@ -591,11 +591,11 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
       </section>
 
       {/* Features Grid */}
-      <section className="bg-white py-40 px-6 border-t border-slate-100">
+      <section className="bg-white py-32 md:py-40 px-6 border-t border-slate-100">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-24">
-            <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight">O que você recebe no <span className="text-indigo-600 italic font-serif font-medium">Premium</span></h2>
-            <p className="text-slate-500 text-xl max-w-2xl mx-auto">Tudo o que você precisa para uma jornada ministerial produtiva, intuitiva e abençoada.</p>
+            <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight">O que você recebe no <span className="text-indigo-600 italic font-serif font-medium">Premium</span></h2>
+            <p className="text-slate-500 text-lg max-w-2xl mx-auto">Tudo o que você precisa para uma jornada ministerial produtiva, intuitiva e abençoada.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -617,27 +617,27 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
       </section>
 
       {/* Video Demo Section - Impactful Visual */}
-      <section className="py-40 bg-slate-50 relative overflow-hidden">
+      <section className="py-32 md:py-40 bg-slate-50 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex flex-col lg:flex-row items-center gap-20">
              <div className="flex-1 space-y-8">
                 <div className="inline-flex items-center gap-2 text-indigo-600 bg-white px-4 py-2 rounded-full border border-indigo-50 shadow-sm text-[10px] font-black tracking-widest">
                   <Zap size={14} className="fill-indigo-600" /> Demonstração Real
                 </div>
-                <h2 className="text-5xl md:text-6xl font-serif italic text-slate-900 leading-tight">
+                <h2 className="text-4xl md:text-5xl font-serif italic text-slate-900 leading-tight">
                   Veja como a ferramenta <span className="text-indigo-600 font-sans font-black not-italic block md:inline">potencializa seu chamado</span>
                 </h2>
-                <p className="text-xl text-slate-500 leading-relaxed max-w-xl">
+                <p className="text-lg text-slate-500 leading-relaxed max-w-xl">
                   Testamos o Ministrando com centenas de pastores. O resultado? Uma clareza teológica sem precedentes, garantindo mais tempo para oração e preparação, com total foco no que realmente importa: a mensagem.
                 </p>
-                <div className="flex flex-col gap-6 pt-4">
+                <div className="flex flex-col gap-4 md:gap-5 pt-2 md:pt-4">
                   {[
                     { label: 'Esboços Personalizados', val: 'Em 15 segundos' },
                     { label: 'Sincronização Cloud', val: 'Tempo Real' }
                   ].map((stat, i) => (
-                    <div key={i} className="flex justify-between items-center p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                      <span className="font-bold text-slate-900">{stat.label}</span>
-                      <span className="font-black text-indigo-600 tracking-widest text-xs">{stat.val}</span>
+                    <div key={i} className="flex justify-between items-center p-5 md:p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                      <span className="font-bold text-slate-900 text-sm md:text-base">{stat.label}</span>
+                      <span className="font-black text-indigo-600 tracking-widest text-[10px] md:text-xs">{stat.val}</span>
                     </div>
                   ))}
                 </div>
@@ -789,10 +789,10 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                whileInView={{ opacity: 1, y: 0 }}
                viewport={{ once: true }}
             >
-              <h2 className="text-4xl md:text-8xl font-black mb-8 tracking-tighter leading-tight">
+              <h2 className="text-4xl md:text-5xl font-black mb-8 tracking-tighter leading-tight">
                 Um convite para a <br /><span className="text-indigo-400 font-serif italic font-medium">excelência ministerial</span>
               </h2>
-              <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium px-4">
+              <p className="text-lg md:text-xl max-w-2xl mx-auto font-medium px-4 text-slate-400">
                 Recupere o seu tempo e potencialize o seu chamado com a melhor ferramenta de apoio para pregadores do Brasil.
               </p>
             </motion.div>
@@ -810,7 +810,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                      <div className="w-12 h-12 md:w-16 md:h-16 bg-indigo-600 text-white rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/40">
                         <Star className="fill-white w-7 h-7 md:w-8 md:h-8" />
                      </div>
-                     <span className="text-indigo-400 font-black tracking-[0.4em] text-[9px] md:text-[10px]">Acesso Premium Anual</span>
+                     <span className="text-indigo-400 font-black tracking-[0.4em] text-[10px]">Acesso Premium Anual</span>
                   </div>
 
                   <div className="flex flex-col md:flex-row items-baseline gap-4 md:gap-8 mb-12 md:mb-16">
@@ -820,7 +820,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                     </div>
                     <div className="flex items-baseline gap-3 md:gap-4">
                       <span className="text-slate-400 text-3xl md:text-4xl font-serif italic">por</span>
-                      <span className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">29,90</span>
+                      <span className="text-6xl md:text-7xl font-black tracking-tighter text-white leading-none">29,90</span>
                       <div className="flex flex-col items-start leading-[1.1] transform translate-y-[-5px] md:translate-y-[-10px]">
                         <span className="text-indigo-400 font-black text-xl md:text-2xl">R$</span>
                         <span className="text-slate-500 font-bold text-[10px] md:text-[12px] tracking-widest leading-none mt-1 md:mt-2">/ ano</span>
@@ -828,7 +828,7 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
                     </div>
                   </div>
 
-                  <p className="text-slate-400 text-lg md:text-xl mb-12 md:mb-20 font-medium max-w-md leading-relaxed">
+                  <p className="text-lg md:text-xl mb-12 md:mb-20 font-medium max-w-md leading-relaxed text-slate-400">
                     Menos que o preço de um café por mês para ter acesso a todas as ferramentas premium.
                   </p>
 
@@ -888,9 +888,9 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
       <section className="py-48 bg-[#FDFCFB] border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-6">
            <div className="flex flex-col lg:flex-row items-center gap-20 md:gap-32">
-              <div className="flex-1 lg:max-w-2xl">
-                 <Quote className="text-slate-200/50 fill-slate-200/50 -mb-6 lg:-ml-10 opacity-60" size={120} />
-                 <h3 className="text-4xl md:text-6xl font-serif italic text-slate-900 leading-tight mb-12 relative z-10">
+              <div className="flex-1 lg:max-w-xl">
+                 <Quote className="text-slate-200/50 fill-slate-200/50 -mb-6 lg:-ml-10 opacity-60" size={100} />
+                 <h3 className="text-3xl md:text-4xl font-serif italic text-slate-900 leading-tight mb-12 relative z-10">
                     "O Ministrando mudou a forma como me preparo para o altar. Mais tempo para oração, menos tempo em pastas e cadernos."
                  </h3>
                  <div className="flex items-center gap-6">
@@ -949,16 +949,16 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
              ))}
           </div>
           
-          <div className="mt-32 text-center p-16 bg-indigo-600 rounded-[4rem] text-white space-y-10 shadow-[0_40px_100px_-20px_rgba(79,70,229,0.3)] relative overflow-hidden group">
+          <div className="mt-24 md:mt-32 text-center p-12 md:p-16 bg-indigo-600 rounded-[3rem] md:rounded-[4rem] text-white space-y-8 shadow-[0_40px_100px_-20px_rgba(79,70,229,0.3)] relative overflow-hidden group">
              <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-[100px] -m-48 transition-transform group-hover:scale-125 duration-1000" />
-             <h3 className="text-4xl md:text-5xl font-serif italic relative z-10">Ainda tem alguma pergunta?</h3>
-             <p className="text-xl opacity-80 max-w-xl mx-auto relative z-10">Nossa equipe está pronta para te atender agora mesmo e tirar qualquer dúvida.</p>
-             <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
-                <a href="mailto:suporte@ministrandoapalavra.com.br" className="bg-white text-indigo-600 px-12 py-6 rounded-3xl font-black text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
-                   Enviar E-mail <MessageSquare size={20} />
+             <h3 className="text-3xl md:text-4xl font-serif italic relative z-10">Ainda tem alguma pergunta?</h3>
+             <p className="text-lg opacity-80 max-w-xl mx-auto relative z-10">Nossa equipe está pronta para te atender agora mesmo e tirar qualquer dúvida.</p>
+             <div className="flex flex-col sm:flex-row gap-5 justify-center relative z-10">
+                <a href="mailto:suporte@ministrandoapalavra.com.br" className="bg-white text-indigo-600 px-10 py-5 rounded-3xl font-black text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-xl">
+                   Enviar E-mail <MessageSquare size={18} />
                 </a>
-                <a href="https://wa.me/5531973148166" target="_blank" rel="noreferrer" className="bg-green-500 text-white px-12 py-6 rounded-3xl font-black text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl">
-                   WhatsApp <MousePointer2 size={20} />
+                <a href="https://wa.me/5531973148166" target="_blank" rel="noreferrer" className="bg-green-500 text-white px-10 py-5 rounded-3xl font-black text-xs tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-xl">
+                   WhatsApp <MousePointer2 size={18} />
                 </a>
              </div>
           </div>
@@ -966,15 +966,15 @@ export default function SalesLandingPage({ onLogin, isLoading = false }: { onLog
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-50 py-32 border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-24">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-600/20">
-              <BookOpen className="text-white" size={28} />
+      <footer className="bg-slate-50 py-20 md:py-24 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-16 md:gap-24">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-2xl shadow-indigo-600/20">
+              <BookOpen className="text-white" size={24} />
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="font-serif italic text-3xl text-slate-900 tracking-tight">Ministrando</span>
-              <span className="text-[10px] font-black text-[#C2945E] tracking-[0.3em] mt-1 ml-1 uppercase opacity-80">a Palavra</span>
+              <span className="font-serif italic text-2xl text-slate-900 tracking-tight">Ministrando</span>
+              <span className="text-[9px] font-black text-[#C2945E] tracking-[0.3em] mt-1 ml-1 uppercase opacity-80">a Palavra</span>
             </div>
           </div>
           
