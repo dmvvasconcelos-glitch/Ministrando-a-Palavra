@@ -319,11 +319,11 @@ export default function MinisterialAgenda({ onPreach }: { onPreach?: (id: string
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
         {[
           { label: t('statPreachings'), count: items.length, color: 'app-accent', textColor: 'text-app-accent' },
-          { label: t('statAlerts'), count: items.filter(e => (e.notify24h || e.notifyDayOf) && !((e.date?.toDate?.() || new Date(e.date)) < new Date())).length, color: 'rose-500', textColor: 'text-rose-500' },
+          { label: t('statCompleted'), count: items.filter(e => (e.date?.toDate?.() || new Date(e.date)) < new Date()).length, color: 'emerald-500', textColor: 'text-emerald-500' },
           { label: t('statToday'), count: items.filter(e => {
             const d = e.date?.toDate?.() || new Date(e.date);
             return format(d, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
-          }).length, color: 'emerald-500', textColor: 'text-emerald-500' },
+          }).length, color: 'rose-500', textColor: 'text-rose-500' },
           { label: t('statUpcoming'), count: items.filter(e => {
             const d = e.date?.toDate?.() || new Date(e.date);
             const diff = (d.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24);

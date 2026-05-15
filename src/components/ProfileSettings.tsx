@@ -33,7 +33,7 @@ import { format } from 'date-fns';
 import { ptBR, es, enUS } from 'date-fns/locale';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc, deleteDoc, onSnapshot, query, orderBy, updateDoc } from 'firebase/firestore';
-import { updateProfile, signOut } from 'firebase/auth';
+import { updateProfile, signOut, sendEmailVerification } from 'firebase/auth';
 import { UserProfile, Birthday } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { requestNotificationPermission } from '../services/notificationService';
@@ -53,6 +53,8 @@ export default function ProfileSettings() {
     photoURL: auth.currentUser?.photoURL || ''
   });
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
@@ -134,6 +136,23 @@ export default function ProfileSettings() {
       setTimeout(() => setSavedSuccess(false), 3000);
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `users/${auth.currentUser?.uid}`);
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    if (!auth.currentUser || verifying) return;
+    
+    setVerifying(true);
+    try {
+      await sendEmailVerification(auth.currentUser);
+      setVerificationSent(true);
+      setTimeout(() => setVerificationSent(false), 5000);
+    } catch (err) {
+      console.error('Error sending verification email:', err);
+      const isTooManyRequests = err instanceof Error && err.message.includes('auth/too-many-requests');
+      alert(isTooManyRequests ? (language === 'pt' ? 'Muitas tentativas. Tente novamente mais tarde.' : 'Too many requests. Try again later.') : (language === 'pt' ? 'Erro ao enviar e-mail de verificação.' : 'Error sending verification email.'));
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -278,6 +297,11 @@ export default function ProfileSettings() {
       }
 
       await setDoc(docRef, saveContent, { merge: true });
+      
+      // Notify about verification if needed
+      if (!auth.currentUser.emailVerified && !verificationSent) {
+        console.log('User is not verified, showing verification hint');
+      }
 
       // Update Firebase Auth Profile (Only if display name changed or photo is small/URL)
       const isDataUrl = profile.photoURL?.startsWith('data:');
@@ -564,9 +588,38 @@ export default function ProfileSettings() {
           </div>
 
           <div className="space-y-3 md:col-span-2">
-            <label className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
-              <Mail size={14} /> {t('emailLabel')}
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                <Mail size={14} /> {t('emailLabel')}
+              </label>
+              <div className="flex items-center gap-2">
+                {auth.currentUser?.emailVerified ? (
+                  <span className="flex items-center gap-1.5 text-[10px] font-black text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                    <CheckCircle2 size={10} strokeWidth={3} />
+                    {t('verified')}
+                  </span>
+                ) : (
+                  <button
+                    onClick={handleVerifyEmail}
+                    disabled={verifying || verificationSent}
+                    className={`flex items-center gap-1.5 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter transition-all ${
+                      verificationSent 
+                        ? 'bg-amber-500/20 text-amber-500 cursor-default' 
+                        : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 active:scale-95'
+                    }`}
+                  >
+                    {verifying ? (
+                      <div className="w-2.5 h-2.5 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
+                    ) : (
+                      <Mail size={10} strokeWidth={3} />
+                    )}
+                    {verificationSent 
+                      ? t('verificationLinkSent')
+                      : t('notVerified')}
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="relative group">
               <input 
                 type="text"
