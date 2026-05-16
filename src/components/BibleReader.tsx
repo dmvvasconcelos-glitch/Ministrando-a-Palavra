@@ -451,7 +451,7 @@ export default function BibleReader({ profile }: BibleReaderProps) {
                 className="frosted-glass p-8 md:p-12 rounded-[32px] shadow-2xl"
               >
                 <div className="flex items-center justify-between mb-8 pb-6 border-b border-app-border/40">
-                  <h2 className="text-3xl font-bold tracking-tight text-app-text">{content.reference}</h2>
+                  <h2 className="text-2xl font-bold tracking-tight text-app-text">{content.reference}</h2>
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={handleCopyPassage}

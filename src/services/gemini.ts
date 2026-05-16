@@ -307,7 +307,8 @@ export async function generateSermonOutline(params: {
   3. ALWAYS provide the COMPLETE biblical reference (Book, Chapter, and Verses) and the version/translation used at the end of the citation (e.g., - John 3:16, ${version}).
   4. If there is more than one verse, put the verse number in bold before the text (e.g., **1** Verse text).
   5. Use bold ONLY for verse numbers and extremely important terms. DO NOT use bold for the full biblical text.
-  6. Use blockquotes ("> ") for the biblical text.`;
+  6. Use blockquotes ("> ") for the biblical text.
+  7. CRITICAL: Start the response directly with the Title. DO NOT include any introductory greetings, conversational fillers, or meta-commentary (e.g., 'Sure, here is your outline...').`;
 
   const config: any = {};
   if (params.videoUrl) {
@@ -387,7 +388,7 @@ export async function refineSermonOutline(currentOutline: string, instruction: s
   4. NEVER use references like "(v. 7)" outside the blockquotes.
   5. For multiple verses, use bold numbers: **1** Text... **2** Text...
   6. DO NOT use bold for the full biblical text, only for verse numbers.
-  7. Return only the new complete outline in Markdown.`;
+  7. Return only the new complete outline in Markdown. DO NOT include any greetings or introductory text. Start directly with the adjusted content.`;
 
   const config: any = {};
   if (videoUrl) {
@@ -414,7 +415,8 @@ export async function chatWithAI(history: { role: 'user' | 'model', parts: strin
   3. If the user asks for a sermon outline, you can provide one using Markdown.
   4. Use blockquotes ("> ") for biblical verses.
   5. Always cite the reference and version.
-  6. If you don't know an answer, honestly state that it's a profound or debated topic.`;
+  6. If you don't know an answer, honestly state that it's a profound or debated topic.
+  7. CRITICAL: DO NOT include ANY greetings, warm welcomes, or introductory phrases (e.g., 'Hello', 'I can help with that', or 'Here is your answer'). Start the content of your response immediately and objectively.`;
 
   const geminiHistory = history.map(h => ({
     role: h.role === 'model' ? 'model' : 'user',
@@ -424,7 +426,7 @@ export async function chatWithAI(history: { role: 'user' | 'model', parts: strin
   return await callGeminiDirect('chat', { 
     history: [
       { role: "user", parts: [{ text: systemPrompt }] },
-      { role: "model", parts: [{ text: "I understand. I am ready to assist you with theological questions, biblical study, and pastoral support. How can I help you today?" }] },
+      { role: "model", parts: [{ text: "Compreendido. Estou pronto para fornecer assistência teológica objetiva e direta." }] },
       ...geminiHistory
     ],
     message 
