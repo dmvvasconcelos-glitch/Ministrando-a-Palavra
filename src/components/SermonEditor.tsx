@@ -47,6 +47,7 @@ export default function SermonEditor({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const holdTimerRef = useRef<any>(null);
+  const debounceTimerRef = useRef<any>(null);
   const [isHolding, setIsHolding] = useState(false);
   
   const isOwner = !activeId || auth.currentUser?.uid === sermon?.ownerId;
@@ -397,9 +398,25 @@ export default function SermonEditor({
 
   const handleEditorInput = () => {
     if (editorRef.current) {
-      setContent(editorRef.current.innerHTML);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        if (editorRef.current) {
+          setContent(editorRef.current.innerHTML);
+        }
+      }, 1000);
     }
   };
+
+  // Cleanup cleanup timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

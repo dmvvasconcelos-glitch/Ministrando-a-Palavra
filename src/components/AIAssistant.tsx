@@ -792,6 +792,13 @@ export default function AIAssistant({ onApplyOutline, profile }: AIAssistantProp
                       onChange={(e) => setVideoUrl(e.target.value)}
                     />
                   </div>
+                  {videoUrl && (
+                    <p className="text-[10px] text-app-secondary/60 leading-tight mt-1 px-1">
+                      {language === 'pt' 
+                        ? 'Se as legendas diretas estiverem indisponíveis, a IA usará metadados e pesquisa de web para compor o sermão.' 
+                        : 'If direct subtitles are unavailable, the AI will use metadata and web search to compose the sermon.'}
+                    </p>
+                  )}
                 </div>
               </div>
 

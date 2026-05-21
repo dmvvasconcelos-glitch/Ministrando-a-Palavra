@@ -199,11 +199,46 @@ export default function App() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
+  // Proactively preload lazy-loaded components on idle to eliminate transition load delays
+  useEffect(() => {
+    const preloadLazyComponents = () => {
+      console.log('App: Preloading lazy components on system idle for maximum responsiveness...');
+      const preloads = [
+        () => import('./components/BibleReader'),
+        () => import('./components/SermonEditor'),
+        () => import('./components/AIAssistant'),
+        () => import('./components/PreachingMode'),
+        () => import('./components/Dashboard'),
+        () => import('./components/EventsManager'),
+        () => import('./components/MinisterialAgenda'),
+        () => import('./components/SermonsList'),
+        () => import('./components/ProfileSettings'),
+        () => import('./components/HelpCenter')
+      ];
+      
+      // Load them incrementally so we don't clog the network thread all at once
+      preloads.forEach((load, idx) => {
+        setTimeout(() => {
+          load().catch(err => console.debug('Preload delay error:', err));
+        }, 1500 + idx * 300);
+      });
+    };
+
+    if (typeof window !== 'undefined') {
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(() => preloadLazyComponents());
+      } else {
+        const timer = setTimeout(preloadLazyComponents, 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
+
   // Handle redirect result and set persistence once
   useEffect(() => {
     const splashTimer = setTimeout(() => {
       setMinLoadingComplete(true);
-    }, 7000); // 7 seconds of "Grace and Peace" for smooth prep as requested
+    }, 1200); // Optimized to 1.2 seconds for ultra-responsive initial loading
 
     const initAuth = async () => {
       try {
@@ -731,7 +766,7 @@ export default function App() {
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: "100%" }}
-              transition={{ duration: 4.5, ease: "linear" }}
+              transition={{ duration: 1.0, ease: "linear" }}
               className="h-0.5 bg-indigo-500/40 rounded-full w-24 mx-auto"
             />
           </div>
@@ -911,12 +946,12 @@ export default function App() {
 
       {/* Sidebar */}
       <nav className={`
-        fixed inset-y-0 left-0 z-[100] w-72 md:w-64 frosted-glass m-4 rounded-[2.5rem] transform transition-all duration-500 ease-out flex flex-col md:relative md:translate-x-0 md:m-6 overflow-hidden
+        fixed inset-y-0 left-0 z-[100] w-72 md:w-64 frosted-glass m-2 md:m-6 rounded-2xl md:rounded-[2.5rem] transform transition-all duration-500 ease-out flex flex-col md:relative md:translate-x-0 overflow-hidden
         ${isMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-[120%] md:translate-x-0'}
         ${isSidebarCollapsed ? 'md:w-0 md:m-0 md:opacity-0 md:pointer-events-none' : 'md:w-64 md:opacity-100'}
       `}>
         {/* Mobile Header Inside Sidebar context */}
-        <div className="md:hidden flex items-center justify-between p-8 border-b border-app-border/10 mb-6 px-6 shrink-0">
+        <div className="md:hidden flex items-center justify-between p-4 px-5 border-b border-app-border/10 mb-2 shrink-0">
           <div className="flex items-center gap-3">
             <motion.div 
               whileHover={{ scale: 1.1, rotate: 5 }}
@@ -977,35 +1012,36 @@ export default function App() {
                   setIsMenuOpen(false);
                 }}
                 className={`
-                  w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative group
-                  ${activeTab === tab.id ? 'bg-indigo-500/10 text-indigo-500 shadow-sm' : 'text-app-secondary hover:bg-app-card hover:text-app-text'}
-                  ${theme === 'light' && activeTab !== tab.id ? 'border-b border-transparent hover:border-slate-200' : ''}
+                  w-full flex items-center gap-3 px-4 py-2 md:py-3 rounded-lg md:rounded-xl transition-all relative group
+                  ${activeTab === tab.id ? 'bg-indigo-500/10 text-indigo-500 shadow-sm border border-indigo-500/10' : 'text-app-secondary hover:bg-app-card hover:text-app-text border border-transparent hover:border-app-border/40'}
+                  ${theme === 'light' && activeTab === tab.id ? 'shadow-[0_4px_12px_-4px_rgba(79,70,229,0.2)]' : ''}
                 `}
               >
+                {theme === 'light' && activeTab === tab.id && (
+                  <motion.div 
+                    layoutId="activeNavLine"
+                    className="absolute -left-1 w-1 h-6 bg-indigo-500 rounded-full"
+                  />
+                )}
                 <motion.div 
                   whileHover={{ scale: 1.2, rotate: 10 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                  className="shrink-0"
                 >
-                  <tab.icon size={18} className={activeTab === tab.id ? 'text-indigo-500' : ''} />
+                  <tab.icon className={`w-5 h-5 md:w-4 md:h-4 ${activeTab === tab.id ? 'text-indigo-500' : ''}`} />
                 </motion.div>
-                <span className="font-bold text-[11.5px] tracking-[0.05em]">{tab.label}</span>
+                <span className="font-bold text-[12px] md:text-[11.5px] tracking-[0.05em]">{tab.label}</span>
                 {tab.badge !== undefined && tab.badge > 0 && (
                   <span className="absolute right-4 w-4 h-4 bg-red-500 text-white text-[8px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-app-card transition-all">
                     {tab.badge}
                   </span>
-                )}
-                {theme === 'light' && activeTab === tab.id && (
-                  <motion.div 
-                    layoutId="activeNavIndicator"
-                    className="absolute left-0 w-1 h-6 bg-indigo-500 rounded-r-full"
-                  />
                 )}
               </button>
             ))}
           </div>
 
           {(profile?.role === 'admin' || isUserAdmin) && (
-            <div className="pt-4 mt-6 border-t border-app-border/20 pb-2">
+            <div className="pt-2 mt-2 md:pt-4 md:mt-6 border-t border-app-border/20 pb-1">
               <button
                 id="nav-admin"
                 onClick={() => {
@@ -1014,12 +1050,12 @@ export default function App() {
                   setIsMenuOpen(false);
                 }}
                 className={`
-                  w-full flex items-center gap-3 px-4 py-4 rounded-xl transition-all relative group
+                  w-full flex items-center gap-3 px-4 py-2.5 md:py-4 rounded-lg md:rounded-xl transition-all relative group
                   ${activeTab === 'admin' ? 'bg-indigo-600 text-white shadow-lg' : 'text-indigo-500/60 hover:bg-indigo-500/10 hover:text-indigo-500'}
                 `}
               >
-                <ShieldCheck size={20} />
-                <span className="font-bold text-xs tracking-[0.2em]">{t('admin') || 'Admin'}</span>
+                <ShieldCheck className="w-5 h-5 md:w-4 md:h-4 shrink-0" />
+                <span className="font-bold text-[12px] md:text-xs tracking-[0.15em] md:tracking-[0.2em]">{t('admin') || 'Admin'}</span>
                 {adminNewMsgCount > 0 && (
                   <span className="absolute right-4 w-5 h-5 bg-red-500 text-white text-[10px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-app-card transition-all">
                     {adminNewMsgCount}
@@ -1030,32 +1066,32 @@ export default function App() {
           )}
         </div>
 
-        <div className="p-4 mt-auto border-t border-app-border shrink-0 bg-app-card/20 backdrop-blur-md">
+        <div className="p-3 md:p-4 mt-auto border-t border-app-border shrink-0 bg-app-card/20 backdrop-blur-md">
           {/* Social Links */}
-          <div className="px-1 mb-4 flex flex-col gap-1">
+          <div className="px-1 mb-2.5 md:mb-4 flex flex-col gap-1">
             <a 
               href="https://www.instagram.com/ministrandoapalavra.app?igsh=MWE5N2JvcWo0Z25ydg=="
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between px-4 py-2.5 rounded-xl text-app-secondary hover:text-pink-500 hover:bg-pink-500/5 transition-all group"
+              className="flex items-center justify-between px-4 py-2 md:py-2.5 rounded-lg md:rounded-xl text-app-secondary hover:text-pink-500 hover:bg-pink-500/5 transition-all group"
             >
               <div className="flex items-center gap-3">
-                <Instagram size={18} className="group-hover:scale-110 transition-transform" />
-                <span className="font-bold text-[10px] tracking-widest uppercase">{t('followInstagram')}</span>
+                <Instagram className="w-[18px] h-[18px] md:w-4 md:h-4 shrink-0 group-hover:scale-110 transition-transform" />
+                <span className="font-bold text-[10px] md:text-[10px] tracking-widest uppercase">{t('followInstagram')}</span>
               </div>
               <div className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
             </a>
           </div>
 
           {/* Discrete Language Selector */}
-          <div className="flex items-center justify-between px-4 mb-5">
-            <span className="text-[8px] font-black tracking-widest uppercase text-app-secondary opacity-40">Idioma</span>
+          <div className="flex items-center justify-between px-4 mb-3 md:mb-5">
+            <span className="text-[9px] font-black tracking-widest uppercase text-app-secondary opacity-40">Idioma</span>
             <div className="flex items-center gap-3">
               {(['pt', 'en', 'es'] as Language[]).map((lang) => (
                 <button
                   key={lang}
                   onClick={() => setLanguage(lang)}
-                  className={`text-[9px] font-black tracking-widest transition-all ${language === lang ? 'text-indigo-500' : 'text-slate-600 hover:text-slate-400'}`}
+                  className={`text-[10px] font-black tracking-widest transition-all ${language === lang ? 'text-indigo-500' : 'text-slate-600 hover:text-slate-400'}`}
                 >
                   {lang.toUpperCase()}
                 </button>
@@ -1065,27 +1101,27 @@ export default function App() {
 
           <button 
             onClick={() => currentSermonId && handlePreach(currentSermonId)}
-            className={`w-full mb-4 py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all ${currentSermonId ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-app-card text-app-secondary border border-app-border cursor-not-allowed opacity-50'}`}
+            className={`w-full mb-3 md:mb-4 py-2.5 md:py-3 rounded-lg md:rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all ${currentSermonId ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-app-card text-app-secondary border border-app-border cursor-not-allowed opacity-50'}`}
           >
-            <Play size={16} fill={currentSermonId ? "currentColor" : "none"} />
-            <span className="font-bold text-[9px] tracking-widest uppercase italic">{t('pulpitMode')}</span>
+            <Play className="w-[16px] h-[16px] md:w-[14px] md:h-[14px]" fill={currentSermonId ? "currentColor" : "none"} />
+            <span className="font-bold text-[10px] md:text-[9px] tracking-widest uppercase italic">{t('pulpitMode')}</span>
           </button>
 
           <div 
             onClick={() => setActiveTab('profile')}
-            className={`flex items-center gap-3 p-3 rounded-2xl border border-app-border cursor-pointer transition-all ${activeTab === 'profile' ? 'bg-indigo-500/10 border-indigo-500/20 shadow-sm' : 'bg-app-card/50 hover:bg-app-card hover:shadow-md'}`}
+            className={`flex items-center gap-3 p-2.5 md:p-3 rounded-xl md:rounded-2xl border border-app-border cursor-pointer transition-all ${activeTab === 'profile' ? 'bg-indigo-500/10 border-indigo-500/20 shadow-sm' : 'bg-app-card/50 hover:bg-app-card hover:shadow-md'}`}
           >
             <div className="relative shrink-0">
               <img 
                 src={profile?.photoURL || user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.displayName || user.displayName}`} 
-                className="w-10 h-10 rounded-full border border-app-border object-cover" 
+                className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-app-border object-cover" 
                 alt="User" 
               />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-app-card rounded-full shadow-sm" />
+              <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-app-card rounded-full shadow-sm" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-black truncate text-app-text tracking-tight uppercase">{profile?.displayName || user.displayName}</p>
-              <p className="text-[9px] text-app-secondary truncate font-medium">{user.email}</p>
+              <p className="text-[11px] md:text-[11px] font-black truncate text-app-text tracking-tight uppercase">{profile?.displayName || user.displayName}</p>
+              <p className="text-[9px] md:text-[9px] text-app-secondary truncate font-medium">{user.email}</p>
             </div>
           </div>
         </div>

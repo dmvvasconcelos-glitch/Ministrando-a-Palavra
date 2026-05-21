@@ -25,6 +25,7 @@ import { getMessaging, Messaging } from 'firebase-admin/messaging';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import fs from 'fs';
 import { GoogleGenAI } from '@google/genai';
+import { YoutubeTranscript } from 'youtube-transcript';
 
 // Early environment setup
 const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
@@ -312,6 +313,149 @@ async function startServer() {
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Helper to fetch video metadata (title and description) from public watch page as a fallback
+  async function fetchYoutubePageMetadata(videoId: string): Promise<{ title?: string; description?: string; author?: string } | null> {
+    let title: string | undefined = undefined;
+    let description: string | undefined = undefined;
+    let author: string | undefined = undefined;
+
+    // 1. Try oEmbed (highly reliable for title and author/channel)
+    try {
+      const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+      console.log(`[YouTube] Fetching oembed metadata as fallback for: ${oembedUrl}`);
+      const oembedResponse = await fetch(oembedUrl);
+      if (oembedResponse.ok) {
+        const oembedData: any = await oembedResponse.json();
+        if (oembedData.title) title = oembedData.title;
+        if (oembedData.author_name) author = oembedData.author_name;
+        console.log(`[YouTube] oEmbed metadata fetched successfully. Title: "${title}", Author/Channel: "${author}"`);
+      } else {
+        console.warn(`[YouTube] oEmbed fetch failed with status: ${oembedResponse.status}`);
+      }
+    } catch (err: any) {
+      console.error('[YouTube] oEmbed fetch error, proceeding to next fallbacks:', err.message || String(err));
+    }
+
+    // 2. Try watch page HTML (for description/full details)
+    try {
+      const url = `https://www.youtube.com/watch?v=${videoId}`;
+      console.log(`[YouTube] Fetching page metadata from HTML fallback for: ${url}`);
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
+          'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8,en-US;q=0.7'
+        }
+      });
+
+      if (response.ok) {
+        const html = await response.text();
+        
+        // Extract Title if not already set by oEmbed
+        if (!title) {
+          const ogTitleMatch = html.match(/<meta\s+property="og:title"\s+content="([^"]*)"/i) ||
+                              html.match(/<meta\s+name="title"\s+content="([^"]*)"/i);
+          if (ogTitleMatch) {
+            title = ogTitleMatch[1];
+          } else {
+            const titleTagMatch = html.match(/<title>([^<]*)<\/title>/i);
+            if (titleTagMatch) {
+              title = titleTagMatch[1].replace(/ - YouTube$/i, '');
+            }
+          }
+        }
+
+        // Extract Description
+        const ogDescMatch = html.match(/<meta\s+property="og:description"\s+content="([^"]*)"/i) ||
+                           html.match(/<meta\s+name="description"\s+content="([^"]*)"/i);
+        if (ogDescMatch) {
+          description = ogDescMatch[1];
+        }
+
+        const decodeEntities = (str: string) => {
+          return str
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>');
+        };
+
+        if (title) title = decodeEntities(title);
+        if (description) description = decodeEntities(description);
+      } else {
+        console.warn(`[YouTube] Fallback page fetch failed with status: ${response.status}`);
+      }
+    } catch (err: any) {
+      console.error('[YouTube] General error fetching video page metadata:', err.message || String(err));
+    }
+
+    // Return combined or partially found information
+    if (!title && !description && !author) {
+      return null;
+    }
+
+    return { title, description, author };
+  }
+
+  // Retrieve raw transcript from a YouTube video URL
+  app.get('/api/youtube/transcript', async (req, res) => {
+    const videoUrl = req.query.url as string;
+    if (!videoUrl) {
+      return res.status(400).json({ error: 'Falta o parâmetro url' });
+    }
+
+    try {
+      // Regex to extract video Id
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+      const match = videoUrl.match(regExp);
+      const videoId = (match && match[2].length === 11) ? match[2] : null;
+
+      if (!videoId) {
+        return res.status(400).json({ error: 'URL do YouTube inválida' });
+      }
+
+      console.log(`[YouTube] Fetching transcript for video ID: ${videoId}`);
+      try {
+        const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId);
+        
+        const fullText = transcriptItems
+          .map(item => item.text)
+          .join(' ')
+          .replace(/&#39;/g, "'")
+          .replace(/&quot;/g, '"')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>');
+
+        console.log(`[YouTube] Transcript loaded successfully. Length: ${fullText.length}`);
+        return res.json({ videoId, transcript: fullText, disabled: false });
+      } catch (transcriptError: any) {
+        const cleanMessage = (transcriptError.message || String(transcriptError)).replace('🚨 ', '').trim();
+        console.log(`[YouTube] Transcript not directly accessible for video ID ${videoId}. Falling back to metadata. Details: ${cleanMessage}`);
+        
+        // Attempt to extract title/description from YouTube watch HTML
+        const metadata = await fetchYoutubePageMetadata(videoId);
+        
+        return res.json({ 
+          videoId, 
+          transcript: null, 
+          disabled: true,
+          title: metadata?.title || 'Título indisponível',
+          description: metadata?.description || 'Descrição indiscreta ou indisponível',
+          author: metadata?.author || 'Canal indisponível',
+          reason: transcriptError.message || 'Transcrições desativadas neste vídeo'
+        });
+      }
+    } catch (err: any) {
+      console.error('[YouTube] General error in transcript endpoint:', err);
+      return res.status(500).json({ 
+        error: 'Não foi possível extrair a transcrição do vídeo', 
+        details: err.message || String(err)
+      });
+    }
+  });
 
   app.get('/api/webhooks/cakto', (req, res) => {
     res.json({ status: 'ok', message: 'Webhook endpoint is active. Use POST for actual data.' });

@@ -5,9 +5,144 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ministrando a Palavra</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f46e5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z'></path><path d='M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z'></path></svg>" />
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+    <style>
+      :root {
+        --bg-color-init: #0d1117;
+        --accent-init: #6366f1;
+        --text-primary-init: #f8fafc;
+      }
+      html[data-theme='light'] {
+        --bg-color-init: #f7f9fd;
+        --accent-init: #4f46e5;
+        --text-primary-init: #0f172a;
+      }
+      body {
+        margin: 0;
+        background-color: var(--bg-color-init);
+        color: var(--text-primary-init);
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
+      .init-loader-container {
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bg-color-init);
+        transition: background-color 0.3s ease;
+      }
+      .init-loader-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        color: var(--accent-init);
+        animation: init-pulse 2s ease-in-out infinite;
+      }
+      .init-loader-relative {
+        position: relative;
+        width: 64px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .init-loader-dashed {
+        position: absolute;
+        width: 96px;
+        height: 96px;
+        border: 2px dashed rgba(99, 102, 241, 0.2);
+        border-radius: 50%;
+        animation: init-rotate 8s linear infinite;
+      }
+      html[data-theme='light'] .init-loader-dashed {
+        border-color: rgba(79, 70, 229, 0.2);
+      }
+      .init-loader-icon {
+        position: relative;
+        z-index: 10;
+        width: 64px;
+        height: 64px;
+        stroke: currentColor;
+        animation: init-scale 1.5s ease-in-out infinite;
+      }
+      .init-loader-text-center {
+        text-align: center;
+      }
+      .init-loader-text {
+        font-family: "Cormorant Garamond", Georgia, serif;
+        font-style: italic;
+        font-size: 20px;
+        color: var(--text-primary-init);
+        margin: 0 0 12px 0;
+        letter-spacing: 0.025em;
+      }
+      .init-loader-bar {
+        height: 2px;
+        background-color: rgba(99, 102, 241, 0.2);
+        border-radius: 9999px;
+        width: 96px;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+      }
+      html[data-theme='light'] .init-loader-bar {
+        background-color: rgba(79, 70, 229, 0.2);
+      }
+      .init-loader-bar-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: var(--accent-init);
+        animation: init-bar 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        transform-origin: left;
+      }
+      @keyframes init-pulse {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+      }
+      @keyframes init-rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes init-scale {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.15); }
+      }
+      @keyframes init-bar {
+        0% { transform: scaleX(0); }
+        100% { transform: scaleX(1); }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="init-loader-container">
+        <div class="init-loader-wrapper">
+          <div class="init-loader-relative">
+            <div class="init-loader-dashed"></div>
+            <svg class="init-loader-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <div class="init-loader-text-center">
+            <p class="init-loader-text">A Graça e a Paz</p>
+            <div class="init-loader-bar">
+              <div class="init-loader-bar-fill"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -263,6 +263,31 @@ async function callGeminiDirect(method: 'generateContent' | 'chat', args: any, s
   }
 }
 
+interface YoutubeTranscriptResponse {
+  videoId: string;
+  transcript: string | null;
+  disabled?: boolean;
+  title?: string;
+  description?: string;
+  author?: string;
+  reason?: string;
+}
+
+async function extractYoutubeTranscript(url: string): Promise<YoutubeTranscriptResponse | null> {
+  try {
+    const response = await fetch(`/api/youtube/transcript?url=${encodeURIComponent(url)}`);
+    if (!response.ok) {
+      console.warn(`[YouTube] Failed to fetch transcript from API: ${response.statusText}`);
+      return null;
+    }
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error(`[YouTube] Error calling transcript API:`, err);
+    return null;
+  }
+}
+
 export async function generateSermonOutline(params: {
   theme?: string;
   passage?: string;
@@ -277,9 +302,34 @@ export async function generateSermonOutline(params: {
   const memoryContext = await getMemoryContext(lang);
   const version = params.bibleVersion || 'NVI';
 
+  let transcriptPromptText = '';
+  if (params.videoUrl) {
+    try {
+      const data = await extractYoutubeTranscript(params.videoUrl);
+      if (data) {
+        if (data.transcript) {
+          transcriptPromptText = `\nCRITICAL CONTEXT - RAW TRANSCRIPT FROM THE VIDEO SOURCE:\n"""\n${data.transcript}\n"""\n\nYou MUST review this entire transcript and structure your sermon outline to match its core teaching, key talking points, illustrations used, and overall message. Priority must be strictly given to this transcript's theology, lessons, structure, ideas, and message.`;
+        } else if (data.disabled) {
+          transcriptPromptText = `\nCRITICAL CONTEXT - THE VIDEO TRANSCRIPT IS DISABLED FOR THIS VIDEO. However, we have successfully extracted the video details listed below:
+Video URL: "https://www.youtube.com/watch?v=${data.videoId}"
+Video Title: "${data.title || 'Not specified'}"
+Video Author/Channel: "${data.author || 'Not specified'}"
+Video Description: "${data.description || 'Not specified'}"
+
+Since direct paragraph/audio transcripts are disabled for this YouTube video, you MUST use your Google Search grounding tool to search for details on this specific video URL ("https://www.youtube.com/watch?v=${data.videoId}") or search queries like "${data.title || ''} ${data.author || ''}" to learn about the sermon's transcript, outline, summary, or core points. Craft your sermon outline to match its core theology, structure, key illustrations, and lessons.`;
+        }
+      } else {
+        transcriptPromptText = `\nNo raw transcript could be retrieved directly for the video link (${params.videoUrl}). Please use the Google Search tool to search for details about this video, or fall back to default theological patterns aligning with the theme/passage.`;
+      }
+    } catch (e) {
+      console.error('Error fetching youtube transcript for outline generation:', e);
+    }
+  }
+
   const prompt = `You are a high-level homiletical assistant. Generate a biblical sermon outline based on the Following inputs.
   
   CRITICAL SOURCE: If a "Related Video Content" URL is provided below, you MUST prioritize its content. Use your specialized tools (Google Search) to identify the core message, main points, and tone of that video if possible, and base this outline on that specific teaching.
+  ${transcriptPromptText}
   
   Theme: ${params.theme || 'Not specified'}
   Biblical Text: ${params.passage || 'Not specified'}
@@ -334,6 +384,7 @@ export async function fetchBiblePassage(reference: string, version: string = 'NV
   Return a strict JSON object with:
   {
     "reference": "Full formatted reference in ${langContext} (e.g. John 3:16-17)",
+    "chapterTotalVerses": number, // The total number of verses present in that entire chapter of the book searched (e.g. if the user search for 'John 3:16-17', enter 36 because John Chapter 3 contains 36 verses in total).
     "verses": [
       { "n": number, "text": "Literal verse text" }
     ]
@@ -367,10 +418,32 @@ export async function suggestThemes(language: string = 'pt') {
 export async function refineSermonOutline(currentOutline: string, instruction: string, language: string = 'pt', videoUrl?: string, bibleVersion: string = 'NVI') {
   const langContext = language === 'en' ? 'English' : language === 'es' ? 'Spanish' : 'Portuguese';
   const memoryContext = await getMemoryContext(language);
+
+  let transcriptPromptText = '';
+  if (videoUrl) {
+    try {
+      const data = await extractYoutubeTranscript(videoUrl);
+      if (data) {
+        if (data.transcript) {
+          transcriptPromptText = `\nCRITICAL CONTEXT - RAW TRANSCRIPT FROM THE VIDEO SOURCE:\n"""\n${data.transcript}\n"""\n\nYou MUST keep consistency with this transcript of the video when refining or modifying the outline.`;
+        } else if (data.disabled) {
+          transcriptPromptText = `\nCRITICAL CONTEXT - THE VIDEO TRANSCRIPT IS DISABLED. Use the video details below and your Google Search tool to maintain consistency with its teaching:
+Video URL: "https://www.youtube.com/watch?v=${data.videoId}"
+Video Title: "${data.title || 'Not specified'}"
+Video Author/Channel: "${data.author || 'Not specified'}"
+Video Description: "${data.description || 'Not specified'}"`;
+        }
+      }
+    } catch (e) {
+      console.error('Error fetching youtube transcript for outline refinement:', e);
+    }
+  }
+
   const prompt = `You are an experienced homiletical assistant. 
   ${memoryContext}
   
   SOURCE CONTEXT: ${videoUrl ? `This sermon is based on or related to this video: ${videoUrl}. Maintain consistency with its teaching.` : 'No specific video source.'}
+  ${transcriptPromptText}
   Bible Version for Citations: ${bibleVersion}
 
   CURRENT OUTLINE:

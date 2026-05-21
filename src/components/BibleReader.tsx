@@ -451,7 +451,18 @@ export default function BibleReader({ profile }: BibleReaderProps) {
                 className="frosted-glass p-8 md:p-12 rounded-[32px] shadow-2xl"
               >
                 <div className="flex items-center justify-between mb-8 pb-6 border-b border-app-border/40">
-                  <h2 className="text-2xl font-bold tracking-tight text-app-text">{content.reference}</h2>
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-app-text">{content.reference}</h2>
+                    {content.verses && content.verses.length > 0 && (
+                      <p className="text-xs text-app-accent font-semibold tracking-wider mt-1 opacity-80">
+                        {content.chapterTotalVerses 
+                          ? t('versesCountWithTotal')
+                              .replace('{count}', String(content.verses.length))
+                              .replace('{total}', String(content.chapterTotalVerses))
+                          : t('versesCount').replace('{count}', String(content.verses.length))}
+                      </p>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={handleCopyPassage}

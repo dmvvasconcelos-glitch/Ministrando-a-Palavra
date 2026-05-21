@@ -438,7 +438,10 @@ export default function Dashboard({ profile, preloadedInspiration, onEdit, onPre
               </div>
             )}
           </div>
-          <p className="text-xs text-app-secondary font-medium tracking-wide transition-colors opacity-70">{t('prepareMessage')}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-xs text-app-secondary font-medium tracking-wide transition-colors opacity-70">{t('prepareMessage')}</p>
+            <div className="h-px w-8 bg-app-accent/20 hidden md:block" />
+          </div>
         </div>
         <button 
           id="btn-new-sermon"
@@ -576,7 +579,8 @@ export default function Dashboard({ profile, preloadedInspiration, onEdit, onPre
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 pt-4">
         {/* Ministerial Agenda */}
-        <section className="space-y-5">
+        <section className="space-y-5 relative">
+          <div className="absolute -left-5 top-0 bottom-0 w-[1px] bg-gradient-to-b from-indigo-500/30 via-indigo-500/10 to-transparent hidden lg:block" />
           <div className="flex items-center justify-between px-2">
             <div className="flex flex-col">
               <h2 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 text-indigo-500">
@@ -589,10 +593,10 @@ export default function Dashboard({ profile, preloadedInspiration, onEdit, onPre
               onClick={onSeeAgenda}
               className="text-[10px] font-medium text-app-secondary hover:text-indigo-400 transition-colors bg-app-card px-3 py-1.5 rounded-full border border-app-border hover:border-app-border/40 shadow-sm opacity-70"
             >
-              {t('seeAgenda')}
+               {t('seeAgenda')}
             </button>
           </div>
-                   <div className="space-y-3 relative">
+                    <div className="space-y-3 relative">
             {ministerialAgenda.filter(item => {
               const itemDate = item.date?.toDate ? item.date.toDate() : new Date(item.date);
               return itemDate >= today;
@@ -620,7 +624,8 @@ export default function Dashboard({ profile, preloadedInspiration, onEdit, onPre
         </section>
 
         {/* Upcoming Events */}
-        <section className="space-y-5">
+        <section className="space-y-5 relative">
+          <div className="absolute -left-5 top-0 bottom-0 w-[1px] bg-gradient-to-b from-indigo-500/30 via-indigo-500/10 to-transparent hidden lg:block" />
           <div className="flex items-center justify-between px-2">
             <div className="flex flex-col">
               <h2 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 text-indigo-500">
