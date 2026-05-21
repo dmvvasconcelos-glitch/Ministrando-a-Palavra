@@ -979,7 +979,7 @@ export default function App() {
             {!isSidebarCollapsed && (
               <div className="flex flex-col leading-tight py-1 whitespace-nowrap">
                 <span className="text-xl font-serif italic text-app-text px-1 tracking-tight">Ministrando</span>
-                <span className="text-[14px] font-black tracking-[0.2em] text-indigo-500 mt-0.5 uppercase">A PALAVRA</span>
+                <span className="text-[11px] font-black tracking-[0.25em] text-indigo-500 mt-0.5 uppercase">A PALAVRA</span>
               </div>
             )}
           </div>
